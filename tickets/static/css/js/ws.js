@@ -9,12 +9,12 @@ function connectWS() {
 
     socket.onopen = function () {
         console.log("🔥 WebSocket connected");
+        fetchLatestTickets();  // ← fetch on every reconnect
     };
 
     socket.onmessage = function (event) {
         const payload = JSON.parse(event.data);
         console.log("🔥 Ticket update:", payload);
-
         handleTicketEvent(payload);
     };
 
@@ -30,7 +30,17 @@ function connectWS() {
 
 connectWS();
 
-
+// ========================
+// FETCH LATEST ON RECONNECT
+// ========================
+function fetchLatestTickets() {
+    fetch("/ticket-api/")
+        .then(res => res.json())
+        .then(tickets => {
+            tickets.forEach(ticket => upsertTicket(ticket));
+        })
+        .catch(err => console.log("fetch error", err));
+}
 // ========================
 // MAIN EVENT HANDLER
 // ========================

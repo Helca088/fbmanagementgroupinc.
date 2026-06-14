@@ -106,15 +106,19 @@ def delete_ticket(request, id):
 
 def ticket_api(request):
     tickets = Ticket.objects.all().order_by('-created_at')
-
-    data = list(tickets.values(
-        'id',
-        'title',
-        'message',
-        'status',
-        'created_at'
-    ))
-
+    data = []
+    for ticket in tickets:
+        data.append({
+            "id": ticket.id,
+            "title": ticket.title,
+            "message": ticket.message,
+            "user": ticket.user.username if ticket.user else "N/A",
+            "section": ticket.section.name if ticket.section else "N/A",
+            "concern_type": ticket.concern_type.name if ticket.concern_type else "N/A",
+            "status": ticket.status,
+            "created_at": ticket.created_at.strftime("%Y-%m-%d %H:%M"),
+            "attachment": bool(ticket.attachment),
+        })
     return JsonResponse(data, safe=False)
 
 def download_attachment(request, pk):
