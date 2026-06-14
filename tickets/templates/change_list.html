@@ -1,0 +1,28 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+    {{ block.super }}
+
+    <script>
+        async function refreshTable() {
+            const response = await fetch(window.location.href, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+
+            const newTable = doc.querySelector("#result_list");
+            const oldTable = document.querySelector("#result_list");
+
+            if (newTable && oldTable) {
+                oldTable.innerHTML = newTable.innerHTML;
+            }
+        }
+
+        setInterval(refreshTable, 5000); // every 5 seconds
+    </script>
+{% endblock %}

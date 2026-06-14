@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+<h1>Create Ticket</h1>
+
+<form method="POST">
+
+<input type="text"
+name="title"
+placeholder="Title">
+
+<br><br>
+
+<textarea
+name="message"
+placeholder="Message">
+</textarea>
+
+<br><br>
+
+<button type="submit">
+Submit
+</button>
+
+</form>
+
+</body>
+</html>

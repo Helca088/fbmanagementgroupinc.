@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Send Ticket</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+</head>
+
+<body>
+
+<div class="container1">
+
+    <!-- FORM -->
+
+    <div class="form-box">
+
+        <h1>MSR FORMS</h1>
+
+        <form method="POST" enctype="multipart/form-data">
+
+            {% csrf_token %}
+
+            <input 
+                type="text" 
+                name="title" 
+                placeholder="Title"
+            >
+
+            <textarea 
+                name="message" 
+                placeholder="Message"
+            ></textarea>
+
+            <input 
+                type="file" 
+                name="attachment"
+            >
+            <select name="section">
+            {% for section in sections %}
+            <option value="{{ section.id }}">
+            {{ section.name }}
+            </option>
+            {% endfor %}
+            </select>
+            <br></br>
+            <select name="concern_type">
+            {% for concern in concerns %}
+            <option value="{{ concern.id }}">
+            {{ concern.name }}
+            </option>
+            {% endfor %}
+            </select>
+            <br></br>
+            <button type="submit">
+                Send
+            </button>
+
+        </form>
+    </div>
+
+    <!-- TICKET SECTION -->
+
+    <div class="ticket-wrapper">
+
+        <h2 class="ticket-title">
+            Your Ticket List
+        </h2>
+
+        <div class="ticket-list">
+
+            {% for ticket in tickets %}
+
+            <div class="ticket-card" data-id="{{ticket.id}}">
+
+                <h3>{{ ticket.title }}</h3>
+
+                <p>{{ ticket.message }}</p>
+
+                <span class="status">
+                    {{ ticket.status }}
+                </span>
+
+                <div class="ticket-date">
+                    {{ ticket.created_at }}
+                </div>
+
+                {% if ticket.attachment %}
+
+                <a 
+                    href="{{ ticket.attachment.url }}"
+                    class="download-btn"
+                >
+                    Download Attachment
+                </a>
+
+                {% endif %}
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</div>
+<script src="{% static 'css/js/ws.js' %}"></script>
+</script>
+</body>
+</html>

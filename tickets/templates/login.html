@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MSR Login</title>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+
+<div class="login-container">
+
+    <div class="login-card">
+
+        <h1>MSR System</h1>
+
+        <p>Please enter your outlet name</p>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <input type="text" name="user" placeholder="Enter Outlet" required>
+
+            <button type="submit"> Login </button>
+        </form>
+    </div>
+</div>
+</body>
+</html>
