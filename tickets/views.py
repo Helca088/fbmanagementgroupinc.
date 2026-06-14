@@ -11,6 +11,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.views.decorators.http import require_POST
 from django.db.models import Q
+from django.db.models import Case, When, IntegerField
 
 @require_POST
 def update_status(request, id):
@@ -105,7 +106,15 @@ def delete_ticket(request, id):
     return redirect('admin_dashboard')
 
 def ticket_api(request):
-    tickets = Ticket.objects.all().order_by('-created_at')
+    tickets = Ticket.objects.annotate(
+    status_order=Case(
+        When(status='Pending', then=0),
+        When(status='Open', then=1),
+        When(status='Resolved', then=2),
+        default=99,
+        output_field=IntegerField(),
+    )
+).order_by('status_order', '-created_at')
     data = []
     for ticket in tickets:
         data.append({
@@ -223,7 +232,15 @@ def home(request):
 
 def admin_dashboard(request):
 
-    tickets = Ticket.objects.all().order_by('-created_at')
+    tickets = Ticket.objects.annotate(
+    status_order=Case(
+        When(status='Pending', then=0),
+        When(status='Open', then=1),
+        When(status='Resolved', then=2),
+        default=99,
+        output_field=IntegerField(),
+    )
+).order_by('status_order', '-created_at')
 
     q = request.GET.get('q')
 
