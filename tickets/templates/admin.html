@@ -12,85 +12,94 @@
     <!-- SIDEBAR -->
     <aside class="w-64 bg-gray-900 text-white min-h-screen p-6">
         <h1 class="text-3xl font-bold mb-10">FB</h1>
-
         <nav class="space-y-4">
             <a href="#" class="block p-3 rounded-xl bg-blue-600 hover:bg-blue-700 transition">
                 Dashboard
             </a>
-
         </nav>
     </aside>
 
-<!-- MAIN CONTENT -->
-    <main class="flex-1 p-8">
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 p-4 md:p-8">
 
         <!-- TOP BAR -->
         <div class="flex justify-between items-center mb-8">
             <div>
-                <h2 class="text-4xl font-bold text-gray-800">
-                    MSR Dashboard
-                </h2>
-
-                <p class="text-gray-500 mt-2">
-                    Live maintenance Service request monitoring system
-                </p>
+                <h2 class="text-2xl md:text-4xl font-bold text-gray-800">MSR Dashboard</h2>
+                <p class="text-gray-500 mt-2">Live maintenance Service request monitoring system</p>
             </div>
-
         </div>
 
         <!-- STATS -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-
             <div class="bg-white p-6 rounded-3xl shadow-lg">
                 <h3 class="text-gray-500 text-lg">Total Tickets</h3>
-                <p class="text-5xl font-bold mt-4 text-blue-600">
-                    {{ total_tickets }}
-                </p>
+                <p class="text-5xl font-bold mt-4 text-blue-600">{{ total_tickets }}</p>
             </div>
-
             <div class="bg-white p-6 rounded-3xl shadow-lg">
                 <h3 class="text-gray-500 text-lg">Open Tickets</h3>
-                <p class="text-5xl font-bold mt-4 text-yellow-500">
-                    {{ open_tickets }}
-                </p>
+                <p class="text-5xl font-bold mt-4 text-yellow-500">{{ open_tickets }}</p>
             </div>
-
             <div class="bg-white p-6 rounded-3xl shadow-lg">
                 <h3 class="text-gray-500 text-lg">Resolved</h3>
-                <p class="text-5xl font-bold mt-4 text-green-500">
-                    {{ resolved_tickets }}
-                </p>
+                <p class="text-5xl font-bold mt-4 text-green-500">{{ resolved_tickets }}</p>
             </div>
-
         </div>
 
-        <div class="p-6 border-b">
-    <form method="GET">
-        <input
-            type="text"
-            name="q"
-            placeholder="Search title, email, status..."
-            value="{{ request.GET.q }}"
-            class="border p-2 rounded w-80"
-        >
+        <!-- SEARCH -->
+        <div class="p-4 border-b mb-4">
+            <form method="GET">
+                <input type="text" name="q" placeholder="Search..."
+                    value="{{ request.GET.q }}"
+                    class="border p-2 rounded w-full md:w-80">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded mt-2 md:mt-0">
+                    Search
+                </button>
+            </form>
+        </div>
 
-        <button
-            type="submit"
-            class="bg-blue-600 text-white px-4 py-2 rounded">
-            Search
-        </button>
-    </form>
-</div>
-
-        <!-- TICKET TABLE -->
-        <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
-
-            <div class="p-6 border-b">
-                <h3 class="text-2xl font-bold text-gray-800">
-                    Recent Tickets
-                </h3>
+        <!-- MOBILE: Card view -->
+        <div class="block md:hidden space-y-4" id="mobileTicketList">
+            {% for ticket in tickets %}
+            <div class="bg-white p-4 rounded-xl shadow" data-ticket-id="{{ ticket.id }}">
+                <p><strong>Title:</strong> {{ ticket.title }}</p>
+                <p><strong>Outlet:</strong> {{ ticket.user }}</p>
+                <p class="status"><strong>Status:</strong> {{ ticket.status }}</p>
+                <div class="mt-2 space-x-2">
+                    <button onclick="toggleDetails('{{ ticket.id }}')"
+                        class="bg-blue-500 text-white px-3 py-1 rounded">View</button>
+                    <button onclick="deleteTicket('{{ ticket.id }}')"
+                        class="bg-red-600 text-white px-3 py-1 rounded">Delete</button>
+                </div>
+                <!-- Mobile Details -->
+                <div id="details-{{ ticket.id }}" style="display:none;" class="mt-4 border-t pt-4">
+                    <p><strong>Message:</strong> {{ ticket.message }}</p>
+                    <p><strong>Section:</strong> {{ ticket.section }}</p>
+                    <p><strong>Concern Type:</strong> {{ ticket.concern_type }}</p>
+                    <p><strong>Date:</strong> {{ ticket.created_at }}</p>
+                    <strong>Status:</strong>
+                    <select data-ticket-id="{{ ticket.id }}"
+                            onchange="updateStatus(this.dataset.ticketId, this.value)"
+                            class="mt-2 p-2 border rounded">
+                        <option value="Open" {% if ticket.status == "Open" %}selected{% endif %}>Open</option>
+                        <option value="Pending" {% if ticket.status == "Pending" %}selected{% endif %}>Pending</option>
+                        <option value="Resolved" {% if ticket.status == "Resolved" %}selected{% endif %}>Resolved</option>
+                    </select>
+                    {% if ticket.attachment %}
+                    <br><br>
+                    <a href="{% url 'ticket-download' ticket.id %}"
+                       class="bg-green-600 text-white px-3 py-2 rounded">Download Attachment</a>
+                    {% endif %}
+                </div>
             </div>
+            {% endfor %}
+        </div>
 
+        <!-- DESKTOP: Table view -->
+        <div class="hidden md:block bg-white rounded-3xl shadow-lg overflow-hidden">
+            <div class="p-6 border-b">
+                <h3 class="text-2xl font-bold text-gray-800">Recent Tickets</h3>
+            </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-100">
@@ -101,104 +110,51 @@
                             <th class="text-left p-5">Actions</th>
                         </tr>
                     </thead>
-
                     <tbody id="ticketTable">
-
-<!-- MOBILE: Card view -->
-<div class="block md:hidden">
-    {% for ticket in tickets %}
-    <div class="bg-white p-4 mb-4 rounded-xl shadow">
-        <p><strong>Title:</strong> {{ ticket.title }}</p>
-        <p><strong>Outlet:</strong> {{ ticket.user }}</p>
-        <p><strong>Status:</strong> {{ ticket.status }}</p>
-        <div class="mt-2 space-x-2">
-            <button onclick="toggleDetails('{{ ticket.id }}')"
-                class="bg-blue-500 text-white px-3 py-1 rounded">
-                View
-            </button>
-            <button onclick="deleteTicket('{{ ticket.id }}')"
-                class="bg-red-600 text-white px-3 py-1 rounded">
-                Delete
-            </button>
-        </div>
-    </div>
-    {% endfor %}
-</div>
-
-<!-- DESKTOP: Table view -->
-<div class="hidden md:block overflow-x-auto">
-    <table class="w-full">
-        ... your existing table ...
-    </table>
-</div>
-
-<tr id="details-{{ ticket.id }}" style="display:none;">
-    <td colspan="4" class="p-4 bg-gray-50">
-
-        <strong>Title:</strong>
-        {{ ticket.title }}
-
-        <br><br>
-
-        <strong>Message:</strong>
-        {{ ticket.message }}
-
-        <br><br>
-
-        <strong>User:</strong>
-        {{ ticket.user }}
-
-        <br><br>
-
-        <strong>Section:</strong>
-        {{ ticket.section }}
-
-        <br><br>
-
-        <strong>Concern Type:</strong>
-        {{ ticket.concern_type }}
-
-        <br><br>
-
-         <strong>Status:</strong><br>
-
-    <select data-ticket-id="{{ ticket.id }}"
-            onchange="updateStatus(this.dataset.ticketId, this.value)"
-            class="mt-2 p-2 border rounded">
-
-        <option value="Open" {% if ticket.status == "Open" %}selected{% endif %}>Open</option>
-        <option value="Pending" {% if ticket.status == "Pending" %}selected{% endif %}>Pending</option>
-        <option value="Resolved" {% if ticket.status == "Resolved" %}selected{% endif %}>Resolved</option>
-
-    </select><br><br>
-    <strong>Date Created:</strong><br>
-        {{ ticket.created_at }}
-
-        <br><br>
-
-        {% if ticket.attachment %}
-        <a href="{% url 'ticket-download' ticket.id %}"
-           class="bg-green-600 text-white px-3 py-2 rounded">
-            Download Attachment
-        </a>
-        
-        {% endif %}
-
-    </td>
-</tr>
-
-{% endfor %}
-
+                        {% for ticket in tickets %}
+                        <tr data-ticket-id="{{ ticket.id }}" style="cursor:pointer;" class="border-b hover:bg-gray-100">
+                            <td class="p-4">{{ ticket.title }}</td>
+                            <td class="p-4">{{ ticket.user }}</td>
+                            <td class="p-4 status">{{ ticket.status }}</td>
+                            <td class="p-4 space-x-2">
+                                <button onclick="toggleDetails('{{ ticket.id }}')"
+                                    class="bg-blue-500 text-white px-3 py-1 rounded">View</button>
+                                <button onclick="deleteTicket('{{ ticket.id }}')"
+                                    class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Delete</button>
+                            </td>
+                        </tr>
+                        <tr id="details-{{ ticket.id }}" style="display:none;">
+                            <td colspan="4" class="p-4 bg-gray-50">
+                                <strong>Title:</strong> {{ ticket.title }}<br><br>
+                                <strong>Message:</strong> {{ ticket.message }}<br><br>
+                                <strong>User:</strong> {{ ticket.user }}<br><br>
+                                <strong>Section:</strong> {{ ticket.section }}<br><br>
+                                <strong>Concern Type:</strong> {{ ticket.concern_type }}<br><br>
+                                <strong>Status:</strong><br>
+                                <select data-ticket-id="{{ ticket.id }}"
+                                        onchange="updateStatus(this.dataset.ticketId, this.value)"
+                                        class="mt-2 p-2 border rounded">
+                                    <option value="Open" {% if ticket.status == "Open" %}selected{% endif %}>Open</option>
+                                    <option value="Pending" {% if ticket.status == "Pending" %}selected{% endif %}>Pending</option>
+                                    <option value="Resolved" {% if ticket.status == "Resolved" %}selected{% endif %}>Resolved</option>
+                                </select><br><br>
+                                <strong>Date Created:</strong><br>{{ ticket.created_at }}<br><br>
+                                {% if ticket.attachment %}
+                                <a href="{% url 'ticket-download' ticket.id %}"
+                                   class="bg-green-600 text-white px-3 py-2 rounded">Download Attachment</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
-
         </div>
 
     </main>
 </div>
-{% load static %}
 
+{% load static %}
 <script src="{% static 'css/js/ws.js' %}"></script>
 
 </body>
