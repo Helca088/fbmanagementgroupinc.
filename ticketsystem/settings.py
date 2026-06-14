@@ -31,6 +31,9 @@ CSRF_TRUSTED_ORIGINS = ['https://fbmanagementgroupinc.onrender.com', 'wss://fbma
 CORS_ALLOWED_ORIGINS = [
     'https://fbmanagementgroupinc.onrender.com',
 ]
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+SESSION_COOKIE_AGE = 86400
+SESSION_COOKIE_SECURE = True
 
 # Application definition
 
