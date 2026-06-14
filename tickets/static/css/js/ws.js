@@ -158,28 +158,25 @@ function upsertTicket(data) {
 // ========================
 function updateTicketUI(data) {
 
-    // Update status cell in both desktop and mobile rows
-    document.querySelectorAll(`[data-ticket-id="${data.id}"]`).forEach(row => {
-        const statusCell = row.querySelector(".status");
-        if (statusCell) statusCell.innerText = data.status;
+    console.log("Updating:", data.id, data.status);
 
-        const select = row.querySelector("select");
-        if (select) select.value = data.status;
-    });
+    // Update all status labels/cards
+    document.querySelectorAll(`[data-ticket-id="${data.id}"] .status`)
+        .forEach(el => {
 
-    // Update desktop details row
-    const desktopDetails = document.getElementById(`details-${data.id}`);
-    if (desktopDetails) {
-        const select = desktopDetails.querySelector("select");
-        if (select) select.value = data.status;
-    }
+            if (el.tagName === "P") {
+                el.innerHTML = `<strong>Status:</strong> ${data.status}`;
+            } else {
+                el.textContent = data.status;
+            }
+        });
 
-    // Update mobile details
-    const mobileDetails = document.getElementById(`details-${data.id}-mobile`);
-    if (mobileDetails) {
-        const select = mobileDetails.querySelector("select");
-        if (select) select.value = data.status;
-    }
+    // Update ALL selects that belong to this ticket
+    document
+        .querySelectorAll(`select[data-ticket-id="${data.id}"]`)
+        .forEach(select => {
+            select.value = data.status;
+        });
 }
 
 // ========================
