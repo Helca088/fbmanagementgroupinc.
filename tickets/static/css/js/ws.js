@@ -68,89 +68,78 @@ function handleTicketEvent(payload) {
 // ========================
 // UPDATE EXISTING UI
 // ========================
-function updateTicketUI(data) {
-
-    // ADMIN TABLE
-    document.querySelectorAll(`[data-ticket-id="${data.id}"]`).forEach(row => {
-        const statusCell = row.querySelector(".status");
-        if (statusCell) statusCell.innerText = data.status;
-
-        const select = row.querySelector("select");
-        if (select) select.value = data.status;
-    });
-
-    // HOME PAGE
-    const home = document.querySelector(`[data-id="${data.id}"]`);
-
-    if (home) {
-        const status = home.querySelector(".status");
-        if (status) status.innerText = data.status;
-    }
-}
-
-
-// ========================
-// INSERT NEW TICKET
-// ========================
 function upsertTicket(data) {
 
-    // Remove any existing rows to avoid duplicates
+    // Remove existing rows
     document.querySelectorAll(`[data-ticket-id="${data.id}"]`).forEach(el => el.remove());
     document.getElementById(`details-${data.id}`)?.remove();
 
     const table = document.getElementById("ticketTable");
-    // ------------------------
-    // MAIN ROW
-    // ------------------------
-    const newRow = document.createElement("tr");
-    newRow.setAttribute("data-ticket-id", data.id);
-    newRow.className = "border-b hover:bg-gray-100";
-    newRow.style.cursor = "pointer";
 
-    newRow.innerHTML = `
-        <td class="p-4">${data.title}</td>
-        <td class="p-4">${data.user}</td>
-        <td class="p-4 status">${data.status}</td>
-        <td class="p-4 space-x-2">
-            <button onclick="toggleDetails(${data.id})"
-                class="bg-blue-500 text-white px-3 py-1 rounded">
-                View
-            </button>
+    // ========================
+    // DESKTOP ROW
+    // ========================
+    if (table) {
+        const newRow = document.createElement("tr");
+        newRow.setAttribute("data-ticket-id", data.id);
+        newRow.className = "border-b hover:bg-gray-100";
+        newRow.style.cursor = "pointer";
+        newRow.innerHTML = `
+            <td class="p-4">${data.title}</td>
+            <td class="p-4">${data.user}</td>
+            <td class="p-4 status">${data.status}</td>
+            <td class="p-4 space-x-2">
+                <button onclick="toggleDetails(${data.id})" class="bg-blue-500 text-white px-3 py-1 rounded">View</button>
+                <button onclick="deleteTicket(${data.id})" class="bg-red-600 text-white px-3 py-1 rounded">Delete</button>
+            </td>
+        `;
 
-            <button onclick="deleteTicket(${data.id})"
-                class="bg-red-600 text-white px-3 py-1 rounded">
-                Delete
-            </button>
-        </td>
-    `;
+        const detailsRow = document.createElement("tr");
+        detailsRow.id = `details-${data.id}`;
+        detailsRow.style.display = "none";
+        detailsRow.innerHTML = `
+            <td colspan="4" class="p-4 bg-gray-50">
+                <strong>Title:</strong> ${data.title}<br><br>
+                <strong>Message:</strong> ${data.message || ""}<br><br>
+                <strong>User:</strong> ${data.user}<br><br>
+                <strong>Section:</strong> ${data.section || ""}<br><br>
+                <strong>Concern Type:</strong> ${data.concern_type || ""}<br><br>
+                <strong>Status:</strong> ${data.status}<br><br>
+                <strong>Date:</strong> ${data.created_at || ""}<br><br>
+                ${data.attachment ? `<a href="/ticket/${data.id}/download/" class="bg-green-600 text-white px-3 py-1 rounded">Download Attachment</a>` : ""}
+            </td>
+        `;
 
-    // ------------------------
-    // DETAILS ROW
-    // ------------------------
-    const detailsRow = document.createElement("tr");
-    detailsRow.id = `details-${data.id}`;
-    detailsRow.style.display = "none";
+        table.prepend(detailsRow);
+        table.prepend(newRow);
+    }
 
-    detailsRow.innerHTML = `
-        <td colspan="4" class="p-4 bg-gray-50">
-            <strong>Title:</strong> ${data.title}<br><br>
-            <strong>Message:</strong> ${data.message || ""}<br><br>
-            <strong>User:</strong> ${data.user}<br><br>
-            <strong>Section:</strong> ${data.section || ""}<br><br>
-            <strong>Concern Type:</strong> ${data.concern_type || ""}<br><br>
-            <strong>Status:</strong> ${data.status}<br><br>
-            <strong>Date:</strong> ${data.created_at || ""}<br><br>
-            ${data.attachment ? `
-            <a href="/ticket/${data.id}/download/"
-            class="bg-green-600 text-white px-3 py-1 rounded">
-            Download Attachment
-            </a>
-            ` : ""}
-        </td>
-    `;
+    // ========================
+    // MOBILE CARD
+    // ========================
+    const mobileList = document.getElementById("mobileTicketList");
 
-    table.prepend(detailsRow);
-    table.prepend(newRow);
+    if (mobileList) {
+        const card = document.createElement("div");
+        card.setAttribute("data-ticket-id", data.id);
+        card.className = "bg-white p-4 rounded-xl shadow";
+        card.innerHTML = `
+            <p><strong>Title:</strong> ${data.title}</p>
+            <p><strong>Outlet:</strong> ${data.user}</p>
+            <p class="status"><strong>Status:</strong> ${data.status}</p>
+            <div class="mt-2 space-x-2">
+                <button onclick="toggleDetails(${data.id})" class="bg-blue-500 text-white px-3 py-1 rounded">View</button>
+                <button onclick="deleteTicket(${data.id})" class="bg-red-600 text-white px-3 py-1 rounded">Delete</button>
+            </div>
+            <div id="details-${data.id}-mobile" style="display:none;" class="mt-4 border-t pt-4">
+                <p><strong>Message:</strong> ${data.message || ""}</p>
+                <p><strong>Section:</strong> ${data.section || ""}</p>
+                <p><strong>Date:</strong> ${data.created_at || ""}</p>
+                ${data.attachment ? `<a href="/ticket/${data.id}/download/" class="bg-green-600 text-white px-3 py-1 rounded">Download Attachment</a>` : ""}
+            </div>
+        `;
+        mobileList.prepend(card);
+    }
 
     console.log("✅ New ticket added");
 }
