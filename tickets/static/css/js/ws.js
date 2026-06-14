@@ -149,11 +149,19 @@ function upsertTicket(data) {
 // TOGGLE DETAILS
 // ========================
 window.toggleDetails = function (id) {
-    const details = document.getElementById(`details-${id}`);
-    if (!details) return;
+    // Desktop
+    const desktopDetails = document.getElementById(`details-${id}`);
+    if (desktopDetails) {
+        desktopDetails.style.display =
+            desktopDetails.style.display === "none" ? "table-row" : "none";
+    }
 
-    details.style.display =
-        details.style.display === "none" ? "table-row" : "none";
+    // Mobile
+    const mobileDetails = document.getElementById(`details-${id}-mobile`);
+    if (mobileDetails) {
+        mobileDetails.style.display =
+            mobileDetails.style.display === "none" ? "block" : "none";
+    }
 };
 
 
