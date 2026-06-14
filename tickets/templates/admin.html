@@ -104,30 +104,33 @@
 
                     <tbody id="ticketTable">
 
-{% for ticket in tickets %}
+<!-- MOBILE: Card view -->
+<div class="block md:hidden">
+    {% for ticket in tickets %}
+    <div class="bg-white p-4 mb-4 rounded-xl shadow">
+        <p><strong>Title:</strong> {{ ticket.title }}</p>
+        <p><strong>Outlet:</strong> {{ ticket.user }}</p>
+        <p><strong>Status:</strong> {{ ticket.status }}</p>
+        <div class="mt-2 space-x-2">
+            <button onclick="toggleDetails('{{ ticket.id }}')"
+                class="bg-blue-500 text-white px-3 py-1 rounded">
+                View
+            </button>
+            <button onclick="deleteTicket('{{ ticket.id }}')"
+                class="bg-red-600 text-white px-3 py-1 rounded">
+                Delete
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
 
-<tr data-ticket-id="{{ ticket.id }}"
-    style="cursor:pointer;"
-    class="border-b hover:bg-gray-100">
-
-    <td class="p-4">{{ ticket.title }}</td>
-    <td class="p-4">{{ ticket.user }}</td>
-    <td class="p-4 status">{{ ticket.status }}</td>
-    <td class="p-4 space-x-2">
-    <button
-        onclick="toggleDetails('{{ ticket.id }}')"
-        class="bg-blue-500 text-white px-3 py-1 rounded">
-        View
-    </button>
-
-    <button
-        onclick="deleteTicket('{{ ticket.id }}')"
-        class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
-        Delete
-    </button>
-
-</td>
-</tr>
+<!-- DESKTOP: Table view -->
+<div class="hidden md:block overflow-x-auto">
+    <table class="w-full">
+        ... your existing table ...
+    </table>
+</div>
 
 <tr id="details-{{ ticket.id }}" style="display:none;">
     <td colspan="4" class="p-4 bg-gray-50">
