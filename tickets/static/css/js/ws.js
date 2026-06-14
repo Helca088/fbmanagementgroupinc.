@@ -18,10 +18,15 @@ function connectWS() {
         handleTicketEvent(payload);
     };
 
-    socket.onclose = function () {
-        console.log("⚠️ WebSocket closed. Reconnecting...");
-        setTimeout(connectWS, 2000);
-    };
+    socket.onclose = function(event) {
+    console.log(
+        "⚠️ WebSocket closed",
+        event.code,
+        event.reason
+    );
+
+    setTimeout(connectWS, 2000);
+};
 
     socket.onerror = function (error) {
         console.log("❌ WebSocket error", error);
@@ -42,7 +47,7 @@ function fetchLatestTickets() {
             return res.json();
         })
         .then(tickets => {
-            tickets.forEach(ticket => upsertTicket(ticket));
+            tickets.reverse().foreach(ticket => upsertTicket(ticket));
         })
         .catch(err => console.error("fetch error", err));
 }
