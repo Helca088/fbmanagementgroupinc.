@@ -31,13 +31,16 @@ class TicketConsumer(AsyncWebsocketConsumer):
             print("❌ DISCONNECT ERROR:", e)
 
     async def ticket_update(self, event):
-        try:
-            print("🔥 EVENT RECEIVED IN CONSUMER:", event)
+       try:
+           print("🔥 EVENT RECEIVED IN CONSUMER:", event)
 
-            await self.send(text_data=json.dumps(event["data"]))
+           await self.send(text_data=json.dumps({
+            "action": event.get("action", "create"),
+            "data": event["data"]
+        }))
 
-        except Exception as e:
-            print("❌ SEND ERROR:", e)
+       except Exception as e:
+        print("❌ SEND ERROR:", e)
 
     async def ticket_delete(self, event):
         print("Delete receive:", event)

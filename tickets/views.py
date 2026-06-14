@@ -15,17 +15,13 @@ from django.db.models import Q
 @require_POST
 def update_status(request, id):
     ticket = get_object_or_404(Ticket, id=id)
-
     new_status = request.POST.get("status")
     ticket.status = new_status
     ticket.save()
 
-    notify_ticket_update(ticket)  # 🔥 broadcast update
+    notify_ticket_update(ticket, action="update")  # ← pass update
 
-    return JsonResponse({
-        "success": True,
-        "status": ticket.status
-    })
+    return JsonResponse({"success": True, "status": ticket.status})
 
 def notify_ticket_delete(ticket_id):
     print("Sending delete:", ticket_id)
@@ -42,7 +38,7 @@ def notify_ticket_delete(ticket_id):
         }
     )
 
-def notify_ticket_update(ticket):
+def notify_ticket_update(ticket, action="create"):  
     print("🚀 SENDING EVENT:", ticket.id)
 
     channel_layer = get_channel_layer()
@@ -51,6 +47,7 @@ def notify_ticket_update(ticket):
         "tickets",
         {
             "type": "ticket_update",
+            "action": action,          
             "data": {
                 "id": ticket.id,
                 "title": ticket.title,
@@ -58,10 +55,9 @@ def notify_ticket_update(ticket):
                 "user": ticket.user.username if ticket.user else "N/A",
                 "section": ticket.section.name if ticket.section else "N/A",
                 "concern_type": ticket.concern_type.name if ticket.concern_type else "N/A",
-                "status": ticket.status, 
+                "status": ticket.status,
                 "created_at": ticket.created_at.strftime("%Y-%m-%d %H:%M"),
                 "attachment": bool(ticket.attachment),
-
             }
         }
     )
