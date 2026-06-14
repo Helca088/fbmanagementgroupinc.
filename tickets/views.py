@@ -19,7 +19,7 @@ def update_status(request, id):
     ticket.status = new_status
     ticket.save()
 
-    notify_ticket_update(ticket, action="update")  # ← pass update
+    notify_ticket_update(ticket, action="update")  
 
     return JsonResponse({"success": True, "status": ticket.status})
 
