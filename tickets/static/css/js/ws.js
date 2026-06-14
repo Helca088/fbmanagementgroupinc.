@@ -143,7 +143,34 @@ function upsertTicket(data) {
 
     console.log("✅ New ticket added");
 }
+// ========================
+// UPDATE EXISTING UI
+// ========================
+function updateTicketUI(data) {
 
+    // Update status cell in both desktop and mobile rows
+    document.querySelectorAll(`[data-ticket-id="${data.id}"]`).forEach(row => {
+        const statusCell = row.querySelector(".status");
+        if (statusCell) statusCell.innerText = data.status;
+
+        const select = row.querySelector("select");
+        if (select) select.value = data.status;
+    });
+
+    // Update desktop details row
+    const desktopDetails = document.getElementById(`details-${data.id}`);
+    if (desktopDetails) {
+        const select = desktopDetails.querySelector("select");
+        if (select) select.value = data.status;
+    }
+
+    // Update mobile details
+    const mobileDetails = document.getElementById(`details-${data.id}-mobile`);
+    if (mobileDetails) {
+        const select = mobileDetails.querySelector("select");
+        if (select) select.value = data.status;
+    }
+}
 
 // ========================
 // TOGGLE DETAILS
