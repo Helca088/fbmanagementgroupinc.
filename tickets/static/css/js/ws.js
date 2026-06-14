@@ -34,12 +34,17 @@ connectWS();
 // FETCH LATEST ON RECONNECT
 // ========================
 function fetchLatestTickets() {
-    fetch("/ticket-api/")
-        .then(res => res.json())
+    fetch("/api/tickets/")
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+            return res.json();
+        })
         .then(tickets => {
             tickets.forEach(ticket => upsertTicket(ticket));
         })
-        .catch(err => console.log("fetch error", err));
+        .catch(err => console.error("fetch error", err));
 }
 // ========================
 // MAIN EVENT HANDLER

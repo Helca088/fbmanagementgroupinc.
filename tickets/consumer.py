@@ -48,3 +48,11 @@ class TicketConsumer(AsyncWebsocketConsumer):
         "action": "delete",
         "data": event["data"]
     }))
+        
+    async def disconnect(self, close_code):
+        print("WS CLOSED:", close_code)
+
+        await self.channel_layer.group_discard(
+        "tickets",
+            self.channel_name
+    )
