@@ -149,21 +149,17 @@ function upsertTicket(data) {
 // TOGGLE DETAILS
 // ========================
 window.toggleDetails = function (id) {
-    // Desktop
-    const desktopDetails = document.getElementById(`details-${id}`);
-    if (desktopDetails) {
-        desktopDetails.style.display =
-            desktopDetails.style.display === "none" ? "table-row" : "none";
-    }
+    const details = document.getElementById(`details-${id}`);
+    if (!details) return;
 
-    // Mobile
-    const mobileDetails = document.getElementById(`details-${id}-mobile`);
-    if (mobileDetails) {
-        mobileDetails.style.display =
-            mobileDetails.style.display === "none" ? "block" : "none";
+    const isTable = details.tagName === "TR";
+    
+    if (details.style.display === "none") {
+        details.style.display = isTable ? "table-row" : "block";
+    } else {
+        details.style.display = "none";
     }
 };
-
 
 // ========================
 // DELETE TICKET
