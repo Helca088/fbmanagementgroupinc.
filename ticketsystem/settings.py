@@ -1,3 +1,4 @@
+import os
 """
 Django settings for ticketsystem project.
 
@@ -135,9 +136,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6380)],
-            "capacity": 1500,
-            "expiry": 10,
+            "hosts": [os.environ.get("REDIS_URL", "redis://127.0.0.1:6380")],
         },
     },
 }
