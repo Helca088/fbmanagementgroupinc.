@@ -5,7 +5,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Send Ticket</title>
-
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
 </head>
@@ -39,28 +39,50 @@
                 type="file" 
                 name="attachment"
             >
-            <select name="section">
+
+            <div>
+                <label>Section</label>
+
+            <select name="section"
+                    class="border p-2 rounded w-full"
+                    hx-get="{% url 'get_concerns' %}"
+                    hx-trigger="change"
+                    hx-target="#concern_type"
+                    hx-swap="innerHTML"
+                    hx-include="[name='section']">
+
+            <option value="">Select Section</option>
+
             {% for section in sections %}
             <option value="{{ section.id }}">
             {{ section.name }}
             </option>
             {% endfor %}
             </select>
+            </div>
+
             <br></br>
-            <select name="concern_type">
-            {% for concern in concerns %}
-            <option value="{{ concern.id }}">
-            {{ concern.name }}
+
+            <div>
+            
+            <label>Concerns Type</label>
+
+            <select id="concern_type"
+                    name="concern_type"
+                    class="border p-2 rounded w-full">
+                    
+            <option value="">
+            Select Section First
             </option>
-            {% endfor %}
             </select>
+            </div>
             <br></br>
             <button type="submit">
                 Send
             </button>
-
+        
         </form>
-    </div>
+        </div>
 
     <!-- TICKET SECTION -->
 
