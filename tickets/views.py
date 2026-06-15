@@ -13,6 +13,18 @@ from django.views.decorators.http import require_POST
 from django.db.models import Q
 from django.db.models import Case, When, IntegerField
 
+def get_concerns(request):
+
+    section_id = request.Get.get("section")
+
+    concerns = ConcernType.objects.filter(section_id=section_id)
+
+    return render(
+     request, "partials/concern_options.html",
+     {
+         "concerns": concerns
+     }
+ )   
 @require_POST
 def update_status(request, id):
     ticket = get_object_or_404(Ticket, id=id)

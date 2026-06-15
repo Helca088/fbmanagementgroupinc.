@@ -1,0 +1,7 @@
+<option value="">Select Concern type</option>
+
+{% for concern in concerns %}
+<option value="{{ concern.id }}">
+    {{ concern.nama }}
+</option>
+{% endfor %}
