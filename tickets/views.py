@@ -15,7 +15,7 @@ from django.db.models import Case, When, IntegerField
 
 def get_concerns(request):
 
-    section_id = request.Get.get("section")
+    section_id = request.GET.get("section")
 
     concerns = ConcernType.objects.filter(section_id=section_id)
 
