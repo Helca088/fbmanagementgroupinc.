@@ -20,7 +20,12 @@
         <form method="POST">
             {% csrf_token %}
 
-            <input type="text" name="user" placeholder="Enter Outlet" required>
+            <select name="user" required>
+                <option value="">-- Select Outlet --</option>
+
+                <option value="atc">ATC</option>
+
+            </select>
 
             <button type="submit"> Login </button>
         </form>

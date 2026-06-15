@@ -119,3 +119,16 @@ body{
 .login-card button:active{
     transform:translateY(0);
 }
+.login-card select{
+    width:100%;
+    padding:15px;
+
+    border:none;
+    border-radius:12px;
+
+    margin-bottom:20px;
+
+    font-size:16px;
+
+    background:white;
+}
