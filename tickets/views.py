@@ -3,7 +3,7 @@ from .form import TicketForm
 import os
 from django.http import JsonResponse, HttpResponse, FileResponse, Http404
 from reportlab.pdfgen import canvas
-from .models import Section, Ticket, ConcernType
+from .models import Section, Ticket, ConcernType, TicketStatusLog
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
@@ -36,10 +36,16 @@ def get_concerns(request):
 @require_POST
 def update_status(request, id):
     ticket = get_object_or_404(Ticket, id=id)
+    old_status = ticket.status
     new_status = request.POST.get("status")
     ticket.status = new_status
     ticket.save()
 
+    TicketStatusLog.objects.create(
+        ticket = ticket,
+        old_status = old_status,
+        new_status = new_status
+    )
     notify_ticket_update(ticket, action="update")  
 
     return JsonResponse({"success": True, "status": ticket.status})

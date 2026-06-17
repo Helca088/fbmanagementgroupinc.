@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+
 
 class Section(models.Model):
     name = models.CharField(max_length=100)
@@ -43,6 +45,53 @@ class Ticket(models.Model):
     admin_note = models.TextField(blank=True, null=True)
     outlet = models.CharField(max_length=50)
 
+    def resolution_time(self):
+        logs = self.status_logs.order_by('changed_at')
+
+        start = None
+        total = timezone.timedelta()
+
+        for log in logs:
+            if log.new_status == "resolved":
+                start = log.changed_at
+
+            if log.old_status == "resolved" and start:
+                total += log.changed_at - start
+                start = None
+
+        return total
+
+    @property
+    def age(self):
+        return timezone.now() - self.created_at
+
+
+    @property
+    def reopen_count(self):
+        return self.status_logs.filter(
+        old_status='resolved',
+        new_status='pending'
+    ).count()
+
+
+    @property
+    def first_resolution_time(self):
+
+        first_resolved = self.status_logs.filter(
+        new_status='resolved'
+    ).order_by('changed_at').first()
+
+        if first_resolved:
+         return first_resolved.changed_at - self.created_at
+
+        return None
+    
+class TicketStatusLog(models.Model):
+    ticket = models.ForeignKey(Ticket,on_delete=models.CASCADE,related_name="status_logs")
+    old_status = models.CharField(max_length=20)
+    new_status = models.CharField(max_length=20)
+    changed_at = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
-        return f'Ticket {self.id} - {self.title}'
+        return f"{self.ticket.id}: {self.old_status} → {self.new_status}"        
 # Create your models here.

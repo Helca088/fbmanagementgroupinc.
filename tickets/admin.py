@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from .models import Section, Ticket, ConcernType
 from django.contrib.admin import AdminSite
+from .models import TicketStatusLog
 
 class MyAdminSite(AdminSite):
     class Media:
@@ -10,6 +11,15 @@ class MyAdminSite(AdminSite):
         }
 
 admin_site = MyAdminSite(name="myadmin")
+
+@admin.register(TicketStatusLog)
+class TicketStatuslogAdmin(admin.ModelAdmin):
+    list_display = (
+    'ticket',
+    'old_status',
+    'new_status',
+    'changed_at'    
+    )
 
 @admin.register(ConcernType)
 class ConcernTypeAdmin(admin.ModelAdmin):
@@ -21,18 +31,38 @@ class SectionAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
     search_fields = ('name',)
 
+class TicketStatusLogInline(admin.TabularInline):
+    model = TicketStatusLog
+    extra = 0
+    can_delete = False
+
+    readonly_fields = (
+        'old_status',
+        'new_status',
+        'changed_at',
+    )
+
+
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):
     class Media:
         js = ('css/js/admin_autorefresh.js',)
-        
+
+    inlines = [TicketStatusLogInline]
     search_fields =[
         'outlet',
         'section__name',
         'concern_type__name'
         ]
 
-    list_display = ('outlet', 'section', 'concern_type', 'status', 'priority','scheduled_date', 'scheduled_time')
+    list_display = ('outlet', 
+                    'section', 
+                    'concern_type', 
+                    'status', 
+                    'priority',
+                    'ticket_age',
+                    'latest_resolution',
+                    'reopenings',)
 
     readonly_fields = ('download_button', 'outlet', 'message')
     list_filter = ('section', 'status', 'priority')
@@ -42,7 +72,61 @@ class TicketAdmin(admin.ModelAdmin):
               'attachment', 'download_button',
               'section', 'priority', 'concern_type')
 
+
+    
+    def ticket_age(self, obj):
+
+        seconds = int(obj.age.total_seconds())
+
+        days = seconds // 86400
+        hours = (seconds % 86400) // 3600
+        minutes = (seconds % 3600) // 60
+
+        return f"{days}d {hours}h {minutes}m"
+
+    ticket_age.short_description = "Age"
+
+    def save_model(self, request, obj, form, change):
+
+        if change:
+            old_obj = Ticket.objects.get(pk=obj.pk)
+
+        if old_obj.status != obj.status:
+            TicketStatusLog.objects.create(
+                ticket=obj,
+                old_status=old_obj.status,
+                new_status=obj.status,
+            )
+
+        super().save_model(request, obj, form, change)
+
+    def latest_resolution(self, obj):
+        last = obj.status_logs.order_by('-changed_at').first()
+        return last.changed_at if last else None
+
+    latest_resolution.short_description = "Latest Update"    
+    def resolution_time(self, obj):
+
+        if not obj.first_resolution_time:
+            return "-"
+
+        seconds = int(obj.first_resolution_time.total_seconds())
+
+        days = seconds // 86400
+        hours = (seconds % 86400) // 3600
+        minutes = (seconds % 3600) // 60
+
+        return f"{days}d {hours}h {minutes}m"
+
+    resolution_time.short_description = "Resolve"
+
+
+    def reopenings(self, obj):
+        return obj.reopen_count
+
+    reopenings.short_description = "Reopens"
     def download_button(self, obj):
+
         if obj.attachment:
             return format_html(
             '<a href="/ticket/{}/download/">⬇ Download File</a>',
