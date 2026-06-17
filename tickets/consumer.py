@@ -20,22 +20,12 @@ class TicketConsumer(AsyncWebsocketConsumer):
             print("❌ CONNECT ERROR:", e)
             await self.close()
 
-    async def disconnect(self, close_code):
-        try:
-            await self.channel_layer.group_discard(
-                "tickets",
-                self.channel_name
-            )
-            print("⚠️ WS DISCONNECTED")
-        except Exception as e:
-            print("❌ DISCONNECT ERROR:", e)
-
     async def ticket_update(self, event):
        try:
            print("🔥 EVENT RECEIVED IN CONSUMER:", event)
 
            await self.send(text_data=json.dumps({
-            "action": event.get("action", "create"),
+            "action": event.get("action", "update"),
             "data": event["data"]
         }))
 
@@ -54,5 +44,6 @@ class TicketConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_discard(
         "tickets",
+            self.group_name,
             self.channel_name
     )

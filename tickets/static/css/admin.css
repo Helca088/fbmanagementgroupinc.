@@ -1,0 +1,131 @@
+/* Page title */
+#content h1 {
+    font-size: 32px;
+}
+
+/* Sidebar */
+#nav-sidebar {
+    font-size: 16px;
+}
+
+/* Table headers */
+#result_list th {
+    font-size: 18px;
+}
+
+/* Table rows */
+#result_list td {
+    font-size: 13px;
+}
+
+/* Forms */
+input,
+select,
+textarea {
+    font-size: 16px !important;
+}
+
+/* Buttons */
+.button,
+input[type=submit],
+input[type=button] {
+    font-size: 16px !important;
+}
+
+/* Breadcrumbs */
+.breadcrumbs {
+    font-size: 15px;
+}
+/* Filter title */
+#changelist-filter h2 {
+    font-size: 18px !important;
+}
+
+/* Filter headings */
+#changelist-filter h3 {
+    font-size: 16px !important;
+}
+
+/* Filter options */
+#changelist-filter li {
+    font-size: 15px !important;
+}
+
+/* Filter links */
+#changelist-filter a {
+    font-size: 15px !important;
+}
+
+/* Selected filter */
+#changelist-filter li.selected a {
+    font-weight: bold;
+    font-size: 16px !important;
+}
+#changelist-filter {
+    width: 280px;
+}
+/* Import modern font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body,
+input,
+select,
+textarea,
+button {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Page title */
+#content h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+/* Table headers */
+#result_list th {
+    font-size: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Table data */
+#result_list td {
+    font-size: 15px;
+    font-weight: 400;
+}
+
+/* Sidebar */
+#nav-sidebar {
+    font-size: 15px;
+}
+
+/* Filter panel */
+#changelist-filter h2 {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+#changelist-filter h3 {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+#changelist-filter li {
+    font-size: 14px;
+}
+
+/* Buttons */
+.button,
+input[type=submit],
+input[type=button] {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
+/* Form labels */
+.form-row label {
+    font-size: 15px;
+    font-weight: 600;
+}

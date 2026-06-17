@@ -24,11 +24,7 @@
 
             {% csrf_token %}
 
-            <input 
-                type="text" 
-                name="title" 
-                placeholder="Title"
-            >
+
 
             <textarea 
                 name="message" 
@@ -96,16 +92,30 @@
 
             {% for ticket in tickets %}
 
-            <div class="ticket-card" data-id="{{ticket.id}}">
+            <div class="ticket-card" data-ticket-id="{{ticket.id}}">
 
-                <h3>{{ ticket.title }}</h3>
+                <h3>{{ ticket.outlet }}</h3>
 
                 <p>{{ ticket.message }}</p>
 
                 <span class="status">
                     {{ ticket.status }}
-                </span>
+                </span><br></br>
+                {% if ticket.scheduled_date %}
+                <div class="schedule">
+                <strong>Scheduled:</strong>
+                {{ ticket.scheduled_date }}<br>
+                <strong>Scheduled Time:</strong>
+                {{ ticket.scheduled_time }}
+                </div>
+                {% endif %}
 
+                {% if ticket.admin_note %}
+                <div class="admin-note">
+                <strong>Note:</strong>
+                {{ ticket.admin_note }}
+                </div>
+                {% endif %}
                 <div class="ticket-date">
                     {{ ticket.created_at }}
                 </div>

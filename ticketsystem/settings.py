@@ -27,14 +27,16 @@ SECRET_KEY = 'django-insecure-=0mxswoxp_!r-pq2li)l9!tr%#1-744ehj9&a*w&0-+0yi=-4j
 DEBUG = True
 
 ALLOWED_HOSTS = ['fbmanagementgroupinc.onrender.com', '127.0.0.1', 'localhost']
-CSRF_TRUSTED_ORIGINS = ['https://fbmanagementgroupinc.onrender.com', 'wss://fbmanagementgroupinc.onrender.com',]
-CORS_ALLOWED_ORIGINS = [
-    'https://fbmanagementgroupinc.onrender.com',
-]
+CSRF_TRUSTED_ORIGINS = ['https://fbmanagementgroupinc.onrender.com',]
+CORS_ALLOWED_ORIGINS = ['https://fbmanagementgroupinc.onrender.com',]
+
+CORS_ALLOW_CREDENTIALS = True
+
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 SESSION_COOKIE_AGE = 86400
-SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = False
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Application definition
 
 INSTALLED_APPS = [
@@ -115,7 +117,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Manila'
 
 USE_I18N = True
 

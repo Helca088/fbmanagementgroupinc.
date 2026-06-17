@@ -5,13 +5,21 @@ from django.http import JsonResponse, HttpResponse, FileResponse, Http404
 from reportlab.pdfgen import canvas
 from .models import Section, Ticket, ConcernType
 from django.contrib.auth.models import User
-from django.contrib.auth import login
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.views.decorators.http import require_POST
 from django.db.models import Q
 from django.db.models import Case, When, IntegerField
+from django.template.loader import get_template
+from .util import serialize_ticket
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+def test_template(request):
+    t = get_template("admin/base_site.html")
+    return HttpResponse(str(t.origin))
 
 def get_concerns(request):
 
@@ -51,7 +59,7 @@ def notify_ticket_delete(ticket_id):
         }
     )
 
-def notify_ticket_update(ticket, action="create"):  
+def notify_ticket_update(ticket, action="update"):  
     print("🚀 SENDING EVENT:", ticket.id)
 
     channel_layer = get_channel_layer()
@@ -61,18 +69,9 @@ def notify_ticket_update(ticket, action="create"):
         {
             "type": "ticket_update",
             "action": action,          
-            "data": {
-                "id": ticket.id,
-                "title": ticket.title,
-                "message": ticket.message,
-                "user": ticket.user.username if ticket.user else "N/A",
-                "section": ticket.section.name if ticket.section else "N/A",
-                "concern_type": ticket.concern_type.name if ticket.concern_type else "N/A",
-                "status": ticket.status,
-                "created_at": ticket.created_at.strftime("%Y-%m-%d %H:%M"),
-                "attachment": bool(ticket.attachment),
+            "data": serialize_ticket(ticket)
             }
-        }
+        
     )
 
 def create_ticket(request):
@@ -180,7 +179,6 @@ def download_ticket(request, ticket_id):
     p.save()
 
     return response
-
 def email_login(request):
 
     if request.method == "POST":
@@ -192,17 +190,19 @@ def email_login(request):
                 "error": "Outlet name required"
             })
 
-        user, created = User.objects.get_or_create(
-            username=username
-        )
+        try:
+            user = User.objects.get(username=username)
 
-        user.backend = "django.contrib.auth.backends.ModelBackend"
+        except User.DoesNotExist:
+            return render(request, "login.html", {
+                "error": "Outlet does not exist"
+            })
+
         login(request, user)
 
         return redirect("home")
 
     return render(request, "login.html")
-
 @login_required
 def home(request):
 
@@ -219,7 +219,7 @@ def home(request):
         ticket = Ticket.objects.create(
             user=request.user,
             email=request.user.email,
-            title=title,
+            outlet=request.user.username,
             message=message,
             attachment=attachment,
             section=section,

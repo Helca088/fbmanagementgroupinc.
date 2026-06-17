@@ -138,6 +138,14 @@
                                     <option value="Pending" {% if ticket.status == "Pending" %}selected{% endif %}>Pending</option>
                                     <option value="Resolved" {% if ticket.status == "Resolved" %}selected{% endif %}>Resolved</option>
                                 </select><br><br>
+                                <label>Schedule Date</label>
+                                <input
+                                type="date"
+                                name="scheduled"
+                                value="{{ ticket.scheduled_date | date: 'Y-m-d' }}">
+                                <label>Schedule Time</label>
+                                <input
+                                type="">
                                 <strong>Date Created:</strong><br>{{ ticket.created_at }}<br><br>
                                 {% if ticket.attachment %}
                                 <a href="{% url 'ticket-download' ticket.id %}"

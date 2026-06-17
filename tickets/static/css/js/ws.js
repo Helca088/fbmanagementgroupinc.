@@ -7,10 +7,6 @@ function connectWS() {
         protocol + "://" + window.location.host + "/ws/tickets/"
     );
 
-    socket.onopen = function () {
-        console.log("🔥 WebSocket connected");
-        fetchLatestTickets();  // ← fetch on every reconnect
-    };
 
     socket.onmessage = function (event) {
         const payload = JSON.parse(event.data);
@@ -34,6 +30,7 @@ function connectWS() {
 }
 
 connectWS();
+fetchLatestTickets();
 
 // ========================
 // FETCH LATEST ON RECONNECT
@@ -47,7 +44,7 @@ function fetchLatestTickets() {
             return res.json();
         })
         .then(tickets => {
-            tickets.reverse().foreach(ticket => upsertTicket(ticket));
+            tickets.reverse().forEach(ticket => upsertTicket(ticket));
         })
         .catch(err => console.error("fetch error", err));
 }
@@ -84,56 +81,36 @@ function handleTicketEvent(payload) {
     upsertTicket(data);
 }
 
+    function upsertTicket(data) {
 
-// ========================
-// UPDATE EXISTING UI
-// ========================
-function upsertTicket(data) {
+    const existing = document.querySelector(`[data-ticket-id="${data.id}"]`);
 
-    // Remove existing rows
-    document.querySelectorAll(`[data-ticket-id="${data.id}"]`).forEach(el => el.remove());
-    document.getElementById(`details-${data.id}`)?.remove();
-
-    const table = document.getElementById("ticketTable");
-
-    // ========================
-    // DESKTOP ROW
-    // ========================
-    if (table) {
-        const newRow = document.createElement("tr");
-        newRow.setAttribute("data-ticket-id", data.id);
-        newRow.className = "border-b hover:bg-gray-100";
-        newRow.style.cursor = "pointer";
-        newRow.innerHTML = `
-            <td class="p-4">${data.title}</td>
-            <td class="p-4">${data.user}</td>
-            <td class="p-4 status">${data.status}</td>
-            <td class="p-4 space-x-2">
-                <button onclick="toggleDetails(${data.id})" class="bg-blue-500 text-white px-3 py-1 rounded">View</button>
-                <button onclick="deleteTicket(${data.id})" class="bg-red-600 text-white px-3 py-1 rounded">Delete</button>
-            </td>
-        `;
-
-        const detailsRow = document.createElement("tr");
-        detailsRow.id = `details-${data.id}`;
-        detailsRow.style.display = "none";
-        detailsRow.innerHTML = `
-            <td colspan="4" class="p-4 bg-gray-50">
-                <strong>Title:</strong> ${data.title}<br><br>
-                <strong>Message:</strong> ${data.message || ""}<br><br>
-                <strong>User:</strong> ${data.user}<br><br>
-                <strong>Section:</strong> ${data.section || ""}<br><br>
-                <strong>Concern Type:</strong> ${data.concern_type || ""}<br><br>
-                <strong>Status:</strong> ${data.status}<br><br>
-                <strong>Date:</strong> ${data.created_at || ""}<br><br>
-                ${data.attachment ? `<a href="/ticket/${data.id}/download/" class="bg-green-600 text-white px-3 py-1 rounded">Download Attachment</a>` : ""}
-            </td>
-        `;
-
-        table.prepend(detailsRow);
-        table.prepend(newRow);
+    // UPDATE EXISTING
+    if (existing) {
+        existing.querySelector(".status").textContent = data.status;
+        return;
     }
 
+    const table = document.getElementById("ticketTable");
+    if (!table) return;
+
+    const newRow = document.createElement("tr");
+    newRow.setAttribute("data-ticket-id", data.id);
+    newRow.className = "border-b hover:bg-gray-100";
+    newRow.style.cursor = "pointer";
+
+    newRow.innerHTML = `
+        <td class="p-4">${data.title}</td>
+        <td class="p-4">${data.user}</td>
+        <td class="p-4 status">${data.status}</td>
+        <td class="p-4 space-x-2">
+            <button onclick="toggleDetails(${data.id})" class="bg-blue-500 text-white px-3 py-1 rounded">View</button>
+            <button onclick="deleteTicket(${data.id})" class="bg-red-600 text-white px-3 py-1 rounded">Delete</button>
+        </td>
+    `;
+
+    table.prepend(newRow);
+}
     // ========================
     // MOBILE CARD
     // ========================
@@ -162,7 +139,7 @@ function upsertTicket(data) {
     }
 
     console.log("✅ New ticket added");
-}
+
 // ========================
 // UPDATE EXISTING UI
 // ========================
@@ -170,24 +147,26 @@ function updateTicketUI(data) {
 
     console.log("Updating:", data.id, data.status);
 
-    // Update all status labels/cards
     document.querySelectorAll(`[data-ticket-id="${data.id}"] .status`)
         .forEach(el => {
-
-            if (el.tagName === "P") {
-                el.innerHTML = `<strong>Status:</strong> ${data.status}`;
-            } else {
-                el.textContent = data.status;
-            }
+            el.textContent = data.status;
         });
 
-    // Update ALL selects that belong to this ticket
-    document
-        .querySelectorAll(`select[data-ticket-id="${data.id}"]`)
+    document.querySelectorAll(`select[data-ticket-id="${data.id}"]`)
         .forEach(select => {
             select.value = data.status;
         });
+
+    document.querySelectorAll(`[data-ticket-id="${data.id}"] .scheduled-date`)
+        .forEach(el => el.textContent = data.scheduled_date || "-");
+
+    document.querySelectorAll(`[data-ticket-id="${data.id}"] .scheduled-time`)
+        .forEach(el => el.textContent = data.scheduled_time || "-");
+
+    document.querySelectorAll(`[data-ticket-id="${data.id}"] .admin-note`)
+        .forEach(el => el.textContent = data.admin_note || "-");
 }
+
 
 // ========================
 // TOGGLE DETAILS
