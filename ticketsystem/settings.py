@@ -54,7 +54,7 @@ INSTALLED_APPS = [
 ]
 
 UNFOLD = {
-    "SITE_TITLE": "Admin Site",
+    "SITE_TITLE": "Fb Management Group inc.",
     "SITE_HEADER": "FB MANAGEMENT", 
     "STYLES": ["css/admin.css",
     ],
