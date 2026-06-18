@@ -5,7 +5,27 @@ from django.contrib.admin import AdminSite
 from .models import TicketStatusLog
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.sites import UnfoldAdminSite
+from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
+# unregister default admin
+admin.site.unregister(User)
+
+# re-register with custom settings
+@admin.register(User)
+class CustomUserAdmin(DjangoUserAdmin, ModelAdmin):
+    list_display = ('username', 'email', 'is_staff', 'is_active')
+    search_fields = ('username', 'email')
+    list_filter = ('is_staff', 'is_active')
+
+    actions = ['delete_selected'] 
+
+
+    actions_on_top = True
+    actions_on_bottom = True
+    actions_selection_counter = True
+    show_full_result_count = True
+    
 class MyAdminSite(UnfoldAdminSite):
     class Media:
         css = {

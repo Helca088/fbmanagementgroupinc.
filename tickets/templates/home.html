@@ -11,14 +11,32 @@
 </head>
 
 <body>
+<!-- TOP HEADER -->
+<div class="topbar">
 
+    <div class="logo">
+        🍜 <span>MSR FORMS</span>
+    </div>
+
+    <div class="user-area">
+        <span class="welcome">
+            Welcome, <strong>{{ request.user.username }}</strong>
+        </span>
+
+        <form action="{% url 'logout' %}" method="POST" class="logout-form">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">
+                Logout
+            </button>
+        </form>
+    </div>
+
+</div>
 <div class="container1">
 
     <!-- FORM -->
 
     <div class="form-box">
-
-        <h1>MSR FORMS</h1>
 
         <form method="POST" enctype="multipart/form-data">
 

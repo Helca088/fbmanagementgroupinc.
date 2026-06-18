@@ -15,19 +15,14 @@
         <div class="logo">🍜</div>
             <h1>PhoHoa-Mythai</h1>
 
-        <p>Please enter your outlet name</p>
+        <p>Make the store convenience</p>
 
         <form method="POST">
             {% csrf_token %}
 
-            <select name="user" required>
-                <option value="">-- Select Outlet --</option>
+           <input type="text" name="username" placeholder="Username" required>
 
-                <option value="atc">Alabang Town Center</option>
-                <option value="GingerlilyShang">Gingerlily Shangrila</option>
-                <option value="UptownBGC">Uptown BGC</option>
-
-            </select>
+           <input type="password" name="password" placeholder="Password" required>
 
             <button type="submit"> Login </button>
         </form>

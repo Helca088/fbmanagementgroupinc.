@@ -5,7 +5,7 @@ from django.http import JsonResponse, HttpResponse, FileResponse, Http404
 from reportlab.pdfgen import canvas
 from .models import Section, Ticket, ConcernType, TicketStatusLog
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -189,27 +189,34 @@ def email_login(request):
 
     if request.method == "POST":
 
-        username = request.POST.get("user", "").strip()
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "").strip()
 
-        if not username:
+        if not username or not password:
             return render(request, "login.html", {
-                "error": "Outlet name required"
+                "error": "Username and password required"
             })
 
-        try:
-            user = User.objects.get(username=username)
+        user = authenticate(request, username=username, password=password)
 
-        except User.DoesNotExist:
-            return render(request, "login.html", {
-                "error": "Outlet does not exist"
-            })
+        if user is not None:
+            login(request, user)
+            return redirect("home")
 
-        login(request, user)
-
-        return redirect("home")
+        return render(request, "login.html", {
+            "error": "Invalid username or password"
+        })
 
     return render(request, "login.html")
-@login_required
+
+@require_POST
+def logout_view(request):
+        
+        print("LOGGING OUT USER:", request.user)
+        logout(request)
+        return redirect('login')
+
+@login_required(login_url='login')
 def home(request):
 
     if request.method == "POST":
