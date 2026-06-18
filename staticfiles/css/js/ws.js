@@ -7,21 +7,22 @@ function connectWS() {
         protocol + "://" + window.location.host + "/ws/tickets/"
     );
 
-    socket.onopen = function () {
-        console.log("🔥 WebSocket connected");
-    };
 
     socket.onmessage = function (event) {
         const payload = JSON.parse(event.data);
         console.log("🔥 Ticket update:", payload);
-
         handleTicketEvent(payload);
     };
 
-    socket.onclose = function () {
-        console.log("⚠️ WebSocket closed. Reconnecting...");
-        setTimeout(connectWS, 2000);
-    };
+    socket.onclose = function(event) {
+    console.log(
+        "⚠️ WebSocket closed",
+        event.code,
+        event.reason
+    );
+
+    setTimeout(connectWS, 2000);
+};
 
     socket.onerror = function (error) {
         console.log("❌ WebSocket error", error);
@@ -29,8 +30,24 @@ function connectWS() {
 }
 
 connectWS();
+fetchLatestTickets();
 
-
+// ========================
+// FETCH LATEST ON RECONNECT
+// ========================
+function fetchLatestTickets() {
+    fetch("/api/tickets/")
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+            return res.json();
+        })
+        .then(tickets => {
+            tickets.reverse().forEach(ticket => upsertTicket(ticket));
+        })
+        .catch(err => console.error("fetch error", err));
+}
 // ========================
 // MAIN EVENT HANDLER
 // ========================
@@ -64,44 +81,19 @@ function handleTicketEvent(payload) {
     upsertTicket(data);
 }
 
+    function upsertTicket(data) {
 
-// ========================
-// UPDATE EXISTING UI
-// ========================
-function updateTicketUI(data) {
+    const existing = document.querySelector(`[data-ticket-id="${data.id}"]`);
 
-    // ADMIN TABLE
-    document.querySelectorAll(`[data-ticket-id="${data.id}"]`).forEach(row => {
-        const statusCell = row.querySelector(".status");
-        if (statusCell) statusCell.innerText = data.status;
-
-        const select = row.querySelector("select");
-        if (select) select.value = data.status;
-    });
-
-    // HOME PAGE
-    const home = document.querySelector(`[data-id="${data.id}"]`);
-
-    if (home) {
-        const status = home.querySelector(".status");
-        if (status) status.innerText = data.status;
+    // UPDATE EXISTING
+    if (existing) {
+        existing.querySelector(".status").textContent = data.status;
+        return;
     }
-}
-
-
-// ========================
-// INSERT NEW TICKET
-// ========================
-function upsertTicket(data) {
-
-    // Remove any existing rows to avoid duplicates
-    document.querySelectorAll(`[data-ticket-id="${data.id}"]`).forEach(el => el.remove());
-    document.getElementById(`details-${data.id}`)?.remove();
 
     const table = document.getElementById("ticketTable");
-    // ------------------------
-    // MAIN ROW
-    // ------------------------
+    if (!table) return;
+
     const newRow = document.createElement("tr");
     newRow.setAttribute("data-ticket-id", data.id);
     newRow.className = "border-b hover:bg-gray-100";
@@ -112,47 +104,67 @@ function upsertTicket(data) {
         <td class="p-4">${data.user}</td>
         <td class="p-4 status">${data.status}</td>
         <td class="p-4 space-x-2">
-            <button onclick="toggleDetails(${data.id})"
-                class="bg-blue-500 text-white px-3 py-1 rounded">
-                View
-            </button>
-
-            <button onclick="deleteTicket(${data.id})"
-                class="bg-red-600 text-white px-3 py-1 rounded">
-                Delete
-            </button>
+            <button onclick="toggleDetails(${data.id})" class="bg-blue-500 text-white px-3 py-1 rounded">View</button>
+            <button onclick="deleteTicket(${data.id})" class="bg-red-600 text-white px-3 py-1 rounded">Delete</button>
         </td>
     `;
 
-    // ------------------------
-    // DETAILS ROW
-    // ------------------------
-    const detailsRow = document.createElement("tr");
-    detailsRow.id = `details-${data.id}`;
-    detailsRow.style.display = "none";
-
-    detailsRow.innerHTML = `
-        <td colspan="4" class="p-4 bg-gray-50">
-            <strong>Title:</strong> ${data.title}<br><br>
-            <strong>Message:</strong> ${data.message || ""}<br><br>
-            <strong>User:</strong> ${data.user}<br><br>
-            <strong>Section:</strong> ${data.section || ""}<br><br>
-            <strong>Concern Type:</strong> ${data.concern_type || ""}<br><br>
-            <strong>Status:</strong> ${data.status}<br><br>
-            <strong>Date:</strong> ${data.created_at || ""}<br><br>
-            ${data.attachment ? `
-            <a href="/ticket/${data.id}/download/"
-            class="bg-green-600 text-white px-3 py-1 rounded">
-            Download Attachment
-            </a>
-            ` : ""}
-        </td>
-    `;
-
-    table.prepend(detailsRow);
     table.prepend(newRow);
+}
+    // ========================
+    // MOBILE CARD
+    // ========================
+    const mobileList = document.getElementById("mobileTicketList");
+
+    if (mobileList) {
+        const card = document.createElement("div");
+        card.setAttribute("data-ticket-id", data.id);
+        card.className = "bg-white p-4 rounded-xl shadow";
+        card.innerHTML = `
+            <p><strong>Title:</strong> ${data.title}</p>
+            <p><strong>Outlet:</strong> ${data.user}</p>
+            <p class="status"><strong>Status:</strong> ${data.status}</p>
+            <div class="mt-2 space-x-2">
+                <button onclick="toggleDetails(${data.id})" class="bg-blue-500 text-white px-3 py-1 rounded">View</button>
+                <button onclick="deleteTicket(${data.id})" class="bg-red-600 text-white px-3 py-1 rounded">Delete</button>
+            </div>
+            <div id="details-${data.id}-mobile" style="display:none;" class="mt-4 border-t pt-4">
+                <p><strong>Message:</strong> ${data.message || ""}</p>
+                <p><strong>Section:</strong> ${data.section || ""}</p>
+                <p><strong>Date:</strong> ${data.created_at || ""}</p>
+                ${data.attachment ? `<a href="/ticket/${data.id}/download/" class="bg-green-600 text-white px-3 py-1 rounded">Download Attachment</a>` : ""}
+            </div>
+        `;
+        mobileList.prepend(card);
+    }
 
     console.log("✅ New ticket added");
+
+// ========================
+// UPDATE EXISTING UI
+// ========================
+function updateTicketUI(data) {
+
+    console.log("Updating:", data.id, data.status);
+
+    document.querySelectorAll(`[data-ticket-id="${data.id}"] .status`)
+        .forEach(el => {
+            el.textContent = data.status;
+        });
+
+    document.querySelectorAll(`select[data-ticket-id="${data.id}"]`)
+        .forEach(select => {
+            select.value = data.status;
+        });
+
+    document.querySelectorAll(`[data-ticket-id="${data.id}"] .scheduled-date`)
+        .forEach(el => el.textContent = data.scheduled_date || "-");
+
+    document.querySelectorAll(`[data-ticket-id="${data.id}"] .scheduled-time`)
+        .forEach(el => el.textContent = data.scheduled_time || "-");
+
+    document.querySelectorAll(`[data-ticket-id="${data.id}"] .admin-note`)
+        .forEach(el => el.textContent = data.admin_note || "-");
 }
 
 
@@ -160,13 +172,20 @@ function upsertTicket(data) {
 // TOGGLE DETAILS
 // ========================
 window.toggleDetails = function (id) {
-    const details = document.getElementById(`details-${id}`);
-    if (!details) return;
+    // Desktop
+    const desktopDetails = document.getElementById(`details-${id}`);
+    if (desktopDetails && desktopDetails.tagName === "TR") {
+        desktopDetails.style.display =
+            desktopDetails.style.display === "none" ? "table-row" : "none";
+    }
 
-    details.style.display =
-        details.style.display === "none" ? "table-row" : "none";
+    // Mobile
+    const mobileDetails = document.getElementById(`details-${id}-mobile`);
+    if (mobileDetails) {
+        mobileDetails.style.display =
+            mobileDetails.style.display === "none" ? "block" : "none";
+    }
 };
-
 
 // ========================
 // DELETE TICKET

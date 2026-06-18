@@ -1,4 +1,5 @@
 import os
+from django.templatetags.static import static
 """
 Django settings for ticketsystem project.
 
@@ -41,6 +42,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 INSTALLED_APPS = [
     'daphne',
+    'unfold',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -50,6 +52,13 @@ INSTALLED_APPS = [
     'channels',
     'tickets',
 ]
+
+UNFOLD = {
+    "SITE_TITLE": "Admin Site",
+    "SITE_HEADER": "FB MANAGEMENT", 
+    "STYLES": ["css/admin.css",
+    ],
+}
 
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -134,7 +143,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
+DEBUG = True
 ASGI_APPLICATION = 'ticketsystem.asgi.application'
 
 CHANNEL_LAYERS = {

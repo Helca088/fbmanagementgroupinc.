@@ -3,17 +3,19 @@ from django.utils.html import format_html
 from .models import Section, Ticket, ConcernType
 from django.contrib.admin import AdminSite
 from .models import TicketStatusLog
+from unfold.admin import ModelAdmin, TabularInline
+from unfold.sites import UnfoldAdminSite
 
-class MyAdminSite(AdminSite):
+class MyAdminSite(UnfoldAdminSite):
     class Media:
         css = {
-            "all": ("css/admin.css",)
+            "all": ("/static/css/admin.css",)
         }
 
 admin_site = MyAdminSite(name="myadmin")
 
 @admin.register(TicketStatusLog)
-class TicketStatuslogAdmin(admin.ModelAdmin):
+class TicketStatuslogAdmin(ModelAdmin):
     list_display = (
     'ticket',
     'old_status',
@@ -22,16 +24,16 @@ class TicketStatuslogAdmin(admin.ModelAdmin):
     )
 
 @admin.register(ConcernType)
-class ConcernTypeAdmin(admin.ModelAdmin):
+class ConcernTypeAdmin(ModelAdmin):
     list_display = ('name', 'section')
     list_filter = ('section',)
     
 @admin.register(Section)
-class SectionAdmin(admin.ModelAdmin):
+class SectionAdmin(ModelAdmin):
     list_display = ('id', 'name')
     search_fields = ('name',)
 
-class TicketStatusLogInline(admin.TabularInline):
+class TicketStatusLogInline(TabularInline):
     model = TicketStatusLog
     extra = 0
     can_delete = False
@@ -44,7 +46,7 @@ class TicketStatusLogInline(admin.TabularInline):
 
 
 @admin.register(Ticket)
-class TicketAdmin(admin.ModelAdmin):
+class TicketAdmin(ModelAdmin):
     class Media:
         js = ('css/js/admin_autorefresh.js',)
 
@@ -153,3 +155,4 @@ admin.site.site_header = "FB MANAGEMENT GROUP INC."
 admin.site.site_title = "Ticket System"
 
 admin.site.index_title = "Welcome Admin"
+

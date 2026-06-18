@@ -14,8 +14,9 @@ body{
     background:
     linear-gradient(
         135deg,
-        #2563eb,
-        #7c3aed
+        #0f5132 0%,
+        #198754 50%,
+        #2e8b57 100%
     );
 }
 
@@ -30,10 +31,11 @@ body{
 .login-card{
     width:400px;
 
-    background:rgba(255,255,255,0.15);
+    background:rgba(255,255,255,0.12);
     backdrop-filter:blur(15px);
+    -webkit-backdrop-filter:blur(15px);
 
-    border:1px solid rgba(255,255,255,0.2);
+    border:1px solid rgba(255,255,255,0.18);
 
     padding:40px;
     border-radius:25px;
@@ -41,19 +43,25 @@ body{
     text-align:center;
 
     box-shadow:
-    0 15px 35px rgba(0,0,0,.2);
+        0 15px 35px rgba(0,0,0,.25);
+}
+
+.logo{
+    font-size:60px;
+    margin-bottom:15px;
 }
 
 .login-card h1{
-    color:white;
+    color:#ffffff;
     font-size:36px;
     margin-bottom:10px;
-    
+    font-weight: 700;
 }
 
 .login-card p{
-    color:rgba(255,255,255,.8);
+    color:rgba(255,255,255,.85);
     margin-bottom:25px;
+    font-size:15px;
 }
 
 .login-card input{
@@ -66,10 +74,20 @@ body{
     margin-bottom:20px;
 
     font-size:16px;
+
+    background:rgba(255,255,255,.95);
+    color:#0f5132;
+}
+
+.login-card input::placeholder{
+    color:#6b7280;
 }
 
 .login-card input:focus{
     outline:none;
+
+    box-shadow:
+        0 0 0 3px rgba(212,175,55,.35);
 }
 
 .login-card button{
@@ -79,22 +97,38 @@ body{
     border:none;
     border-radius:12px;
 
-    background:white;
-    color:#2563eb;
+    background:#d4af37;
+    color:white;
 
     font-size:16px;
-    font-weight:bold;
+    font-weight:700;
 
     cursor:pointer;
-    transition:.3s;
+    transition:all .3s ease;
 }
 
 .login-card button:hover{
+    background:#c59d22;
+
     transform:translateY(-3px);
-    box-shadow:0 10px 20px rgba(0,0,0,.15);
+
+    box-shadow:
+        0 10px 20px rgba(0,0,0,.18);
 }
 
-.logo{
-    font-size:60px;
-    margin-bottom:15px;
+.login-card button:active{
+    transform:translateY(0);
+}
+.login-card select{
+    width:100%;
+    padding:15px;
+
+    border:none;
+    border-radius:12px;
+
+    margin-bottom:20px;
+
+    font-size:16px;
+
+    background:white;
 }
