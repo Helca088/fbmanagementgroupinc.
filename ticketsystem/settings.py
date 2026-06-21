@@ -53,7 +53,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'channels',
     'tickets',
+    'cloudinary,'
+    'cloudinary_storage',
 ]
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('dd26ujkqz'),
+    'API_KEY': config('493292758357159'),
+    'API_SECRET': config('9U6uAYdVF7ua05nQww25hfhkN4Y'),
+}
 
 UNFOLD = {
     "SITE_TITLE": "Fb Management Group inc.",
@@ -139,6 +147,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
