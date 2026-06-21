@@ -156,6 +156,8 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
             "hosts": [os.environ.get("REDIS_URL", "redis://127.0.0.1:6380")],
+            'address': config('REDIS_URL'),
+            'ssl': True,
             "capacity": 1500,
             "expiry": 60,
         },
