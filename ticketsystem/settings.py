@@ -107,9 +107,14 @@ WSGI_APPLICATION = 'ticketsystem.wsgi.application'
 DATABASES = {
     'default': dj_database_url.config (
         default=config('DATABASE_URL'),
-        conn_max_age=600,
+        conn_max_age=0,
         ssl_require= True,
     )
+}
+
+DATABASES['default']['CONN_MAX_AGE'] = 0
+DATABASES['default']['OPTIONS'] = {
+    'connect_timeout': 10,
 }
 
 
