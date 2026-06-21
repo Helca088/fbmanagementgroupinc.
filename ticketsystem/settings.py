@@ -169,7 +169,6 @@ CHANNEL_LAYERS = {
                 "host": "loving-elf-123903.upstash.io",
                 "port": 6379,
                 "password": config('UPSTASH_REDIS_PASSWORD'),
-                "ssl": True,
                 "ssl_cert_reqs": ssl.CERT_NONE,
             }],
             "capacity": 1500,
