@@ -165,12 +165,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [{
-                "host": "loving-elf-123903.upstash.io",
-                "port": 6379,
-                "password": config('UPSTASH_REDIS_PASSWORD'),
-                "ssl_cert_reqs": ssl.CERT_NONE,
-            }],
+            "hosts": ["rediss://default:" + config('UPSTASH_REDIS_PASSWORD') + "@loving-elf-123903.upstash.io:6379"],
             "capacity": 1500,
             "expiry": 60,
         },
