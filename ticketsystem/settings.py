@@ -100,7 +100,6 @@ DATABASES = {
     'default': dj_database_url.config (
         default=config('DATABASE_URL'),
         conn_mac_age=600,
-        ssl_require=True,
     )
 }
 
@@ -141,6 +140,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/' 
 MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = '/admin/login/'
