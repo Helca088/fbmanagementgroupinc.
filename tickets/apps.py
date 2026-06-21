@@ -6,4 +6,4 @@ class TicketsConfig(AppConfig):
     name = 'tickets'
 
     def ready(self):
-     from . import  signals 
+     import tickets.signals 

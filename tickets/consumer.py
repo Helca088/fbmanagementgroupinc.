@@ -43,7 +43,6 @@ class TicketConsumer(AsyncWebsocketConsumer):
         print("WS CLOSED:", close_code)
 
         await self.channel_layer.group_discard(
-        "tickets",
             self.group_name,
             self.channel_name
     )

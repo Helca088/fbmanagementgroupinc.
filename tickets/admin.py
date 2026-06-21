@@ -2,11 +2,14 @@ from django.contrib import admin
 from django.utils.html import format_html
 from .models import Section, Ticket, ConcernType
 from django.contrib.admin import AdminSite
-from .models import TicketStatusLog
+from .models import Ticket, TicketStatusLog, TicketAttachment
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.sites import UnfoldAdminSite
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from django.utils.safestring import mark_safe
 
 # unregister default admin
 admin.site.unregister(User)
@@ -52,6 +55,9 @@ class ConcernTypeAdmin(ModelAdmin):
 class SectionAdmin(ModelAdmin):
     list_display = ('id', 'name')
     search_fields = ('name',)
+class TicketAttachmentInline(admin.TabularInline):
+    model = TicketAttachment
+    extra = 1
 
 class TicketStatusLogInline(TabularInline):
     model = TicketStatusLog
@@ -68,7 +74,8 @@ class TicketStatusLogInline(TabularInline):
 @admin.register(Ticket)
 class TicketAdmin(ModelAdmin):
     class Media:
-        js = ('css/js/admin_autorefresh.js',)
+        js = ('css/js/admin_autorefresh.js',
+              'css/js/attach_modal.js',)
 
     inlines = [TicketStatusLogInline]
     search_fields =[
@@ -84,17 +91,81 @@ class TicketAdmin(ModelAdmin):
                     'priority',
                     'ticket_age',
                     'latest_resolution',
-                    'reopenings',)
+                    'deadline',
+                    'overdue',)
 
-    readonly_fields = ('download_button', 'outlet', 'message')
+    readonly_fields = ( 'attachment_preview', 'download_button', 'outlet', 'message')
     list_filter = ('section', 'status', 'priority')
 
-    fields = ('outlet', 'message', 'status', 
+    fields = ('outlet', 'message', 'attachment_preview', 'status', 'deadline',
               'scheduled_date', 'scheduled_time', 'admin_note',
-              'attachment', 'download_button',
               'section', 'priority', 'concern_type')
 
 
+    def attachment_preview(self, obj):
+        images = obj.attachments.all()
+
+        if not images.exists():
+            return "-"
+        
+        html = [] 
+
+        html.append("""
+    <div style="
+        display: grid !important;
+        grid-template-columns: repeat(3, 50px) !important;
+        gap: 6px !important;
+        width: fit-content;
+    ">
+    """)
+
+        for a in images:
+            html .append (f'''
+            <div style="text-align:center;">
+                 <input type="checkbox"
+                        name="attachments"
+                        value="{a.id}">
+
+               <br>
+
+                <img src="{a.file.url}"
+                   onclick="openImageModal(this.src)"
+                   style="width:45px;
+                    height:45px;
+                    object-fit:cover;
+                    border-radius:50%;
+                    cursor:pointer;
+                    margin-right:5px;
+                    border:2px solid #ddd;
+                    display:block;
+                    "/>
+             </div> 
+                   ''')
+            
+        html.append("</div>")
+
+        html.append("""
+                    <br>
+                    <button type="button"
+                            onclick="downloadSelectedAttachments()">
+                        ⬇ Download Selected
+                    </button>
+                    """)
+
+        return mark_safe("".join(html))
+    
+    attachment_preview.short_description = "attachments"
+
+    def overdue(self, obj):
+        if obj.is_overdue:
+                return format_html ('<span style="color: {} !important; font-weight: bold;">{}</span>',
+                                    'red',
+                                    '⚠️Overdue')
+        return format_html ('<span style="color: {} !important;">{}</span>',
+                            'green',
+                            '✅On time')
+
+    overdue.short_description = "Overdue"
     
     def ticket_age(self, obj):
 
@@ -121,7 +192,25 @@ class TicketAdmin(ModelAdmin):
             )
 
         super().save_model(request, obj, form, change)
+        channel_layer = get_channel_layer()
 
+        async_to_sync(channel_layer.group_send)(
+        "tickets",
+        {
+        "type": "ticket_update",
+        "action": "update",
+        "data": {
+            "id": obj.id,
+            "status": obj.status,
+            "scheduled_date": str(obj.scheduled_date or ""),
+            "scheduled_time": str(obj.scheduled_time or ""),
+            "admin_note": obj.admin_note or "",
+            "is_overdue": obj.is_overdue,
+            "deadline": (obj.deadline.strftime("%Y-%m-%d %H:%M")
+                         if obj.deadline else ""),
+        }
+    }
+)
     def latest_resolution(self, obj):
         last = obj.status_logs.order_by('-changed_at').first()
         return last.changed_at if last else None
@@ -148,11 +237,12 @@ class TicketAdmin(ModelAdmin):
 
     reopenings.short_description = "Reopens"
     def download_button(self, obj):
+        first_file = obj.attachments.first()
 
-        if obj.attachment:
+        if first_file and first_file.file:
             return format_html(
-            '<a href="/ticket/{}/download/">⬇ Download File</a>',
-            obj.id
+            '<a href="{}" download>⬇ Download File</a>',
+            first_file.file.url
         )
         return "No file"
 

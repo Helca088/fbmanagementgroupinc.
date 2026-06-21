@@ -3,7 +3,7 @@ from .form import TicketForm
 import os
 from django.http import JsonResponse, HttpResponse, FileResponse, Http404
 from reportlab.pdfgen import canvas
-from .models import Section, Ticket, ConcernType, TicketStatusLog
+from .models import Section, Ticket, ConcernType, TicketStatusLog, TicketAttachment
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -13,9 +13,10 @@ from django.views.decorators.http import require_POST
 from django.db.models import Q
 from django.db.models import Case, When, IntegerField
 from django.template.loader import get_template
-from .util import serialize_ticket
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
+from .websocket import (
+    notify_ticket_update,
+    notify_ticket_delete,
+)
 
 def test_template(request):
     t = get_template("admin/base_site.html")
@@ -45,40 +46,9 @@ def update_status(request, id):
         ticket = ticket,
         old_status = old_status,
         new_status = new_status
-    )
-    notify_ticket_update(ticket, action="update")  
+    ) 
 
     return JsonResponse({"success": True, "status": ticket.status})
-
-def notify_ticket_delete(ticket_id):
-    print("Sending delete:", ticket_id)
-
-    channel_layer = get_channel_layer()
-
-    async_to_sync(channel_layer.group_send)(
-        "tickets",
-        {
-            "type": "ticket_delete",
-            "data": {
-                "id": ticket_id
-            }
-        }
-    )
-
-def notify_ticket_update(ticket, action="update"):  
-    print("🚀 SENDING EVENT:", ticket.id)
-
-    channel_layer = get_channel_layer()
-
-    async_to_sync(channel_layer.group_send)(
-        "tickets",
-        {
-            "type": "ticket_update",
-            "action": action,          
-            "data": serialize_ticket(ticket)
-            }
-        
-    )
 
 def create_ticket(request):
     if request.method == "POST":
@@ -87,7 +57,7 @@ def create_ticket(request):
         if form.is_valid():
             ticket = form.save()
 
-            notify_ticket_update(ticket)
+            
 
             return redirect('admin_dashboard')
 
@@ -134,6 +104,11 @@ def ticket_api(request):
 ).order_by('status_order', '-created_at')
     data = []
     for ticket in tickets:
+
+        attachments = [
+            request.build_absolute_uri(a.file.url)
+            for a in ticket.attachments.all()
+        ]
         data.append({
             "id": ticket.id,
             "title": ticket.title,
@@ -143,19 +118,24 @@ def ticket_api(request):
             "concern_type": ticket.concern_type.name if ticket.concern_type else "N/A",
             "status": ticket.status,
             "created_at": ticket.created_at.strftime("%Y-%m-%d %H:%M"),
-            "attachment": bool(ticket.attachment),
+            "attachments": attachments,
+            "scheduled_date": ticket.scheduled_date.strftime("%Y-%m-%d") if ticket.scheduled_date else "",
+            "scheduled_time": ticket.scheduled_time.strftime("%H:%M") if ticket.scheduled_time else "",
+            "admin_note": ticket.admin_note or "",
+            "deadline": (ticket.deadline.strftime("%Y-%m-%d %H:%M")if ticket.deadline else ""),
+            "is_overdue": ticket.is_overdue,  
         })
     return JsonResponse(data, safe=False)
 
 def download_attachment(request, pk):
-    ticket = Ticket.objects.get(pk=pk)
+    attachment = TicketAttachment.objects.get(pk=pk)
 
-    if not ticket.attachment:
+    if not attachment.file:
         raise Http404("No file")
 
-    response = FileResponse(ticket.attachment.open('rb'), as_attachment=True)
+    response = FileResponse(attachment.file.open('rb'), as_attachment=True)
 
-    response['Content-Disposition'] = f'attachment; filename="{ticket.attachment.name.split("/")[-1]}"'
+    response['Content-Disposition'] = f'attachment; filename="{attachment.file.name.split("/")[-1]}"'
     
     return response
 
@@ -223,7 +203,6 @@ def home(request):
 
         title = request.POST.get('title')
         message = request.POST.get('message')
-        attachment = request.FILES.get('attachment')
         section_id = request.POST.get('section')
         section = Section.objects.get(id=section_id)
         concern_id = request.POST.get('concern_type')
@@ -234,11 +213,18 @@ def home(request):
             email=request.user.email,
             outlet=request.user.username,
             message=message,
-            attachment=attachment,
             section=section,
             concern_type=concern
         )
-        notify_ticket_update(ticket)
+
+        files = request.FILES.getlist('files')
+
+        for f in files:
+            TicketAttachment.objects.create(
+                ticket=ticket,
+                file=f
+            )
+        
         return redirect('home')
     
     tickets = Ticket.objects.filter(

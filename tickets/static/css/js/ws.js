@@ -23,6 +23,12 @@ function connectWS() {
 
     setTimeout(connectWS, 2000);
 };
+    socket.onopen = function(){
+
+        console.log("✅ WS OPEN");
+
+        fetchLatestTickets();
+    };
 
     socket.onerror = function (error) {
         console.log("❌ WebSocket error", error);
@@ -87,9 +93,9 @@ function handleTicketEvent(payload) {
 
     // UPDATE EXISTING
     if (existing) {
-        existing.querySelector(".status").textContent = data.status;
-        return;
-    }
+    updateTicketUI(data);
+    return;
+}
 
     const table = document.getElementById("ticketTable");
     if (!table) return;
@@ -145,28 +151,85 @@ function handleTicketEvent(payload) {
 // ========================
 function updateTicketUI(data) {
 
+    console.log("FULL DATA:", data);
+
     console.log("Updating:", data.id, data.status);
+
+    console.log(
+        "Card:",
+        document.querySelector(`[data-ticket-id="${data.id}"]`)
+    );
+
+    console.log(
+        "Date:",
+        document.querySelector(`[data-ticket-id="${data.id}"] .scheduled-date`)
+    );
+
+    console.log(
+        "Time:",
+        document.querySelector(`[data-ticket-id="${data.id}"] .scheduled-time`)
+    );
+
+    console.log(
+        "Note:",
+        document.querySelector(`[data-ticket-id="${data.id}"] .admin-note-text`)
+    );
+
+    console.log("Setting date:", data.scheduled_date);
+    console.log("Setting time:", data.scheduled_time);
+    console.log("Setting note:", data.admin_note);
+    console.log("Setting deadline:", data.deadline);
 
     document.querySelectorAll(`[data-ticket-id="${data.id}"] .status`)
         .forEach(el => {
+            if (el.tagName === "SELECT") {
+            el.value = data.status;
+        } 
+        
+        else {
             el.textContent = data.status;
-        });
-
-    document.querySelectorAll(`select[data-ticket-id="${data.id}"]`)
-        .forEach(select => {
-            select.value = data.status;
+        }
         });
 
     document.querySelectorAll(`[data-ticket-id="${data.id}"] .scheduled-date`)
-        .forEach(el => el.textContent = data.scheduled_date || "-");
+        .forEach(el => {
+            el.textContent = data.scheduled_date || "-";
+        });
 
     document.querySelectorAll(`[data-ticket-id="${data.id}"] .scheduled-time`)
-        .forEach(el => el.textContent = data.scheduled_time || "-");
+        .forEach(el => {
+            el.textContent = data.scheduled_time || "-";
+        });
 
-    document.querySelectorAll(`[data-ticket-id="${data.id}"] .admin-note`)
-        .forEach(el => el.textContent = data.admin_note || "-");
+    document.querySelectorAll(`[data-ticket-id="${data.id}"] .admin-note-text`)
+        .forEach(el => {
+            el.textContent = data.admin_note || "-";
+        });
+
+    document.querySelectorAll(
+        `[data-ticket-id="${data.id}"] .deadline-text`
+    ).forEach(el => {
+        el.textContent = data.deadline || "-";
+    });
+
+    document.querySelectorAll(`[data-ticket-id="${data.id}"]`).forEach(card => {
+
+        const overdueEl = card.querySelector(".overdue-status");
+
+        if (overdueEl){
+            if (data.is_overdue){
+                overdueEl.textContent = "⚠️ OVERDUE";
+                overdueEl.style.color = "red";
+                overdueEl.style.fontWeight = "900";
+
+            } else {
+                overdueEl.textContent = "✅ On time";
+                overdueEl.style.color = "green";
+                overdueEl.style.fontWeight = "normal";   
+            }
+        }
+    })
 }
-
 
 // ========================
 // TOGGLE DETAILS

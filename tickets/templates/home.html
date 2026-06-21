@@ -49,10 +49,7 @@
                 placeholder="Message"
             ></textarea>
 
-            <input 
-                type="file" 
-                name="attachment"
-            >
+            <input type="file" name="files" multiple>
 
             <div>
                 <label>Section</label>
@@ -116,24 +113,54 @@
 
                 <p>{{ ticket.message }}</p>
 
-                <span class="status">
-                    {{ ticket.status }}
-                </span><br></br>
-                {% if ticket.scheduled_date %}
-                <div class="schedule">
-                <strong>Scheduled:</strong>
-                {{ ticket.scheduled_date }}<br>
-                <strong>Scheduled Time:</strong>
-                {{ ticket.scheduled_time }}
-                </div>
-                {% endif %}
+                <select class="status"
+                onchange="updateStatus('{{ ticket.id }}', this.value)">
+    
+                <option value="pending" {% if ticket.status == "pending" %}selected{% endif %}>
+                Pending
+                </option>
 
-                {% if ticket.admin_note %}
-                <div class="admin-note">
-                <strong>Note:</strong>
-                {{ ticket.admin_note }}
+                <option value="progress"
+                {% if ticket.status == "progress" %}selected{% endif %}>
+                In progress
+                </option>
+                
+
+                <option value="resolved" {% if ticket.status == "resolved" %}selected{% endif %}>
+                Resolved
+                </option>
+                </select>
+                <br></br>
+                
+                <div class="schedule">
+                <strong>Scheduled Date:</strong>
+                <span class="scheduled-date">
+                {{ ticket.scheduled_date}}
+                </span>
+                <br>
+
+                <strong>Scheduled Time:</strong>
+                <span class="scheduled-time">
+                {{ ticket.scheduled_time}}
+                </span>
                 </div>
-                {% endif %}
+
+                <div class="admin-note">
+                <strong >Assigned:</strong>
+                <span class="admin-note-text">
+                {{ ticket.admin_note}}
+                </span>
+                </div>
+
+                <div class="deadline">
+                    <strong>Deadline:</strong>
+                    <span class="deadline-text">
+                        {{ ticket.deadline|date:"Y-m-d H:i" }}
+                    </span>
+                </div>
+
+                <p class="overdue-status">Checking...</p>
+
                 <div class="ticket-date">
                     {{ ticket.created_at }}
                 </div>
@@ -159,6 +186,5 @@
 
 </div>
 <script src="{% static 'css/js/ws.js' %}?v=3"></script>
-</script>
 </body>
 </html>

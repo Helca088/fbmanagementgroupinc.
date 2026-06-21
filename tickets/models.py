@@ -43,7 +43,20 @@ class Ticket(models.Model):
     scheduled_date = models.DateField(null=True, blank=True)
     scheduled_time = models.TimeField(null=True, blank=True)
     admin_note = models.TextField(blank=True, null=True)
+    deadline = models.DateTimeField(null=True, blank=True)
     outlet = models.CharField(max_length=50)
+    description = models.TextField()
+    
+
+    @property
+    def is_overdue(self):
+        if not self.deadline:
+            return False
+        
+        if self.status == 'resolve':
+            return False
+        
+        return timezone.now() > self.deadline
 
     def resolution_time(self):
         logs = self.status_logs.order_by('changed_at')
@@ -69,8 +82,7 @@ class Ticket(models.Model):
     @property
     def reopen_count(self):
         return self.status_logs.filter(
-        old_status='resolved',
-        new_status='pending'
+        old_status='resolved'
     ).count()
 
 
@@ -85,7 +97,17 @@ class Ticket(models.Model):
          return first_resolved.changed_at - self.created_at
 
         return None
-    
+class TicketAttachment(models.Model):
+        ticket = models.ForeignKey(
+            Ticket,
+            on_delete=models.CASCADE,
+            related_name="attachments"
+        )
+        file = models.FileField(upload_to='tickets/')
+
+        def _str_(self):
+            return f"Attachment {self.ticket.id}"
+           
 class TicketStatusLog(models.Model):
     ticket = models.ForeignKey(Ticket,on_delete=models.CASCADE,related_name="status_logs")
     old_status = models.CharField(max_length=20)
