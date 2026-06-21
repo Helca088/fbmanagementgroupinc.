@@ -99,7 +99,7 @@ WSGI_APPLICATION = 'ticketsystem.wsgi.application'
 DATABASES = {
     'default': dj_database_url.config (
         default=config('DATABASE_URL'),
-        conn_mac_age=600,
+        conn_max_age=600,
     )
 }
 
