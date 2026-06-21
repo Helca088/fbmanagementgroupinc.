@@ -53,14 +53,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'channels',
     'tickets',
-    'cloudinary,'
+    'cloudinary',
     'cloudinary_storage',
 ]
 
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': config('dd26ujkqz'),
-    'API_KEY': config('493292758357159'),
-    'API_SECRET': config('9U6uAYdVF7ua05nQww25hfhkN4Y'),
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': config('CLOUDINARY_API_KEY'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET'),
 }
 
 UNFOLD = {
@@ -157,7 +157,6 @@ LOGIN_URL = '/admin/login/'
 LOGIN_REDIRECT_URL = '/admin/'
 LOGOUT_REDIRECT_URL = '/admin/login/'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEBUG = True
 ASGI_APPLICATION = 'ticketsystem.asgi.application'
 
 CHANNEL_LAYERS = {
