@@ -1,4 +1,5 @@
 import os
+import ssl
 from decouple import config, Csv
 import dj_database_url
 from django.templatetags.static import static
@@ -151,6 +152,7 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+WHITENOISE_MAX_AGE = 315360000
 MEDIA_URL = '/media/' 
 MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = '/admin/login/'
@@ -163,7 +165,13 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [config('REDIS_URL', default='redis://127.0.0.1:6379')],
+            "hosts": [{
+                "host": "loving-elf-123903.upstash.io",
+                "port": 6379,
+                "password": config('UPSTASH_REDIS_PASSWORD'),
+                "ssl": True,
+                "ssl_cert_reqs": ssl.CERT_NONE,
+            }],
             "capacity": 1500,
             "expiry": 60,
         },
