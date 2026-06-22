@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from cloudinary.models import CloudinaryField
 
 
 class Section(models.Model):
@@ -103,9 +104,9 @@ class TicketAttachment(models.Model):
             on_delete=models.CASCADE,
             related_name="attachments"
         )
-        file = models.FileField(upload_to='tickets/')
+        file = CloudinaryField('file', blank=True, null=True)
 
-        def _str_(self):
+        def __str__(self):
             return f"Attachment {self.ticket.id}"
            
 class TicketStatusLog(models.Model):
