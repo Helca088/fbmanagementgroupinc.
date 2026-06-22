@@ -27,7 +27,7 @@ function openImageModal(src) {
     modal.style.display = "flex";
 }
 
-function downloadSelectedAttachments() {
+window.downloadSelectedAttachments = function () {
     console.log("clicked download");
     const checked =
         document.querySelectorAll(
