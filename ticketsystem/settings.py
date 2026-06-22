@@ -165,7 +165,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [config('rediss://default:gQAAAAAAAeP_AAIgcDE5NDRhMzljZDVlM2U0NWUzODBjZTRiOTE0MjgzOWYxOA@loving-elf-123903.upstash.io:6379')],
+            "hosts": [config('REDIS_URL')],
             "capacity": 1500,
             "expiry": 60,
         },
