@@ -12,5 +12,6 @@ def serialize_ticket(ticket):
         "admin_note": ticket.admin_note or "",
         "created_at": ticket.created_at.isoformat(),
         "attachment": bool(ticket.attachment),
-        "outlet": ticket.outlet or "",
+        "outlet": ticket.outlet.name if ticket.outlet else "",
+        "outlet_id": ticket.outlet_id,
     }

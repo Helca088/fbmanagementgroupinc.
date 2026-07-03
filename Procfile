@@ -1,1 +1,1 @@
-web: gunicorn ticketsystem.wsgi --bind 0.0.0.0:$PORT
+web: python -m daphne -p $PORT -b 0.0.0.0 ticketsystem.asgi:application

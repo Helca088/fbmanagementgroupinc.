@@ -1,15 +1,28 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Section, Ticket, ConcernType
+from django.utils import timezone
+from .models import Section, Ticket, ConcernType, Outlet, UserProfile
+from .services import notify_ticket_update
 from django.contrib.admin import AdminSite
-from .models import Ticket, TicketStatusLog, TicketAttachment
+from .models import Ticket, TicketStatusLog, TicketAttachment, Technician, TicketAssignmentLog
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.sites import UnfoldAdminSite
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
 from django.utils.safestring import mark_safe
+
+admin.site.site_url = "/reports/"
+
+@admin.register(Outlet)
+class OutletAdmin(ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+
+@admin.register(UserProfile)
+class UserProfileAdmin(ModelAdmin):
+    list_display = ("user", "outlet")
+    list_filter = ("outlet",)
+    search_fields = ("user__username",)
 
 # unregister default admin
 admin.site.unregister(User)
@@ -29,13 +42,21 @@ class CustomUserAdmin(DjangoUserAdmin, ModelAdmin):
     actions_selection_counter = True
     show_full_result_count = True
     
-class MyAdminSite(UnfoldAdminSite):
-    class Media:
-        css = {
-            "all": ("/static/css/admin.css",)
-        }
 
-admin_site = MyAdminSite(name="myadmin")
+
+@admin.register(TicketAssignmentLog)
+class TicketAssignmentLogAdmin(ModelAdmin):
+    list_display = (
+        "ticket",
+        "old_technician",
+        "new_technician",
+        "assigned_at"
+    )
+
+@admin.register(Technician)
+class TechnicianAdmin(ModelAdmin):
+    list_display = ("full_name", 'section')
+    search_fields = ("full_name",)
 
 @admin.register(TicketStatusLog)
 class TicketStatuslogAdmin(ModelAdmin):
@@ -66,6 +87,7 @@ class TicketStatusLogInline(TabularInline):
 
     readonly_fields = (
         'old_status',
+        'reasons',
         'new_status',
         'changed_at',
     )
@@ -74,12 +96,11 @@ class TicketStatusLogInline(TabularInline):
 @admin.register(Ticket)
 class TicketAdmin(ModelAdmin):
     class Media:
-        js = ('css/js/admin_autorefresh.js',
-              'css/js/attach_modal.js',)
+        js = ('js/attach_modal.js',)
 
     inlines = [TicketStatusLogInline]
     search_fields =[
-        'outlet',
+        'outlet__name',
         'section__name',
         'concern_type__name'
         ]
@@ -90,17 +111,34 @@ class TicketAdmin(ModelAdmin):
                     'status', 
                     'priority',
                     'ticket_age',
-                    'latest_resolution',
+                    'assigned_to',
                     'deadline',
                     'overdue',)
 
     readonly_fields = ( 'attachment_preview', 'download_button', 'outlet', 'message')
-    list_filter = ('section', 'status', 'priority')
+    list_filter = ('section', 'status', 'priority', 'assigned_to', 'outlet__name')
 
-    fields = ('outlet', 'message', 'attachment_preview', 'status', 'deadline',
-              'scheduled_date', 'scheduled_time', 'admin_note',
+    fields = ('outlet', 'message', 'attachment_preview', 'status',
+              'scheduled_date', 'scheduled_time', 'admin_note', 'assigned_to',
               'section', 'priority', 'concern_type')
 
+    def  formfield_for_foreignkey(self, db_field, request, **kwargs):
+            object_id = request.resolver_match.kwargs.get("object_id")   
+            if db_field.name == "assigned_to":
+             if object_id:
+                 ticket = Ticket.objects.get(pk=object_id)
+
+                 kwargs["queryset"] = Technician.objects.filter(
+                     section=ticket.section
+                 )
+             else:
+                kwargs["queryset"] = Technician.objects.none()
+
+            return super().formfield_for_foreignkey(
+             db_field,
+             request,
+             **kwargs
+         )       
 
     def attachment_preview(self, obj):
         images = obj.attachments.all()
@@ -167,50 +205,41 @@ class TicketAdmin(ModelAdmin):
 
     overdue.short_description = "Overdue"
     
-    def ticket_age(self, obj):
-
-        seconds = int(obj.age.total_seconds())
-
-        days = seconds // 86400
-        hours = (seconds % 86400) // 3600
-        minutes = (seconds % 3600) // 60
-
-        return f"{days}d {hours}h {minutes}m"
-
-    ticket_age.short_description = "Age"
+  
 
     def save_model(self, request, obj, form, change):
 
         if change:
             old_obj = Ticket.objects.get(pk=obj.pk)
+        
+        if old_obj.assigned_to != obj.assigned_to:
+            TicketAssignmentLog.objects.create(
+                ticket=obj,
+                old_technician=old_obj.assigned_to,
+                new_technician=obj.assigned_to,
+                reason="Reassigned by admin"
+            ) 
 
         if old_obj.status != obj.status:
             TicketStatusLog.objects.create(
                 ticket=obj,
                 old_status=old_obj.status,
                 new_status=obj.status,
+                technician=obj.assigned_to,
             )
+            
+        if obj.status == "resolved" and not obj.resolve_at:
+            obj.resolve_at = timezone.now()
+
+        if obj.status != "resolved":
+            obj.resolve_at = None    
 
         super().save_model(request, obj, form, change)
-        channel_layer = get_channel_layer()
+        
+        notify_ticket_update(obj)
+        
+    
 
-        async_to_sync(channel_layer.group_send)(
-        "tickets",
-        {
-        "type": "ticket_update",
-        "action": "update",
-        "data": {
-            "id": obj.id,
-            "status": obj.status,
-            "scheduled_date": str(obj.scheduled_date or ""),
-            "scheduled_time": str(obj.scheduled_time or ""),
-            "admin_note": obj.admin_note or "",
-            "is_overdue": obj.is_overdue,
-            "deadline": (obj.deadline.strftime("%Y-%m-%d %H:%M")
-                         if obj.deadline else ""),
-        }
-    }
-)
     def latest_resolution(self, obj):
         last = obj.status_logs.order_by('-changed_at').first()
         return last.changed_at if last else None

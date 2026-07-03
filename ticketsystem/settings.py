@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'tickets',
     'cloudinary',
     'cloudinary_storage',
+    'pwa',
 ]
 
 CLOUDINARY_STORAGE = {
@@ -65,9 +66,10 @@ CLOUDINARY_STORAGE = {
 }
 
 UNFOLD = {
+    "SITE_URL": "/reports/",
     "SITE_TITLE": "Fb Management Group inc.",
     "SITE_HEADER": "FB MANAGEMENT", 
-    "STYLES": ["css/admin.css",
+    "STYLES": ["/static/css/admin.css",
     ],
 }
 
@@ -105,31 +107,42 @@ WSGI_APPLICATION = 'ticketsystem.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.config (
-        default=config('DATABASE_URL'),
-        conn_max_age=600,
-        ssl_require= True,
-    )
-}
+DATABASE_URL = config('DATABASE_URL', default=None)
 
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True,
+        )
+    }
+else:
+    # Local fallback only — Render's disk is ephemeral, so production
+    # must always provide DATABASE_URL (Postgres) via env vars.
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    #{
+    #    'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    #},
+    #{
+    #    'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    #},
+    #{
+    #    'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    #},
+    #{
+   #     'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+   # },
 ]
 
 
@@ -163,13 +176,55 @@ LOGOUT_REDIRECT_URL = '/admin/login/'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 ASGI_APPLICATION = 'ticketsystem.asgi.application'
 
+REDIS_URL = config('REDIS_URL', default='redis://127.0.0.1:6379')
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [config('REDIS_URL')],
-            "capacity": 1500,
-            "expiry": 60,
+            "hosts": [{
+                "address": REDIS_URL,
+                # Upstash and most managed Redis providers require TLS
+                # when the URL scheme is rediss://
+                **({"ssl_cert_reqs": ssl.CERT_NONE} if REDIS_URL.startswith("rediss://") else {}),
+            }],
         },
     },
 }
+
+PWA_APP_NAME = "Pho Hoa Ticketing"
+PWA_APP_DESCRIPTION = "Ticket Management System"
+PWA_APP_THEME_COLOR = "#C62828"
+PWA_APP_BACKGROUND_COLOR = "#ffffff"
+PWA_APP_DISPLAY = "standalone"
+PWA_APP_SCOPE= "/"
+PWA_APP_ORIENTATION = "portrait"
+PWA_APP_START_URL = "/"
+PWA_APP_STATUS_BAR_COLOR = "default"
+PWA_APP_ICONS = [
+    {
+        "src": "/static/icons/phmt.png",
+        "sizes": "192x192"
+    },
+    {
+        "src": "/static/icons/ff.png",
+        "sizes": "512x512"
+    }
+]
+PWA_APP_ICONS_APPLE = [
+    {
+        "src": "/static/icons/phmt.png",
+        "sizes": "192x192"
+    }
+]
+
+PWA_APP_SPLASH_SCREEN = [
+    {
+        "src": "/static/icons/ff.png",
+        "media": "(device-width: 320px)"
+    }
+]
+
+PWA_APP_DIR = "ltr"
+
+PWA_APP_LANG = "en-US"

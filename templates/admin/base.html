@@ -1,6 +1,10 @@
 {% extends "admin/base.html" %}
 {% load static %}
+{% load pwa %}
+{% load static %}
 
+<link rel="icon" href="{% static 'img/favicon.ico' %}">
+    {% progressive_web_app_meta %}
 {% block extrahead %}
     {{ block.super }}
 {% endblock %}

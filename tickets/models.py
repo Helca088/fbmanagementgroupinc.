@@ -1,19 +1,58 @@
 from django.db import models
+from django.db.models import Max
 from django.contrib.auth.models import User
+from datetime import timedelta
 from django.utils import timezone
 from cloudinary.models import CloudinaryField
 
+class Outlet(models.Model):
+    name = models.CharField(max_length=100)
 
+    def __str__(self):
+        return self.name
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    outlet = models.ForeignKey(
+        Outlet,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+   
+    
 class Section(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
         return self.name
+
+class Technician(models.Model):
+
+    section = models.ForeignKey( 
+        Section, 
+        on_delete=models.CASCADE, 
+        related_name='technician',
+        null=True,
+        blank=True
+        )
     
+    full_name = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return self.full_name
+
 class ConcernType(models.Model):
 
-    section = models.ForeignKey( Section, on_delete=models.CASCADE, related_name='concerns')
+    section = models.ForeignKey( 
+        Section, 
+        on_delete=models.CASCADE, 
+        related_name='concerns'
+        )
     name = models.CharField(max_length=100)
+
+    deadline_days = models.PositiveIntegerField(default=3)
 
     def __str__(self):
         return self.name
@@ -38,6 +77,7 @@ class Ticket(models.Model):
     status = models.CharField(max_length=20,choices=status_choices, default='pending')
     attachment = models.FileField(upload_to='tickets/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    resolve_at = models.DateTimeField(null=True, blank=True)
     section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name="tickets", null=True, blank=True)
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='Medium')
     concern_type = models.ForeignKey(ConcernType, on_delete=models.SET_NULL, null=True, blank=True)
@@ -45,16 +85,68 @@ class Ticket(models.Model):
     scheduled_time = models.TimeField(null=True, blank=True)
     admin_note = models.TextField(blank=True, null=True)
     deadline = models.DateTimeField(null=True, blank=True)
-    outlet = models.CharField(max_length=50)
+    outlet = models.ForeignKey( 
+    Outlet,
+    on_delete=models.SET_NULL,
+    null=True,
+    blank=True,)
+    outlet_ticket_no = models.PositiveIntegerField(
+        editable=False,
+        null=True,
+        blank=True
+    )
     description = models.TextField()
-    
+    assigned_to = models.ForeignKey(
+        Technician,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+        )
+
+    def ticket_age(self):
+
+        seconds = int(self.age.total_seconds())
+
+        days = seconds // 86400
+        hours = (seconds % 86400) // 3600
+        minutes = (seconds % 3600) // 60
+
+        return f"{days}d {hours}h {minutes}m"
+
+    def save(self, *args, **kwargs):
+
+    # Set deadline automatically
+        if self.concern_type and not self.deadline:
+            self.deadline = (
+            timezone.now() +
+            timedelta(days=self.concern_type.deadline_days)
+        )
+
+    # Assign outlet ticket number only when creating a new ticket
+        if self._state.adding and self.outlet and not self.outlet_ticket_no:
+
+            last_number = (
+            Ticket.objects
+            .filter(outlet=self.outlet)
+            .aggregate(Max("outlet_ticket_no"))
+            ["outlet_ticket_no__max"]
+        )
+
+            self.outlet_ticket_no = (last_number or 0) + 1
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        if self.outlet:
+            return f"{self.outlet.name} ({self.outlet_ticket_no})"
+        return f"Ticket ({self.id})"
 
     @property
     def is_overdue(self):
         if not self.deadline:
             return False
         
-        if self.status == 'resolve':
+        if self.status == 'resolved':
             return False
         
         return timezone.now() > self.deadline
@@ -104,7 +196,7 @@ class TicketAttachment(models.Model):
             on_delete=models.CASCADE,
             related_name="attachments"
         )
-        file = CloudinaryField('file', blank=True, null=True)
+        file = models.FileField(upload_to="tickets/")
 
         def __str__(self):
             return f"Attachment {self.ticket.id}"
@@ -112,9 +204,47 @@ class TicketAttachment(models.Model):
 class TicketStatusLog(models.Model):
     ticket = models.ForeignKey(Ticket,on_delete=models.CASCADE,related_name="status_logs")
     old_status = models.CharField(max_length=20)
+    technician = models.ForeignKey(
+        Technician,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    reasons = models.TextField()
     new_status = models.CharField(max_length=20)
     changed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.ticket.id}: {self.old_status} → {self.new_status}"        
-# Create your models here.
+        return f"{self.ticket.id}: {self.old_status} → {self.new_status}" 
+
+class TicketAssignmentLog(models.Model):
+    ticket = models.ForeignKey(
+        Ticket,
+        on_delete=models.CASCADE,
+        related_name="assignment_logs"
+    )       
+
+    old_technician = models.ForeignKey(
+        Technician,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="old_assignment_logs"
+    )
+
+    new_technician = models.ForeignKey(
+        Technician,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="new_assignment_logs"
+    )
+
+    reason = models.TextField(blank=True)
+
+    assigned_at = models.DateTimeField (auto_now_add=True)
+
+    def __str__(self):
+        old = self.old_technician.full_name if self.old_technician else "None"
+        new = self.new_technician.full_name if self.new_technician else "None"
+        return f"Ticket {self.ticket.id}: {old} → {new}"

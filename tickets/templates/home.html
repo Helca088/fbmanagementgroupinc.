@@ -3,10 +3,17 @@
 <html>
 
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Send Ticket</title>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="{% static 'employee-manifest.json' %}">
+    <meta name="theme-color" content="#008000">
+
 
 </head>
 
@@ -113,14 +120,14 @@
 
                 <p>{{ ticket.message }}</p>
 
-                <select class="status"
-                onchange="updateStatus('{{ ticket.id }}', this.value)">
+                <select class="ticket-select status" data-current-status="{{ ticket.status }}"
+                onchange="openReasonModal('{{ ticket.id }}', this)">
     
                 <option value="pending" {% if ticket.status == "pending" %}selected{% endif %}>
                 Pending
                 </option>
 
-                <option value="progress"
+                <option value="progress" disabled
                 {% if ticket.status == "progress" %}selected{% endif %}>
                 In progress
                 </option>
@@ -130,7 +137,29 @@
                 Resolved
                 </option>
                 </select>
-                <br></br>
+                <br>
+   
+
+    
+                <select class="ticket-select priority"
+                        onchange="updatePriority('{{ ticket.id}}', this.value)">
+
+                    <option value="Low"
+                        {% if ticket.priority == "Low" %}selected{% endif %}>
+                        Low
+                    </option>
+
+                    <option value="Medium"
+                        {% if ticket.priority == "Medium" %}selected{% endif %}>
+                        In need
+                    </option>
+
+                    <option value="High"
+                        {% if ticket.priority == "High" %}selected{% endif %}>
+                        Urgent
+                    </option>
+                </select>
+                <br>
                 
                 <div class="schedule">
                 <strong>Scheduled Date:</strong>
@@ -146,18 +175,25 @@
                 </div>
 
                 <div class="admin-note">
-                <strong >Assigned:</strong>
+                <strong >Admin Notes:</strong>
                 <span class="admin-note-text">
                 {{ ticket.admin_note}}
                 </span>
                 </div>
 
-                <div class="deadline">
-                    <strong>Deadline:</strong>
-                    <span class="deadline-text">
-                        {{ ticket.deadline|date:"Y-m-d H:i" }}
-                    </span>
+                <div class="assigned">
+                <strong>Assigned To:</strong>
+                <span class="assigned-to">
+                {% if ticket.assigned_to %}
+                {{ ticket.assigned_to.full_name }}
+                {% else %}
+                     -
+                {% endif %}
+                </span>
                 </div>
+            
+                <strong>Age of concern:</strong>
+                <span>{{ ticket.ticket_age }}</span>
 
                 <p class="overdue-status">Checking...</p>
 
@@ -185,6 +221,81 @@
     </div>
 
 </div>
-<script src="{% static 'css/js/ws.js' %}?v=3"></script>
+<script>
+let selectedTicketId = null;
+let selectedStatus = null;
+let selectedDropdown = null;
+let previousStatus = null;
+
+function openReasonModal(ticketId, dropdown){
+
+    selectedTicketId = ticketId;
+    selectedDropdown = dropdown;
+
+    selectedStatus = dropdown.value;
+
+    previousStatus =
+        dropdown.getAttribute("data-current-status");
+
+    document.getElementById("statusReason").value = "";
+
+    document.getElementById("reasonModal").style.display = "block";
+}
+
+function closeReasonModal() {
+    document.getElementById("reasonModal").style.display = "none";
+
+    if (selectedDropdown) {
+        selectedDropdown.value = previousStatus;
+    }
+}
+
+function submitStatusReason(){
+
+    const reason =
+        document.getElementById("statusReason").value.trim();
+
+    if (!reason) {
+        alert("Please enter a reason");
+        return;
+    }
+
+    updateStatus(
+        selectedTicketId,
+        selectedStatus,
+        reason
+    );
+
+    document.getElementById("reasonModal").style.display = "none";
+}
+</script>
+
+<script src="{% static 'js/ws.js' %}?v=3"></script>
+
+<div id="reasonModal" class="modal">
+
+    <div class="modal-content">
+
+        <h3>Status Update</h3>
+
+        <textarea
+            id="statusReason"
+            placeholder="Enter reason..."
+            rows="4">
+        </textarea>
+
+        <div class="modal-buttons">
+            <button onclick="submitStatusReason()">
+                Submit
+            </button>
+
+            <button onclick="closeReasonModal()">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+<script src="{% static 'js/sw_update.js' %}"></script>
+
 </body>
 </html>

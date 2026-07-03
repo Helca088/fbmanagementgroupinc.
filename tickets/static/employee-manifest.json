@@ -1,0 +1,22 @@
+{
+    "id": "/employee",
+    "name": "FB Management Employee",
+    "short_name": "FB Employee",
+    "start_url": "/login/",
+    "scope": "/",
+    "display": "standalone",
+    "theme_color": "#008000",
+    "background_color": "#ffffff",
+    "icons": [
+        {
+            "src": "/static/icons/employeeff.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/static/icons/employeephmt.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

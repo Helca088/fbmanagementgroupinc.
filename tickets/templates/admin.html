@@ -10,7 +10,7 @@
 <div class="flex">
 
     <!-- SIDEBAR -->
-<aside class="hidden md:block w-64 bg-gray-900 text-white min-h-screen p-6">
+    <aside class="hidden md:block w-64 bg-gray-900 text-white min-h-screen p-6">
         <h1 class="text-3xl font-bold mb-10">FB</h1>
         <nav class="space-y-4">
             <a href="#" class="block p-3 rounded-xl bg-blue-600 hover:bg-blue-700 transition">
@@ -58,99 +58,96 @@
             </form>
         </div>
 
-        <!-- MOBILE: Card view -->
-        <div class="block md:hidden space-y-4" id="mobileTicketList">
-            {% for ticket in tickets %}
-            <div class="bg-white p-4 rounded-xl shadow" data-ticket-id="{{ ticket.id }}">
-                <p><strong>Title:</strong> {{ ticket.title }}</p>
-                <p><strong>Outlet:</strong> {{ ticket.user }}</p>
-                <p class="status"><strong>Status:</strong> {{ ticket.status }}</p>
-                <div class="mt-2 space-x-2">
-                    <button onclick="toggleDetails('{{ ticket.id }}')"
-                        class="bg-blue-500 text-white px-3 py-1 rounded">View</button>
-                    <button onclick="deleteTicket('{{ ticket.id }}')"
-                        class="bg-red-600 text-white px-3 py-1 rounded">Delete</button>
-                </div>
-                <!-- Mobile Details -->
-                <div id="details-{{ ticket.id }}-mobile" style="display:none;" class="mt-4 border-t pt-4">
-                    <p><strong>Message:</strong> {{ ticket.message }}</p>
-                    <p><strong>Section:</strong> {{ ticket.section }}</p>
-                    <p><strong>Concern Type:</strong> {{ ticket.concern_type }}</p>
-                    <p><strong>Date:</strong> {{ ticket.created_at }}</p>
-                    <strong>Status:</strong>
-                    <select data-ticket-id="{{ ticket.id }}"
-                            onchange="updateStatus(this.dataset.ticketId, this.value)"
-                            class="mt-2 p-2 border rounded">
-                        <option value="Open" {% if ticket.status == "Open" %}selected{% endif %}>Open</option>
-                        <option value="Pending" {% if ticket.status == "Pending" %}selected{% endif %}>Pending</option>
-                        <option value="Resolved" {% if ticket.status == "Resolved" %}selected{% endif %}>Resolved</option>
-                    </select>
-                    {% if ticket.attachment %}
-                    <br><br>
-                    <a href="{% url 'ticket-download' ticket.id %}"
-                       class="bg-green-600 text-white px-3 py-2 rounded">Download Attachment</a>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+        <!-- TICKET LIST (ServiceDesk style table, used for both desktop and mobile) -->
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200">
 
-        <!-- DESKTOP: Table view -->
-        <div class="hidden md:block bg-white rounded-3xl shadow-lg overflow-hidden">
-            <div class="p-6 border-b">
-                <h3 class="text-2xl font-bold text-gray-800">Recent Tickets</h3>
+            <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-800">All Tickets ({{ total_tickets }})</h3>
             </div>
+
             <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="text-left p-5">Title</th>
-                            <th class="text-left p-5">Outlet</th>
-                            <th class="text-left p-5">Status</th>
-                            <th class="text-left p-5">Actions</th>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-blue-50 text-blue-700">
+                            <th class="text-left px-6 py-3 font-semibold whitespace-nowrap">Ticket ID</th>
+                            <th class="text-left px-6 py-3 font-semibold whitespace-nowrap">Title</th>
+                            <th class="text-left px-6 py-3 font-semibold whitespace-nowrap">Outlet</th>
+                            <th class="text-left px-6 py-3 font-semibold whitespace-nowrap">Concern Type</th>
+                            <th class="text-left px-6 py-3 font-semibold whitespace-nowrap">Status</th>
+                            <th class="text-left px-6 py-3 font-semibold whitespace-nowrap">Created At</th>
+                            <th class="text-left px-6 py-3 font-semibold whitespace-nowrap">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="ticketTable">
                         {% for ticket in tickets %}
-                        <tr data-ticket-id="{{ ticket.id }}" style="cursor:pointer;" class="border-b hover:bg-gray-100">
-                            <td class="p-4">{{ ticket.title }}</td>
-                            <td class="p-4">{{ ticket.user }}</td>
-                            <td class="p-4 status">{{ ticket.status }}</td>
-                            <td class="p-4 space-x-2">
+                        <tr data-ticket-id="{{ ticket.id }}"
+                            class="border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer">
+                            <td class="px-6 py-4 font-medium text-blue-600 whitespace-nowrap">#{{ ticket.id }}</td>
+                            <td class="px-6 py-4 text-gray-800 max-w-xs truncate">{{ ticket.title }}</td>
+                            <td class="px-6 py-4 text-gray-600 whitespace-nowrap">{{ ticket.user }}</td>
+                            <td class="px-6 py-4 text-gray-600 whitespace-nowrap">{{ ticket.concern_type }}</td>
+                            <td class="px-6 py-4 status whitespace-nowrap">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
+                                    {% if ticket.status == 'Pending' %}bg-amber-100 text-amber-700
+                                    {% elif ticket.status == 'Resolved' %}bg-green-100 text-green-700
+                                    {% else %}bg-gray-100 text-gray-700{% endif %}">
+                                    {{ ticket.status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-gray-500 whitespace-nowrap">{{ ticket.created_at }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap space-x-2">
                                 <button onclick="toggleDetails('{{ ticket.id }}')"
-                                    class="bg-blue-500 text-white px-3 py-1 rounded">View</button>
+                                    class="bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-blue-600 transition">View</button>
                                 <button onclick="deleteTicket('{{ ticket.id }}')"
-                                    class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Delete</button>
+                                    class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-red-100 transition">Delete</button>
                             </td>
                         </tr>
-                        <tr id="details-{{ ticket.id }}" style="display:none;">
-                            <td colspan="4" class="p-4 bg-gray-50">
-                                <strong>Title:</strong> {{ ticket.title }}<br><br>
-                                <strong>Message:</strong> {{ ticket.message }}<br><br>
-                                <strong>User:</strong> {{ ticket.user }}<br><br>
-                                <strong>Section:</strong> {{ ticket.section }}<br><br>
-                                <strong>Concern Type:</strong> {{ ticket.concern_type }}<br><br>
-                                <strong>Status:</strong><br>
-                                <select data-ticket-id="{{ ticket.id }}"
-                                        onchange="updateStatus(this.dataset.ticketId, this.value)"
-                                        class="mt-2 p-2 border rounded">
-                                    <option value="Open" {% if ticket.status == "Open" %}selected{% endif %}>Open</option>
-                                    <option value="Pending" {% if ticket.status == "Pending" %}selected{% endif %}>Pending</option>
-                                    <option value="Resolved" {% if ticket.status == "Resolved" %}selected{% endif %}>Resolved</option>
-                                </select><br><br>
-                                <label>Schedule Date</label>
-                                <input
-                                type="date"
-                                name="scheduled"
-                                value="{{ ticket.scheduled_date | date: 'Y-m-d' }}">
-                                <label>Schedule Time</label>
-                                <input
-                                type="">
-                                <strong>Date Created:</strong><br>{{ ticket.created_at }}<br><br>
-                                {% if ticket.attachment %}
-                                <a href="{% url 'ticket-download' ticket.id %}"
-                                   class="bg-green-600 text-white px-3 py-2 rounded">Download Attachment</a>
-                                {% endif %}
+                        <tr id="details-{{ ticket.id }}" style="display:none;" class="bg-gray-50">
+                            <td colspan="7" class="px-6 py-5">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Title</p>
+                                        <p class="text-gray-800 mb-3">{{ ticket.title }}</p>
+
+                                        <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Message</p>
+                                        <p class="text-gray-800 mb-3">{{ ticket.message }}</p>
+
+                                        <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Outlet</p>
+                                        <p class="text-gray-800 mb-3">{{ ticket.user }}</p>
+
+                                        <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Section</p>
+                                        <p class="text-gray-800">{{ ticket.section }}</p>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Status</p>
+                                        <select data-ticket-id="{{ ticket.id }}"
+                                            onchange="updateStatus(this.dataset.ticketId, this.value)"
+                                            class="mb-3 p-2 border border-gray-200 rounded-lg text-sm w-full md:w-auto">
+                                            <option value="Pending" {% if ticket.status == "Pending" %}selected{% endif %}>Pending</option>
+                                            <option value="In Progress" {% if ticket.status == "In Progress" %}selected{% endif %}>In Progress</option>
+                                            <option value="Resolved" {% if ticket.status == "Resolved" %}selected{% endif %}>Resolved</option>
+                                        </select>
+
+                                        <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Schedule Date</p>
+                                        <input type="date" name="scheduled" value="{{ ticket.scheduled_date|date:'Y-m-d' }}"
+                                            class="mb-3 p-2 border border-gray-200 rounded-lg text-sm w-full md:w-auto">
+
+                                        <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Schedule Time</p>
+                                        <input type="time" name="scheduled_time" value="{{ ticket.scheduled_time|time:'H:i' }}"
+                                            class="mb-3 p-2 border border-gray-200 rounded-lg text-sm w-full md:w-auto">
+
+                                        <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Date Created</p>
+                                        <p class="text-gray-800 mb-3">{{ ticket.created_at }}</p>
+
+                                        {% if ticket.attachment %}
+                                        <a href="{% url 'ticket-download' ticket.id %}"
+                                           class="inline-block bg-green-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-green-700 transition">
+                                           Download Attachment
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -163,7 +160,7 @@
 </div>
 
 {% load static %}
-<script src="{% static 'css/js/ws.js' %}?v=3"></script>
+<script src="{% static 'css/js/ws.js' %}?v=4"></script>
 
 </body>
 </html>

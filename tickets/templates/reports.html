@@ -1,0 +1,234 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports — FB Management</title>
+    <link rel="stylesheet" href="{% static 'css/report.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div class="topnav">
+    <div class="topnav-brand">
+        <div class="topnav-icon">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+        </div>
+        <span class="topnav-title">FB Management — Reports</span>
+    </div>
+</div>
+
+<div class="page">
+
+    <!-- FILTER -->
+    <div class="filter-card">
+        <h2>Filter Report</h2>
+        <form method="get" class="filter-form">
+            <div class="filter-field">
+                <label>Department</label>
+                <select name="department">
+                    <option value="">All Departments</option>
+                    <option value="I.T" {% if request.GET.department == "I.T" %}selected{% endif %}>IT</option>
+                    <option value="Maintenance" {% if request.GET.department == "Maintenance" %}selected{% endif %}>Maintenance</option>
+                </select>
+            </div>
+            <div class="filter-field">
+                <label>Start Date</label>
+                <input type="date" name="start" value="{{ request.GET.start }}">
+            </div>
+            <div class="filter-field">
+                <label>End Date</label>
+                <input type="date" name="end" value="{{ request.GET.end }}">
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">Generate</button>
+                <a href="{% url 'export_pdf' %}?start={{ request.GET.start }}&end={{ request.GET.end }}&department={{ request.GET.department }}">
+                    <button type="button" class="btn btn-danger">Export PDF</button>
+                </a>
+                <a href="{% url 'export_excel' %}?start={{ request.GET.start }}&end={{ request.GET.end }}&department={{ request.GET.department }}">
+                    <button type="button" class="btn btn-success">Export Excel</button>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <p class="stat-label color-default">Total</p>
+            <p class="stat-value color-default">{{ total }}</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-label color-amber">Pending</p>
+            <p class="stat-value color-amber">{{ pending }}</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-label color-blue">In Progress</p>
+            <p class="stat-value color-blue">{{ progress }}</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-label color-green">Resolved</p>
+            <p class="stat-value color-green">{{ resolved }}</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-label color-red">Overdue</p>
+            <p class="stat-value color-red">{{ overdue }}</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-label color-darkgreen">On Time</p>
+            <p class="stat-value color-darkgreen">{{ resolved_on_time }}</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-label color-orange">Reopened</p>
+            <p class="stat-value color-orange">{{ reopened_total }}</p>
+        </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3>Status Breakdown</h3>
+            <canvas id="statusChart" height="200"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Tickets by Department</h3>
+            <canvas id="deptChart" height="200"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Tickets by Concern Type</h3>
+            <canvas id="concernChart" height="200"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-full">
+        <h3>Technician Performance</h3>
+        <canvas id="techChart" height="80"></canvas>
+    </div>
+
+    <!-- TABLES: Departments + Concerns -->
+    <div class="tables-grid">
+        <div class="table-card">
+            <div class="table-header"><h3>Departments</h3></div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for department in departments %}
+                        <tr>
+                            <td class="td-name">{{ department.section__name }}</td>
+                            <td class="td-accent">{{ department.total }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-header"><h3>Concern Types</h3></div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Concern</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for concern in concerns %}
+                        <tr>
+                            <td class="td-name">{{ concern.concern_type__name }}</td>
+                            <td class="td-accent">{{ concern.total }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TECHNICIANS TABLE -->
+    <div class="table-card">
+        <div class="table-header"><h3>Technician Stats</h3></div>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Technician</th>
+                        <th>Current Assigned</th>
+                        <th>Total Assigned</th>
+                        <th>Resolved</th>
+                        <th>Resolved On Time</th>
+                        <th>Reopened</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tech in technician_stats %}
+                    <tr>
+                        <td class="td-name">{{ tech.name }}</td>
+                        <td>{{ tech.current_assigned }}</td>
+                        <td>{{ tech.total_assigned }}</td>
+                        <td><span class="badge badge-green">{{ tech.resolved }}</span></td>
+                        <td><span class="badge badge-blue">{{ tech.resolved_on_time }}</span></td>
+                        <td><span class="badge badge-orange">{{ tech.reopened }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- OUTLETS TABLE -->
+    <div class="table-card">
+        <div class="table-header"><h3>Outlets</h3></div>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Outlet</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for outlet in outlets %}
+                    <tr>
+                        <td>{{ outlet.outlet }}</td>
+                        <td class="td-name">{{ outlet.outlet__name }}</td>
+                        <td class="td-accent">{{ outlet.total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const statusData  = [{{ pending }}, {{ progress }}, {{ resolved }}, {{ overdue }}];
+    const deptLabels  = [{% for d in departments %}"{{ d.section__name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+    const deptData    = [{% for d in departments %}{{ d.total }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    const concernLabels = [{% for c in concerns %}"{{ c.concern_type__name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+    const concernData   = [{% for c in concerns %}{{ c.total }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    const techLabels    = [{% for t in technician_stats %}"{{ t.name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+    const techAssigned  = [{% for t in technician_stats %}{{ t.total_assigned }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    const techResolved  = [{% for t in technician_stats %}{{ t.resolved }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    const techReopened  = [{% for t in technician_stats %}{{ t.reopened }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    </script>
+
+    <script src="{% static 'js/report.js' %}"></script>
+
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+{% extends "admin/login.html" %}
+{% load static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <meta name="nick-test" content="12345">
+
+<link rel="manifest" href="{% static 'admin-manifest.json' %}">
+<meta name="theme-color" content="#5E17EB">
+
+
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+
+
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/static/admin-sw.js');
+}
+</script>
+
+{% endblock %}

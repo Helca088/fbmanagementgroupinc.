@@ -5,6 +5,8 @@ from .util import serialize_ticket
 
 def notify_ticket_update(ticket, action="update"):
 
+    print("📤 SENDING:", ticket.id, action)
+
     channel_layer = get_channel_layer()
 
     async_to_sync(channel_layer.group_send)(
@@ -15,7 +17,7 @@ def notify_ticket_update(ticket, action="update"):
             "data": serialize_ticket(ticket),
         }
     )
-
+    print("📤 group_send FINISHED")
 
 def notify_ticket_delete(ticket_id):
 
