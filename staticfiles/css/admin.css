@@ -1,0 +1,97 @@
+.dark table tbody td,
+.dark table tbody td *,
+.dark table th,
+.dark table th * {
+    color: #f3f4f6 !important;
+}
+
+/* Ensure secondary structural table elements use a slightly softer gray */
+html.dark table th,
+html.dark table th * {
+    color: #f9fafb !important; /* Force Tailwind gray-50 */
+}
+
+/* Keep operational hyperlinks completely legible */
+html.dark #result_list tbody td a,
+html.dark table tbody tr td a {
+    color: #38bdf8 !important; /* Soft Cyan Blue */
+    text-decoration: underline !important;
+}
+/* Unfold table cells */
+html.dark td.field-section,
+html.dark td.field-concern_type,
+html.dark td[class*="field-"] {
+    color: #f3f4f6 !important;
+}
+
+/* Everything inside table rows */
+html.dark tbody tr td {
+    color: #f3f4f6 !important;
+}
+/* =========================
+   Better Admin Typography
+   ========================= */
+
+/* Import Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Entire admin */
+html,
+body {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 16px !important;
+}
+
+/* Sidebar */
+#sidebar,
+nav {
+    font-size: 15px !important;
+}
+
+/* Table headers */
+th {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+
+    background-color: #1e88e5;  /* blue */
+    color: #ffffff;
+
+    padding: 10px 12px;
+    border-bottom: 2px solid #1565c0;
+
+    transition: background-color 0.2s ease;
+}
+table th:hover {
+    background-color: #1565c0 !important;
+    cursor: pointer;
+}
+
+/* Table content */
+td {
+    font-size: 15px !important;
+    font-weight: 500 !important;
+}
+
+/* Forms */
+input,
+select,
+textarea {
+    font-size: 15px !important;
+}
+
+/* Page title */
+h1 {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+}
+
+/* Module titles */
+h2 {
+    font-size: 20px !important;
+    font-weight: 600 !important;
+}
+#id_admin_note {
+    width: 600px !important;
+    height: 60px !important;
+    resize: none !important;
+}

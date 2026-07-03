@@ -1,0 +1,87 @@
+.tables-row{
+    display:flex;
+    flex-direction:column;
+    gap:30px;
+}
+
+.table-box{
+    background:#fff;
+    border-radius:15px;
+    padding:20px;
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+    overflow-x:auto;
+}
+
+.table-box h2{
+    margin-bottom:15px;
+    color:#333;
+}
+
+table{
+    width:100%;
+    min-width:950px; /* Ensures all columns have enough space */
+    border-collapse:collapse;
+    font-size:14px;
+}
+
+thead{
+    background:linear-gradient(90deg,#4f46e5,#6366f1);
+    color:white;
+}
+
+th{
+    padding:15px;
+    text-align:left;
+    font-weight:600;
+    white-space:nowrap;
+}
+
+td{
+    padding:14px 15px;
+    border-bottom:1px solid #ececec;
+    white-space:nowrap;
+}
+
+tbody tr:nth-child(even){
+    background:#fafafa;
+}
+
+tbody tr:hover{
+    background:#eef2ff;
+    transition:.2s;
+}
+
+/* Beautiful scrollbar */
+
+.table-box::-webkit-scrollbar{
+    height:10px;
+}
+
+.table-box::-webkit-scrollbar-track{
+    background:#ececec;
+    border-radius:20px;
+}
+
+.table-box::-webkit-scrollbar-thumb{
+    background:#6366f1;
+    border-radius:20px;
+}
+
+.table-box::-webkit-scrollbar-thumb:hover{
+    background:#4338ca;
+}
+button{
+    background:linear-gradient(135deg,#4f46e5,#6366f1);
+    color:#fff;
+    border:none;
+    padding:12px 22px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+    transition:.3s;
+}
+
+button:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 20px rgba(79,70,229,.25);
+}
