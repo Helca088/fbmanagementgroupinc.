@@ -1,15 +1,12 @@
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect
 from ..models import TicketAttachment 
-import cloudinary.utils
+from django.http import Http404
 
 def download_attachment(request, pk):
-    attachment = TicketAttachment.objects.get(pk=pk)
+    attachment = get_object_or_404(TicketAttachment, pk=pk)
 
-    url, _ = cloudinary.utils.cloudinary_url(
-        attachment.file.public_id,
-        resource_type="auto",
-        flags="attachment"
-    )
+    if not attachment.file:
+        raise Http404("No file")
 
-    return redirect(url)
+    return redirect(attachment.file.url)
