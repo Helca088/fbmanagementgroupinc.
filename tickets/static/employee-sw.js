@@ -1,8 +1,6 @@
 const CACHE_NAME = "fb-employee-v1";
 
 const urlsToCache = [
-    "/login/",
-    "/home/",
     "/static/employee-manifest.json",
     "/static/js/ws.js",
     "/static/js/sw-update.js",
