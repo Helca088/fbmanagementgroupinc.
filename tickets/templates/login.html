@@ -37,7 +37,7 @@
             15% { opacity:.28; }
             35% { transform: translateY(-35px) translateX(-10px) scale(.7) rotate(-4deg); }
             60%{ transform: translateY(-90px) translateX(12px) scale(1) rotate(5deg); opacity:.22; }
-            100%{ transform: translateY(-180px) translateX(-8px) scale(1.5) rotate(-6deg); opacity:0; }
+            100%{ transform: translateY(-320px) translateX(-8px) scale(1.5) rotate(-6deg); opacity:0; }
         }
         @keyframes broth-glow {
             0%, 100% { opacity: 0.22; }
@@ -124,20 +124,20 @@
 
         .steam {
         position: absolute;
-        width: 30px;
-        height: 90px;
+        width: 45px;
+        height: 120px;
         border-radius: 50%;
         pointer-events: none;
 
         background: radial-gradient(
         ellipse at center,
-        rgba(255,255,255,.35) 0%,
-        rgba(255,255,255,.18) 45%,
+        rgba(255,255,255,.50) 0%,
+        rgba(255,255,255,.28) 45%,
         rgba(255,255,255,.08) 70%,
         transparent 100%
         );
 
-        filter: blur(10px);
+        filter: blur(20 px);
         opacity: 0;
         }
 
@@ -341,7 +341,7 @@
 <script>
 const scene = document.getElementById("scene");
 
-for (let i = 0; i < 18; i++) {
+for (let i = 0; i < 50; i++) {
 
     const steam = document.createElement("div");
     steam.className = "steam";
