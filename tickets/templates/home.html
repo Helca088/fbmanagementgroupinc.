@@ -45,7 +45,7 @@
 
     <div class="form-box">
 
-        <form method="POST" enctype="multipart/form-data">
+        <form id="ticketForm" method="POST" enctype="multipart/form-data">
 
             {% csrf_token %}
 
@@ -95,7 +95,7 @@
             </select>
             </div>
             <br></br>
-            <button type="submit">
+            <button type="submit" id="submitBtn">
                 Send
             </button>
         
@@ -269,7 +269,25 @@ function submitStatusReason(){
     document.getElementById("reasonModal").style.display = "none";
 }
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("ticketForm");
+    const button = document.getElementById("submitBtn");
 
+    let submitting = false;
+
+    form.addEventListener("submit", function (e) {
+        if (submitting) {
+            e.preventDefault();
+            return;
+        }
+
+        submitting = true;
+        button.disabled = true;
+        button.innerHTML = `<span class="spinner"></span>Sending...`;
+    });
+});
+</script>
 <script src="{% static 'js/ws.js' %}?v=3"></script>
 
 <div id="reasonModal" class="modal">
