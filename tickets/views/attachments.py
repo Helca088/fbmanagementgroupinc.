@@ -1,7 +1,6 @@
 from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from ..models import TicketAttachment 
-from django.shortcuts import get_object_or_404, redirect
 import cloudinary.utils
 
 def download_attachment(request, pk):
@@ -10,4 +9,4 @@ def download_attachment(request, pk):
     url = attachment.file.url.replace("http://", "https://")
     url = url.replace("/upload/", "/upload/fl_attachment/")
 
-    return HttpResponse(url)
+    return redirect(url)
