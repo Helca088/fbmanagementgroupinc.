@@ -28,21 +28,22 @@ function openImageModal(src) {
 }
 
 window.downloadSelectedAttachments = function () {
-    console.log("clicked download");
-    const checked =
-        document.querySelectorAll(
-             'input[name="attachments"]:checked'
-        );
+    const checked = document.querySelectorAll(
+        'input[name="attachments"]:checked'
+    );
 
     if (checked.length === 0) {
         alert("Select at least one attachment.");
         return;
     }
-    
-    checked.forEach(cb => {
-        window.open(
-            `/attachment/${cb.value}/download/` ,
-            "_blank"
-        );
+
+    checked.forEach((cb, index) => {
+        setTimeout(() => {
+            const a = document.createElement("a");
+            a.href = `/attachment/${cb.value}/download/`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }, index * 500);
     });
 }
