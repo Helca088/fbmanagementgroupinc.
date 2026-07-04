@@ -7,9 +7,7 @@ import cloudinary.utils
 def download_attachment(request, pk):
     attachment = get_object_or_404(TicketAttachment, pk=pk)
 
-    url = attachment.file.url.replace(
-        "/upload/",
-        "/upload/fl_attachment/"
-    )
+    url = attachment.file.url.replace("http://", "https://")
+    url = url.replace("/upload/", "/upload/fl_attachment/")
 
-    return redirect(url)
+    return HttpResponse(url)
