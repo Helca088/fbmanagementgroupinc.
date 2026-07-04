@@ -1,15 +1,15 @@
 from django.http import FileResponse, Http404
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from ..models import TicketAttachment 
+import cloudinary.utils
 
 def download_attachment(request, pk):
     attachment = TicketAttachment.objects.get(pk=pk)
 
-    if not attachment.file:
-        raise Http404("No file")
+    url, _ = cloudinary.utils.cloudinary_url(
+        attachment.file.public_id,
+        resource_type="auto",
+        flags="attachment"
+    )
 
-    response = FileResponse(attachment.file.open('rb'), as_attachment=True)
-
-    response['Content-Disposition'] = f'attachment; filename="{attachment.file.name.split("/")[-1]}"'
-    
-    return response
+    return redirect(url)
