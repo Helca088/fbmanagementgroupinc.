@@ -196,7 +196,7 @@ class TicketAttachment(models.Model):
             on_delete=models.CASCADE,
             related_name="attachments"
         )
-        file = models.FileField(upload_to="tickets/")
+        file = CloudinaryField('file', blank=True, null=True)
 
         def __str__(self):
             return f"Attachment {self.ticket.id}"
