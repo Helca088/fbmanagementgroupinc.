@@ -1,3 +1,7 @@
+import json
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from ..models import DeviceToken
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.db.models import Case, When, IntegerField
@@ -59,3 +63,36 @@ def get_concerns(request):
          "concerns": concerns
      }
  )   
+
+@require_POST
+@login_required
+def save_fcm_token(request):
+    try:
+        data = json.loads(request.body)
+        token = data.get("token")
+
+        if not token:
+            return JsonResponse(
+                {"success": False, "message": "Token is required"},
+                status=400
+            )
+
+        DeviceToken.objects.update_or_create(
+            token=token,
+            defaults={
+                "user": request.user
+            }
+        )
+
+        return JsonResponse({
+            "success": True
+        })
+
+    except Exception as e:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": str(e)
+            },
+            status=500
+        )

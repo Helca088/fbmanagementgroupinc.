@@ -13,6 +13,11 @@ urlpatterns = [
     path('ticket/<int:id>/status/', views.update_status, name='update_status'),
     path("ticket/<int:id>/priority/", views.update_priority, name="update_priority"),
     path('api/tickets/', views.ticket_api, name='ticket_api'),
+    path(
+    "save-fcm-token/",
+    views.save_fcm_token,
+    name="save_fcm_token"
+    ),
     path('create/', views.create_ticket, name='create_ticket'),
     path('edit/<int:id>/', views.edit_ticket, name='edit_ticket'),
     path('delete-ticket/<int:id>/', views.delete_ticket, name='delete_ticket'),

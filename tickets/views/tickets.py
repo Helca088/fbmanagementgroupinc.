@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from tickets.notification import send_push
+from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
@@ -50,7 +52,15 @@ def home(request):
         
         print("Sending WS for ticket", ticket.id)
         notify_ticket_update(ticket, action="create")
-        
+        admins = User.objects.filter(is_staff=True)
+
+        for admin in admins:
+            send_push(
+        user=admin,
+        title="New Ticket",
+        body=f"{ticket.user.username} created Ticket #{ticket.id}"
+    )
+            
         return redirect('home')
     
     tickets = Ticket.objects.filter(
@@ -73,9 +83,19 @@ def create_ticket(request):
         if form.is_valid():
             ticket = form.save()
 
+        if ticket.assigned_to:
+         send_push(
+        user=ticket.assigned_to.user,
+        title="New Ticket Assigned",
+        body=f"Ticket #{ticket.id} has been assigned to you.",
+        data={
+            "ticket_id": str(ticket.id),
+            "url": f"/ticket/{ticket.id}/"
+        }
+    )
             
 
-            return redirect('admin_dashboard')
+        return redirect('admin_dashboard')
 
     else:
         form = TicketForm()
@@ -116,6 +136,16 @@ def update_status(request, id):
     reason = request.POST.get ("reason", "")
     ticket.status = new_status
     ticket.save()
+
+    send_push(
+    user=ticket.user,
+    title="Ticket Updated",
+    body=f"Your ticket #{ticket.id} is now {ticket.status}.",
+    data={
+        "ticket_id": str(ticket.id),
+        "url": f"/ticket/{ticket.id}/"
+    }
+    )
 
     TicketStatusLog.objects.create(
         ticket = ticket,

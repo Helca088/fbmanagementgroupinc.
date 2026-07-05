@@ -4,6 +4,7 @@
 {% load static %}
 
 <link rel="icon" href="{% static 'img/favicon.ico' %}">
+<script type="module" src="{% static 'js/firebase.js' %}"></script>
     {% progressive_web_app_meta %}
 {% block extrahead %}
     {{ block.super }}

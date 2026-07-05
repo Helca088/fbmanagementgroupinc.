@@ -5,6 +5,11 @@ from datetime import timedelta
 from django.utils import timezone
 from cloudinary.models import CloudinaryField
 
+class DeviceToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.TextField(unique=True)
+    created = models.DateTimeField(auto_now_add=True)
+
 class Outlet(models.Model):
     name = models.CharField(max_length=100)
 
