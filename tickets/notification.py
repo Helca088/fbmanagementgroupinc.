@@ -1,31 +1,30 @@
 from firebase_admin import messaging
 from .models import DeviceToken
+import traceback
 
 def send_push(user, title, body, data=None):
     tokens = DeviceToken.objects.filter(user=user)
 
-    print(f"Found {tokens.count()} tokens for {user.username}")
+    print(f"Found {tokens.count()} tokens")
 
     if not tokens.exists():
-        print("No tokens found.")
-        return
+        return "No tokens"
 
     for device in tokens:
         try:
-            print("Sending to:", device.token)
-
             message = messaging.Message(
+                token=device.token,
                 notification=messaging.Notification(
                     title=title,
                     body=body,
                 ),
-                token=device.token,
                 data=data or {},
             )
 
             response = messaging.send(message)
-            print("Firebase response:", response)
+            print("SUCCESS:", response)
+            return response
 
-        except Exception as e:
-            print("❌ Error sending notification")
-            print(e)
+        except Exception:
+            traceback.print_exc()
+            raise
