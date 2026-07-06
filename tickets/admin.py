@@ -10,7 +10,9 @@ from unfold.sites import UnfoldAdminSite
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.safestring import mark_safe
+from .models import DeviceToken
 
+admin.site.register(DeviceToken)
 admin.site.site_url = "/reports/"
 
 @admin.register(Outlet)
