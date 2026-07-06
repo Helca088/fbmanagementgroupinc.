@@ -353,7 +353,7 @@ for (let i = 0; i < 50; i++) {
 </script>
 <script>
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register("{% static 'employee-sw.js' %}");
+    navigator.serviceWorker.register("/employee-sw.js", { scope: '/' })
 }
 </script>
 </body>

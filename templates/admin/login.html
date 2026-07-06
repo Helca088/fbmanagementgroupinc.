@@ -14,7 +14,7 @@
 
 <script>
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/static/admin-sw.js');
+    navigator.serviceWorker.register('/admin-sw.js', { scope: '/admin/' });
 }
 </script>
 
