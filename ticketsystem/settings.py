@@ -183,14 +183,29 @@ ASGI_APPLICATION = 'ticketsystem.asgi.application'
 REDIS_URL = config('REDIS_URL', default='redis://127.0.0.1:6379')
 is_tls = REDIS_URL.startswith("rediss://")
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [REDIS_URL],
+if is_tls:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [
+                    {
+                        "address": REDIS_URL,
+                        "ssl_cert_reqs": None,
+                    }
+                ],
+            },
         },
-    },  
-}
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [REDIS_URL],
+            },
+        },
+    }
 
 PWA_APP_NAME = "Pho Hoa Ticketing"
 PWA_APP_DESCRIPTION = "Ticket Management System"
