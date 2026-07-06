@@ -38,4 +38,6 @@ urlpatterns = [
     views.export_excel,
     name="export_excel"
     ),
+    
+    path('test-push/', views.test_push_view, name='test_push'),
 ]

@@ -19,6 +19,11 @@ from tickets.websocket import (
 )
 import os
 
+@login_required
+def test_push_view(request):
+    send_push(request.user, "Test Notification", "This is a real test push")
+    return HttpResponse("Push attempted — check Render logs.")
+
 @login_required(login_url='login')
 def home(request):
 
