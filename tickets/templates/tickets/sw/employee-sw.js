@@ -18,7 +18,7 @@ messaging.onBackgroundMessage((payload) => {
         payload.notification.title,
         {
             body: payload.notification.body,
-            icon: "/static/icons/icon-192.png"
+            icon: "/static/icons/FBLG.png"
         }
     );
 });
@@ -28,7 +28,7 @@ const CACHE_NAME = "fb-employee-v1";
 const urlsToCache = [
     "/static/employee-manifest.json",
     "/static/js/ws.js",
-    "/static/js/sw-update.js",
+    "/static/js/sw_update.js",
 ];
 
 self.addEventListener("install", (event) => {
