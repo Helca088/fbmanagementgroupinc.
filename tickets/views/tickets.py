@@ -59,6 +59,8 @@ def home(request):
         notify_ticket_update(ticket, action="create")
         admins = User.objects.filter(is_staff=True)
 
+        print("Admins:", list(admins.values_list("username", flat=True)))
+
         for admin in admins:
             send_push(
         user=admin,
