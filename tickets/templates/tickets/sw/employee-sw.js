@@ -28,7 +28,7 @@ const CACHE_NAME = "fb-employee-v1";
 const urlsToCache = [
     "/static/employee-manifest.json",
     "/static/js/ws.js",
-    "/static/js/sw_update.js",
+    "/static/js/sw_update.js",  
 ];
 
 self.addEventListener("install", (event) => {
@@ -70,7 +70,7 @@ self.addEventListener("notificationclick", function(event) {
     event.notification.close();
 
     const url =
-        event.notification.data?.url || "/";
+        event.notification.data?.url || "https://fbmanagement.onrender.com/home/";
 
     event.waitUntil(
         clients.openWindow(url)
