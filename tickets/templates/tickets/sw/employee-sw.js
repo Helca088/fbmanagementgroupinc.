@@ -50,22 +50,8 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-    const req = event.request;
-
-    if (req.url.includes("/login") || req.url.includes("/admin")) {
-        return;
-    }
-
-    if (req.mode === "navigate") {
-        event.respondWith(
-            fetch(req, { redirect: "follow" })
-                .catch(() => caches.match("/login/"))
-        );
-        return;
-    }
-
     event.respondWith(
-        fetch(req).catch(() => caches.match(req))
+        fetch(event.request).catch(() => caches.match(event.request))
     );
 });
 
