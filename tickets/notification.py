@@ -1,15 +1,19 @@
 from firebase_admin import messaging
-
 from .models import DeviceToken
 
 def send_push(user, title, body, data=None):
     tokens = DeviceToken.objects.filter(user=user)
 
+    print(f"Found {tokens.count()} tokens for {user.username}")
+
     if not tokens.exists():
+        print("No tokens found.")
         return
 
     for device in tokens:
         try:
+            print("Sending to:", device.token)
+
             message = messaging.Message(
                 notification=messaging.Notification(
                     title=title,
@@ -17,19 +21,11 @@ def send_push(user, title, body, data=None):
                 ),
                 token=device.token,
                 data=data or {},
-
-                webpush=messaging.WebpushConfig(
-                fcm_options=messaging.WebpushFCMOptions(
-                link=data.get("url") if data and "url" in data else "https://fbmanagement.onrender.com/home/"
-        )
-    )
             )
 
-            messaging.send(message)
+            response = messaging.send(message)
+            print("Firebase response:", response)
 
         except Exception as e:
-            print(f"Invalid token: {device.token}")
+            print("❌ Error sending notification")
             print(e)
-
-            
-            device.delete()
