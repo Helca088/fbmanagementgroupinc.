@@ -181,6 +181,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 ASGI_APPLICATION = 'ticketsystem.asgi.application'
 
 REDIS_URL = config('REDIS_URL', default='redis://127.0.0.1:6379')
+is_tls = REDIS_URL.startswith("rediss://")
 
 CHANNEL_LAYERS = {
     "default": {
@@ -188,8 +189,7 @@ CHANNEL_LAYERS = {
         "CONFIG": {
             "hosts": [{
                 "address": REDIS_URL,
-                # Upstash and most managed Redis providers require TLS
-                # when the URL scheme is rediss://
+
                 **({"ssl_cert_reqs": ssl.CERT_NONE} if REDIS_URL.startswith("rediss://") else {}),
             }],
         },
