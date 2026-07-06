@@ -63,7 +63,10 @@ def home(request):
             send_push(
         user=admin,
         title="New Ticket",
-        body=f"{ticket.user.username} created Ticket #{ticket.id}"
+        body=f"{ticket.user.username} created Ticket #{ticket.id}",
+        data={
+            "url": "https://fbmanagement.onrender.com/admin/"
+        }
     )
             
         return redirect('home')

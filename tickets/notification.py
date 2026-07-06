@@ -17,6 +17,12 @@ def send_push(user, title, body, data=None):
                 ),
                 token=device.token,
                 data=data or {},
+
+                webpush=messaging.WebpushConfig(
+                fcm_options=messaging.WebpushFCMOptions(
+                link=data.get("url") if data and "url" in data else "https://fbmanagement.onrender.com/home/"
+        )
+    )
             )
 
             messaging.send(message)
