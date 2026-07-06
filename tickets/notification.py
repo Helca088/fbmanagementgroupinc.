@@ -13,10 +13,17 @@ def send_push(user, title, body, data=None):
 
     for device in tokens:
         try:
+            payload = {
+            "title": title,
+            "body": body,
+            }
+
+            if data:
+                payload.update(data)
+
             message = messaging.Message(
-                token=device.token,
-                notification=messaging.Notification(title=title, body=body),
-                data=data or {},
+            token=device.token,
+            data=payload,
             )
             response = messaging.send(message)
             print("SUCCESS:", response)

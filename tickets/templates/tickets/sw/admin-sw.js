@@ -14,29 +14,45 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
+
+    console.log("Background payload:", payload);
+
     self.registration.showNotification(
-        payload.notification.title,
+        payload.data.title,
         {
-            body: payload.notification.body,
-            icon: "/static/icons/icon-192.png"
+            body: payload.data.body,
+            icon: "/static/icons/icon-192.png",
+
+            data: {
+                url: payload.data.url
+            }
         }
     );
+
 });
 
-self.addEventListener("install", () => {
-    self.skipWaiting();
-});
-
-self.addEventListener("fetch", () => {});
-
-self.addEventListener("notificationclick", function(event) {
+self.addEventListener("notificationclick", (event) => {
 
     event.notification.close();
 
-    const url =
-        event.notification.data?.url || "https://fbmanagement.onrender.com/admin/tickets/ticket/";
+    const url = event.notification.data?.url || "https://fbmanagement.onrender.com/admin/tickets/ticket/";
 
     event.waitUntil(
-        clients.openWindow(url)
+        clients.matchAll({
+            type: "window",
+            includeUncontrolled: true
+        }).then((clientList) => {
+
+            for (const client of clientList) {
+
+                if (client.url.includes(new URL(url).pathname) && "focus" in client) {
+                    return client.focus();
+                }
+
+            }
+
+            return clients.openWindow(url);
+        })
     );
+
 });
