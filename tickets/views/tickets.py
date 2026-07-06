@@ -60,8 +60,10 @@ def home(request):
         admins = User.objects.filter(is_staff=True)
 
         print("Admins:", list(admins.values_list("username", flat=True)))
-
+        print("Reached notification section")
+        
         for admin in admins:
+            print(f"Sending notification to {admin.username}")
             send_push(
         user=admin,
         title="New Ticket",
