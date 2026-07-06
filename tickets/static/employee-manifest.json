@@ -1,7 +1,7 @@
 {
     "id": "/employee",
     "name": "FB Management Employee",
-    "short_name": "FB Employee",
+    "short_name": "PHOHOA-MYTHAI",
     "start_url": "/home/",
     "scope": "/",
     "display": "standalone",
@@ -14,7 +14,7 @@
             "type": "image/png"
         },
         {
-            "src": "/static/icons/employeephmt.png",
+            "src": "/static/icons/employeephff.png",
             "sizes": "512x512",
             "type": "image/png"
         }

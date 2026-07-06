@@ -34,7 +34,7 @@ self.addEventListener("notificationclick", function(event) {
     event.notification.close();
 
     const url =
-        event.notification.data?.url || "/";
+        event.notification.data?.url || "https://fbmanagement.onrender.com/admin/tickets/ticket/";
 
     event.waitUntil(
         clients.openWindow(url)
