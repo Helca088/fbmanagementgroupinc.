@@ -189,7 +189,7 @@ CHANNEL_LAYERS = {
         "CONFIG": {
             "hosts": [REDIS_URL],
         },
-    },
+    },  
 }
 
 PWA_APP_NAME = "Pho Hoa Ticketing"
