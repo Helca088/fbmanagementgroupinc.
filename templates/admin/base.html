@@ -1,12 +1,10 @@
 {% extends "admin/base.html" %}
 {% load static %}
-{% load pwa %}
-{% load static %}
+
 
 
 {% block extrahead %}
     {{ block.super }}
     <link rel="icon" href="{% static 'img/favicon.ico' %}">
     <script type="module" src="{% static 'js/firebase.js' %}"></script>
-    {% progressive_web_app_meta %}
 {% endblock %}
