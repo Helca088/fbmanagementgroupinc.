@@ -408,3 +408,11 @@ button:hover{
 .modal-buttons button {
     margin-left: 10px;
 }
+
+.section-IT {
+    background: #2196F3;
+}
+
+.section-Maintenance {
+    background: #FF9800;
+}
