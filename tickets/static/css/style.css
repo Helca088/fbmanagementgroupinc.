@@ -411,7 +411,7 @@ button:hover{
     border-left-color:#2196F3;
 }
 .section-maintenance{
-    border-left-color:#F44336;
+    border-left-color: #4CAF50;
 }
 
 /* Department Badge */
@@ -430,5 +430,5 @@ button:hover{
 
 
 .section-badge-maintenance{
-    background:#F44336;
+    background: #4CAF50;
 }
