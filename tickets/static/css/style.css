@@ -173,13 +173,10 @@ button:hover{
 .ticket-card{
 
     background:white;
-
     padding:25px;
-
     border-radius:20px;
-
+    border-left:8px solid #999;
     box-shadow:0 8px 20px rgba(0,0,0,0.25);
-
     transition:0.3s;
 }
 
@@ -188,6 +185,7 @@ button:hover{
 .ticket-card:hover{
 
     transform:translateY(-5px);
+    box-shadow:0 6px 18px rgba(0,0,0,.15);
 }
 
 /* CARD TITLE */
@@ -409,10 +407,28 @@ button:hover{
     margin-left: 10px;
 }
 
-.section-it {
-    background: #2196F3;
+.section-it{
+    border-left-color:#2196F3;
+}
+.section-maintenance{
+    border-left-color:#F44336;
 }
 
-.section-maintenance {
-    background: #FF9800;
+/* Department Badge */
+
+.dept-badge{
+    color:white;
+    padding:4px 10px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.section-badge-it{
+    background:#2196F3;
+}
+
+
+.section-badge-maintenance{
+    background:#F44336;
 }

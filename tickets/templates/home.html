@@ -114,7 +114,12 @@
 
             {% for ticket in tickets %}
 
-            <div class="ticket-card section-{{ ticket.section.name|slugify }}" data-ticket-id="{{ticket.id}}">
+            <div class="ticket-card section-{{ ticket.section.name|slugify }}">
+
+            <div class="ticket-header">
+            <span class="dept-badge section-badge-{{ ticket.section.name|slugify }}">
+                {{ ticket.section.name }}
+             </span>
 
                 <h3>{{ ticket.outlet }}</h3>
 
