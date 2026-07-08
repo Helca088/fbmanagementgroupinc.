@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.safestring import mark_safe
 from .models import DeviceToken
+from tickets.notification import send_push
 
 admin.site.register(DeviceToken)
 admin.site.site_url = "/reports/"
@@ -237,6 +238,17 @@ class TicketAdmin(ModelAdmin):
             obj.resolve_at = None    
 
         super().save_model(request, obj, form, change)
+
+        if change:
+            send_push(
+            user=obj.user,
+            title="Ticket Updated",
+            body=f"Your ticket #{obj.id} has been updated.",
+            data={
+                "ticket_id": str(obj.id),
+                "url": "https://fbmanagement.onrender.com/home/"
+            }
+        )
         
         notify_ticket_update(obj)
         

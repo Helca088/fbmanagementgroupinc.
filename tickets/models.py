@@ -151,7 +151,9 @@ class Ticket(models.Model):
         if not self.deadline:
             return False
         
-        if self.status == 'resolved':
+        if self.status == "resolved":
+            if self.resolve_at:
+                return self.resolve_at > self.deadline
             return False
         
         return timezone.now() > self.deadline
