@@ -4,14 +4,29 @@ def serialize_ticket(ticket):
         "title": ticket.title or "",
         "message": ticket.message or "",
         "status": ticket.status.strip(),
-        "user": getattr(ticket.user, "username", str(ticket.user)),
+        "user": ticket.user.username if ticket.user else "",
         "section": ticket.section.name if ticket.section else "",
         "concern_type": ticket.concern_type.name if ticket.concern_type else "",
-        "scheduled_date": str(ticket.scheduled_date) if ticket.scheduled_date else None,
-        "scheduled_time": str(ticket.scheduled_time) if ticket.scheduled_time else None,
+        "priority": ticket.priority,
+        "assigned_to": (
+            ticket.assigned_to.full_name
+            if ticket.assigned_to else ""
+        ),
+        "scheduled_date": (
+            str(ticket.scheduled_date)
+            if ticket.scheduled_date else ""
+        ),
+        "scheduled_time": (
+            str(ticket.scheduled_time)
+            if ticket.scheduled_time else ""
+        ),
         "admin_note": ticket.admin_note or "",
+        "deadline": (
+            ticket.deadline.strftime("%Y-%m-%d %H:%M")
+            if ticket.deadline else ""
+        ),
+        "is_overdue": ticket.is_overdue,
         "created_at": ticket.created_at.isoformat(),
-        "attachment": bool(ticket.attachment),
-        "outlet": ticket.outlet.name if ticket.outlet else "",
+        "outlet": str(ticket.outlet) if ticket.outlet else "",
         "outlet_id": ticket.outlet_id,
     }
