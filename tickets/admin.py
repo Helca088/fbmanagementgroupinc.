@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils import timezone
 from .models import Section, Ticket, ConcernType, Outlet, UserProfile
-from .services import notify_ticket_update
+from .websocket import notify_ticket_update
 from django.contrib.admin import AdminSite
 from .models import Ticket, TicketStatusLog, TicketAttachment, Technician, TicketAssignmentLog
 from unfold.admin import ModelAdmin, TabularInline
