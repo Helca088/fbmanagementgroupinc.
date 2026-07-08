@@ -24,7 +24,6 @@ def notify_ticket_update(ticket, action="update"):
         payload,
     )
 
-
 def notify_ticket_delete(ticket):
 
     channel_layer = get_channel_layer()
@@ -37,11 +36,13 @@ def notify_ticket_delete(ticket):
         },
     }
 
+    # Admin dashboard
     async_to_sync(channel_layer.group_send)(
         "tickets",
         payload,
     )
 
+    # Ticket owner
     async_to_sync(channel_layer.group_send)(
         f"user_{ticket.user.id}",
         payload,

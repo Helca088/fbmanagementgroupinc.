@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from .websocket import (
     notify_ticket_update,
@@ -10,3 +10,7 @@ from .models import Ticket
 def ticket_saved(sender, instance, **kwargs):
     notify_ticket_update(instance)
     print("🔥 SIGNAL FIRED", instance.id)
+
+@receiver(post_delete, sender=Ticket)
+def ticket_deleted(sender, instance, **kwargs):
+    notify_ticket_delete(instance)

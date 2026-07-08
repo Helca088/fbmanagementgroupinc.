@@ -12,6 +12,7 @@ from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.safestring import mark_safe
 from .models import DeviceToken
 from tickets.notification import send_push
+from .websocket import notify_ticket_delete
 
 admin.site.register(DeviceToken)
 admin.site.site_url = "/reports/"
@@ -196,6 +197,16 @@ class TicketAdmin(ModelAdmin):
         return mark_safe("".join(html))
     
     attachment_preview.short_description = "attachments"
+
+    def delete_model(self, request, obj):
+        notify_ticket_delete(obj)
+        super().delete_model(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        for ticket in queryset:
+            notify_ticket_delete(ticket)
+
+        super().delete_queryset(request, queryset)
 
     def overdue(self, obj):
         if obj.is_overdue:
