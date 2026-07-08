@@ -250,7 +250,7 @@ class TicketAdmin(ModelAdmin):
                 }
             )
         else:
-        # Ticket created from Django Admin
+        
             send_push(
                 user=obj.user,
                 title="New Ticket",

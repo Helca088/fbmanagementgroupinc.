@@ -29,4 +29,10 @@ def serialize_ticket(ticket):
         "created_at": ticket.created_at.isoformat(),
         "outlet": str(ticket.outlet) if ticket.outlet else "",
         "outlet_id": ticket.outlet_id,
+        "priority": ticket.priority,
+        "assigned_to": ticket.assigned_to.full_name if ticket.assigned_to else "",
+        "deadline": ticket.deadline.strftime("%Y-%m-%d %H:%M") if ticket.deadline else "",
+        "is_overdue": ticket.is_overdue,
+        "ticket_age": ticket.ticket_age,
+        "attachment_url": ticket.attachment.url if ticket.attachment else "",
     }
