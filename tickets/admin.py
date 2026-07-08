@@ -215,20 +215,20 @@ class TicketAdmin(ModelAdmin):
         if change:
             old_obj = Ticket.objects.get(pk=obj.pk)
         
-        if old_obj.assigned_to != obj.assigned_to:
-            TicketAssignmentLog.objects.create(
-                ticket=obj,
-                old_technician=old_obj.assigned_to,
-                new_technician=obj.assigned_to,
-                reason="Reassigned by admin"
-            ) 
+            if old_obj.assigned_to != obj.assigned_to:
+                TicketAssignmentLog.objects.create(
+                    ticket=obj,
+                    old_technician=old_obj.assigned_to,
+                    new_technician=obj.assigned_to,
+                    reason="Reassigned by admin"
+             ) 
 
-        if old_obj.status != obj.status:
-            TicketStatusLog.objects.create(
-                ticket=obj,
-                old_status=old_obj.status,
-                new_status=obj.status,
-                technician=obj.assigned_to,
+            if old_obj.status != obj.status:
+                TicketStatusLog.objects.create(
+                    ticket=obj,
+                    old_status=old_obj.status,
+                    new_status=obj.status,
+                    technician=obj.assigned_to,
             )
             
         if obj.status == "resolved" and not obj.resolve_at:
