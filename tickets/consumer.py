@@ -7,23 +7,25 @@ class TicketConsumer(AsyncWebsocketConsumer):
         try:
             user = self.scope["user"]
 
-            if user.is_staff:
-                self.group_name = "tickets"
-            else:
-                self.group_name = f"user_{user.id}"
-
-            await self.channel_layer.group_add(
-                self.group_name,
-                self.channel_name
-            )
-
             await self.accept()
 
-            print(f"🔥 WS CONNECTED: {self.group_name}")
+            if user.is_staff:
+                await self.channel_layer.group_add(
+                    "tickets",
+                    self.channel_name
+                )
+                print("🔥 Admin joined tickets")
+
+            if user.is_authenticated:
+                await self.channel_layer.group_add(
+                    f"user_{user.id}",
+                    self.channel_name
+                )
+                print(f"🔥 User joined user_{user.id}")
 
         except Exception as e:
             print("❌ CONNECT ERROR:", e)
-            await self.close()
+            await self.close()  
 
     async def ticket_update(self, event):
        try:
@@ -45,9 +47,18 @@ class TicketConsumer(AsyncWebsocketConsumer):
     }))
         
     async def disconnect(self, close_code):
-        print("WS CLOSED:", close_code)
+        user = self.scope["user"]
 
-        await self.channel_layer.group_discard(
-            self.group_name,
-            self.channel_name
-    )
+        if user.is_staff:
+            await self.channel_layer.group_discard(
+                "tickets",
+                self.channel_name
+            )
+
+        if user.is_authenticated:
+            await self.channel_layer.group_discard(
+                f"user_{user.id}",
+                self.channel_name
+            )
+
+        print("WS CLOSED:", close_code)
