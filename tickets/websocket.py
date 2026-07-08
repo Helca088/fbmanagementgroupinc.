@@ -25,14 +25,24 @@ def notify_ticket_update(ticket, action="update"):
     )
 
 
-def notify_ticket_delete(ticket_id):
+def notify_ticket_delete(ticket):
 
     channel_layer = get_channel_layer()
 
+    payload = {
+        "type": "ticket_delete",
+        "action": "delete",
+        "data": {
+            "id": ticket.id,
+        },
+    }
+
     async_to_sync(channel_layer.group_send)(
         "tickets",
-        {
-            "type": "ticket_delete",
-            "data": {"id": ticket_id},
-        },
+        payload,
+    )
+
+    async_to_sync(channel_layer.group_send)(
+        f"user_{ticket.user.id}",
+        payload,
     )

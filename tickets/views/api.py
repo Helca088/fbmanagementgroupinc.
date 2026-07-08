@@ -10,9 +10,14 @@ from ..models import (
     Ticket,
     ConcernType,
 )
-
+@login_required
 def ticket_api(request):
-    tickets = Ticket.objects.annotate(
+    if request.user.is_staff:
+        tickets = Ticket.objects.all()
+    else:
+        tickets = Ticket.objects.filter(user=request.user)
+
+    tickets = tickets.annotate(
     status_order=Case(
         When(status='Pending', then=0),
         When(status='Open', then=1),
@@ -20,6 +25,7 @@ def ticket_api(request):
         default=99,
         output_field=IntegerField(),
     )
+
 ).order_by('status_order', '-created_at')
     data = []
     for ticket in tickets:

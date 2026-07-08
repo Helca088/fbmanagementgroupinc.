@@ -133,12 +133,11 @@ def delete_ticket(request, id):
 
     ticket = get_object_or_404(Ticket, id=id)
 
-    ticket_id = ticket.id
+    notify_ticket_delete(ticket)
+
     ticket.delete()
 
-    notify_ticket_delete(ticket_id)
-
-    return redirect('admin_dashboard')
+    return redirect("admin_dashboard")
 
 @require_POST
 def update_status(request, id):
