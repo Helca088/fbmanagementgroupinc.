@@ -118,7 +118,7 @@ class TicketAdmin(ModelAdmin):
                     'deadline',
                     'overdue',)
 
-    readonly_fields = ( 'attachment_preview', 'download_button', 'outlet', 'message')
+    readonly_fields = ( 'attachment_preview', 'download_button', 'message')
     list_filter = ('section', 'status', 'priority', 'assigned_to', 'outlet')
 
     fields = ('user', 'outlet', 'message', 'attachment_preview', 'status',
