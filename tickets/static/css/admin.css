@@ -18,7 +18,7 @@ html.dark table tbody tr td a {
     text-decoration: underline !important;
 }
 /* Unfold table cells */
-html.dark td.field-section,
+html.dark td.field-department,
 html.dark td.field-concern_type,
 html.dark td[class*="field-"] {
     color: #f3f4f6 !important;

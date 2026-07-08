@@ -8,8 +8,8 @@ def serialize_ticket(ticket):
         "status": ticket.status,
         "user": ticket.user.username if ticket.user else "",
 
-        "section": ticket.section.name if ticket.section else "",
-        "section_slug": slugify(ticket.section.name) if ticket.section else "",
+        "department": ticket.department.name if ticket.department else "",
+        "department_slug": slugify(ticket.departmen.name) if ticket.department else "",
 
         "concern_type": (
             ticket.concern_type.name

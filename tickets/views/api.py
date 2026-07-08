@@ -43,8 +43,8 @@ def ticket_api(request):
             "outlet": ticket.outlet.name if ticket.outlet else "",
             "outlet_id": ticket.outlet.pk if ticket.outlet else None,
 
-            "section": ticket.section.name if ticket.section else "",
-            "section_slug": slugify(ticket.section.name) if ticket.section else "",
+            "department": ticket.department.name if ticket.department else "",
+            "department_slug": slugify(ticket.department.name) if ticket.department else "",
 
             "concern_type": ticket.concern_type.name if ticket.concern_type else "",
 
@@ -89,9 +89,9 @@ def ticket_api(request):
 
 def get_concerns(request):
 
-    section_id = request.GET.get("section")
+    department_id = request.GET.get("department")
 
-    concerns = ConcernType.objects.filter(section_id=section_id)
+    concerns = ConcernType.objects.filter(department_id=department_id)
 
     return render(
      request, "partials/concern_options.html",

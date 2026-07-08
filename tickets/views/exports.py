@@ -33,7 +33,7 @@ def export_pdf(request):
             created_at__date__range=[start, end])
         
     if department:
-        tickets = tickets.filter(section__name =department)
+        tickets = tickets.filter(department__name =department)
 
     overdue = tickets.filter(
         deadline__lt=timezone.now()
@@ -123,7 +123,7 @@ def export_pdf(request):
     # =====================
 
     departments = tickets.values(
-        "section__name"
+        "department__name"
     ).annotate(
         total=Count("id")
     )
@@ -136,7 +136,7 @@ def export_pdf(request):
 
     for d in departments:
         dept_data.append([
-            d["section__name"] or "N/A",
+            d["department__name"] or "N/A",
             d["total"]
         ])
 
@@ -204,7 +204,7 @@ def export_pdf(request):
     technicians = Technician.objects.all()
 
     if department:
-        technicians = technicians.filter(section__name=department)
+        technicians = technicians.filter(department__name=department)
 
     for tech in technicians:
 
@@ -275,7 +275,7 @@ def export_pdf(request):
         ticket_data.append([
             str(ticket.id),
             ticket.outlet,
-            ticket.section.name if ticket.section else "",
+            ticket.department.name if ticket.department else "",
             ticket.concern_type.name if ticket.concern_type else "",
             ticket.status,
             (
@@ -313,7 +313,7 @@ def export_excel(request):
         tickets = tickets.filter(
             created_at__date__range=[start, end])
     if department:
-        tickets = tickets.filter(section__name=department)
+        tickets = tickets.filter(department__name=department)
 
     wb = Workbook()
 
@@ -370,7 +370,7 @@ def export_excel(request):
         ws2.append([
         ticket.id,
         ticket.outlet.name if ticket.outlet else "",
-        ticket.section.name if ticket.section else "",
+        ticket.department.name if ticket.department else "",
         ticket.concern_type.name if ticket.concern_type else "",
         ticket.status,
         ticket.assigned_to.full_name if ticket.assigned_to else "",
@@ -387,14 +387,14 @@ def export_excel(request):
     ws3.append(["Department", "Total"])
 
     departments = tickets.values(
-        "section__name"
+        "department__name"
     ).annotate(
         total=Count("id")
     )
 
     for d in departments:
         ws3.append([
-            d["section__name"],
+            d["department__name"],
             d["total"]
         ])
 
@@ -436,7 +436,7 @@ def export_excel(request):
     technicians = Technician.objects.all()
 
     if department:
-     technicians = technicians.filter(section__name=department)
+     technicians = technicians.filter(department__name=department)
 
     for tech in technicians:
 

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils import timezone
-from .models import Section, Ticket, ConcernType, Outlet, UserProfile
+from .models import Department, Ticket, ConcernType, Outlet, UserProfile
 from .websocket import notify_ticket_update
 from django.contrib.admin import AdminSite
 from .models import Ticket, TicketStatusLog, TicketAttachment, Technician, TicketAssignmentLog
@@ -59,7 +59,7 @@ class TicketAssignmentLogAdmin(ModelAdmin):
 
 @admin.register(Technician)
 class TechnicianAdmin(ModelAdmin):
-    list_display = ("full_name", 'section')
+    list_display = ("full_name", 'department')
     search_fields = ("full_name",)
 
 @admin.register(TicketStatusLog)
@@ -73,11 +73,11 @@ class TicketStatuslogAdmin(ModelAdmin):
 
 @admin.register(ConcernType)
 class ConcernTypeAdmin(ModelAdmin):
-    list_display = ('name', 'section')
-    list_filter = ('section',)
+    list_display = ('name', 'department')
+    list_filter = ('department',)
     
-@admin.register(Section)
-class SectionAdmin(ModelAdmin):
+@admin.register(Department)
+class DepartmentAdmin(ModelAdmin):
     list_display = ('id', 'name')
     search_fields = ('name',)
 class TicketAttachmentInline(admin.TabularInline):
@@ -105,12 +105,12 @@ class TicketAdmin(ModelAdmin):
     inlines = [TicketStatusLogInline]
     search_fields =[
         'outlet__name',
-        'section__name',
+        'department__name',
         'concern_type__name'
         ]
 
     list_display = ('outlet', 
-                    'section', 
+                    'department', 
                     'concern_type', 
                     'status', 
                     'priority',
@@ -120,11 +120,11 @@ class TicketAdmin(ModelAdmin):
                     'overdue',)
 
     readonly_fields = ( 'attachment_preview', 'download_button', 'message')
-    list_filter = ('section', 'status', 'priority', 'assigned_to', 'outlet')
+    list_filter = ('department', 'status', 'priority', 'assigned_to', 'outlet')
 
     fields = ('user', 'outlet', 'message', 'attachment_preview', 'status',
               'scheduled_date', 'scheduled_time', 'admin_note', 'assigned_to',
-              'section', 'priority', 'concern_type')
+              'department', 'priority', 'concern_type')
 
     def  formfield_for_foreignkey(self, db_field, request, **kwargs):
             object_id = request.resolver_match.kwargs.get("object_id")   
@@ -133,7 +133,7 @@ class TicketAdmin(ModelAdmin):
                  ticket = Ticket.objects.get(pk=object_id)
 
                  kwargs["queryset"] = Technician.objects.filter(
-                     section=ticket.section
+                     department=ticket.department
                  )
              else:
                 kwargs["queryset"] = Technician.objects.none()

@@ -22,7 +22,7 @@ def reports(request):
         )
 
     if department:
-        tickets = tickets.filter(section__name=department)
+        tickets = tickets.filter(department__name=department)
 
     overdue = tickets.filter(
         deadline__lt=timezone.now()
@@ -43,7 +43,7 @@ def reports(request):
     technicians = Technician.objects.all()
 
     if department:
-        technicians = technicians.filter(section__name=department)
+        technicians = technicians.filter(department__name=department)
 
     for tech in technicians:
 
@@ -94,7 +94,7 @@ def reports(request):
         "technician_stats": technician_stats,
 
         "departments": tickets.values(
-            "section__name"
+            "department__name"
         ).annotate(
             total=Count("id")
         ).order_by("-total"),

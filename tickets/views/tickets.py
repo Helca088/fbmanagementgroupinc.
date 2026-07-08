@@ -7,7 +7,7 @@ from django.views.decorators.http import require_POST
 from tickets.models import (
     Ticket,
     TicketAttachment,
-    Section,
+    Department,
     ConcernType,
     TicketStatusLog,
 )
@@ -32,8 +32,8 @@ def home(request):
 
         title = request.POST.get('title')
         message = request.POST.get('message')
-        section_id = request.POST.get('section')
-        section = Section.objects.get(id=section_id)
+        department_id = request.POST.get('department')
+        department = Department.objects.get(id=department_id)
         concern_id = request.POST.get('concern_type')
         concern = ConcernType.objects.get(id=concern_id)    
 
@@ -43,7 +43,7 @@ def home(request):
             email=request.user.email,
             outlet=request.user.userprofile.outlet,
             message=message,
-            section=section,
+            department=department,
             concern_type=concern
         )
 
@@ -60,7 +60,7 @@ def home(request):
         admins = User.objects.filter(is_staff=True)
 
         print("Admins:", list(admins.values_list("username", flat=True)))
-        print("Reached notification section")
+        print("Reached notification department")
         
         for admin in admins:
             print(f"Sending notification to {admin.username}")
@@ -79,12 +79,12 @@ def home(request):
         user=request.user
     ).order_by('-created_at')
 
-    sections = Section.objects.all()
+    department = Department.objects.all()
     concerns = ConcernType.objects.all()
 
     return render(request, 'home.html', {
         'tickets': tickets,
-        'sections': sections,
+        'department': department,
         'concerns': concerns
     })
 

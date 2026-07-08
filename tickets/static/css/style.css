@@ -407,10 +407,10 @@ button:hover{
     margin-left: 10px;
 }
 
-.section-it{
+.department-it{
     border-left-color:#2196F3;
 }
-.section-maintenance{
+.department-maintenance{
     border-left-color: #4CAF50;
 }
 
@@ -424,11 +424,11 @@ button:hover{
     font-weight:bold;
 }
 
-.section-badge-it{
+.department-badge-it{
     background:#2196F3;
 }
 
 
-.section-badge-maintenance{
+.department-badge-maintenance{
     background: #4CAF50;
 }

@@ -125,7 +125,7 @@
                     <tbody>
                         {% for department in departments %}
                         <tr>
-                            <td class="td-name">{{ department.section__name }}</td>
+                            <td class="td-name">{{ department.department__name }}</td>
                             <td class="td-accent">{{ department.total }}</td>
                         </tr>
                         {% endfor %}
@@ -217,7 +217,7 @@
 
 <script>
     const statusData  = [{{ pending }}, {{ progress }}, {{ resolved }}, {{ overdue }}];
-    const deptLabels  = [{% for d in departments %}"{{ d.section__name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+    const deptLabels  = [{% for d in departments %}"{{ d.department__name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
     const deptData    = [{% for d in departments %}{{ d.total }}{% if not forloop.last %},{% endif %}{% endfor %}];
     const concernLabels = [{% for c in concerns %}"{{ c.concern_type__name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
     const concernData   = [{% for c in concerns %}{{ c.total }}{% if not forloop.last %},{% endif %}{% endfor %}];

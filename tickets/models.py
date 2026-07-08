@@ -27,7 +27,7 @@ class UserProfile(models.Model):
 
    
     
-class Section(models.Model):
+class Department(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
@@ -35,8 +35,8 @@ class Section(models.Model):
 
 class Technician(models.Model):
 
-    section = models.ForeignKey( 
-        Section, 
+    department = models.ForeignKey( 
+        Department, 
         on_delete=models.CASCADE, 
         related_name='technician',
         null=True,
@@ -50,8 +50,8 @@ class Technician(models.Model):
 
 class ConcernType(models.Model):
 
-    section = models.ForeignKey( 
-        Section, 
+    department = models.ForeignKey( 
+        Department, 
         on_delete=models.CASCADE, 
         related_name='concerns'
         )
@@ -83,7 +83,7 @@ class Ticket(models.Model):
     attachment = models.FileField(upload_to='tickets/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     resolve_at = models.DateTimeField(null=True, blank=True)
-    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name="tickets", null=True, blank=True)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name="tickets", null=True, blank=True)
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='Medium')
     concern_type = models.ForeignKey(ConcernType, on_delete=models.SET_NULL, null=True, blank=True)
     scheduled_date = models.DateField(null=True, blank=True)

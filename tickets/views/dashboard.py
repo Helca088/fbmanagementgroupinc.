@@ -21,7 +21,7 @@ def admin_dashboard(request):
             Q(title__icontains=q) |
             Q(message__icontains=q) |
             Q(status__icontains=q) |
-            Q(section__name__icontains=q)
+            Q(department__name__icontains=q)
         )
 
     return render(request, "admin.html", {

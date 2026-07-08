@@ -59,21 +59,21 @@
             <input type="file" name="files" multiple>
 
             <div>
-                <label>Section</label>
+                <label>Department</label>
 
-            <select name="section"
+            <select name="department"
                     class="border p-2 rounded w-full"
                     hx-get="/get-concerns/"
                     hx-trigger="change"
                     hx-target="#concern_type"
                     hx-swap="innerHTML"
-                    hx-include="[name='section']">
+                    hx-include="[name='department']">
 
-            <option value="">Select Section</option>
+            <option value="">Select Department</option>
 
-            {% for section in sections %}
-            <option value="{{ section.id }}">
-            {{ section.name }}
+            {% for department in departments %}
+            <option value="{{ department.id }}">
+            {{ department.name }}
             </option>
             {% endfor %}
             </select>
@@ -90,7 +90,7 @@
                     class="border p-2 rounded w-full">
                     
             <option value="">
-            Select Section First
+            Select Department First
             </option>
             </select>
             </div>
@@ -102,7 +102,6 @@
         </form>
         </div>
 
-    <!-- TICKET SECTION -->
 
     <div class="ticket-wrapper">
 
@@ -114,10 +113,10 @@
 
             {% for ticket in tickets %}
 
-            <div class="ticket-card section-{{ ticket.section.name|slugify }}" data-ticket-id="{{ ticket.id }}">
+            <div class="ticket-card department-{{ ticket.department.name|slugify }}" data-ticket-id="{{ ticket.id }}">
 
-            <span class="dept-badge section-badge-{{ ticket.section.name|slugify }}">
-                {{ ticket.section.name }}
+            <span class="dept-badge department-badge-{{ ticket.department.name|slugify }}">
+                {{ ticket.department.name }}
              </span>
 
                 <h3>{{ ticket.outlet }}</h3>

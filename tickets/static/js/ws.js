@@ -131,7 +131,7 @@ function upsertTicket(data) {
             </div>
             <div id="details-${data.id}-mobile" style="display:none;" class="mt-4 border-t pt-4">
                 <p><strong>Message:</strong> ${data.message || ""}</p>
-                <p><strong>Section:</strong> ${data.section || ""}</p>
+                <p><strong>Department:</strong> ${data.department || ""}</p>
                 <p><strong>Date:</strong> ${data.created_at || ""}</p>
                 ${data.attachment ? `<a href="/ticket/${data.id}/download/" class="bg-green-600 text-white px-3 py-1 rounded">Download Attachment</a>` : ""}
             </div>
@@ -159,11 +159,11 @@ function formatTime12Hour(timeStr) {
 function buildTicketCard(data){
 
     return `
-        <div class="ticket-card section-${data.section_slug}"
+        <div class="ticket-card department-${data.department_slug}"
          data-ticket-id="${data.id}">
 
-        <span class="dept-badge section-badge-${data.section_slug}">
-            ${data.section}
+        <span class="dept-badge department-badge-${data.department_slug}">
+            ${data.department}
         </span>
 
         <h3>${data.outlet}</h3>
