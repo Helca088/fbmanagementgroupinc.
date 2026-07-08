@@ -5,7 +5,7 @@ from ..models import DeviceToken
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.db.models import Case, When, IntegerField
-
+from django.utils.text import slugify
 from ..models import (
     Ticket,
     ConcernType,
@@ -37,22 +37,41 @@ def ticket_api(request):
         data.append({
             "id": ticket.id,
             "title": ticket.title,
+
+            "outlet": ticket.outlet,
+
             "message": ticket.message,
             "user": ticket.user.username if ticket.user else "N/A",
+
             "section": ticket.section.name if ticket.section else "N/A",
+            "section_slug": slugify(ticket.section.name) if ticket.section else "",
+
             "concern_type": ticket.concern_type.name if ticket.concern_type else "N/A",
+
             "status": ticket.status,
             "priority": ticket.priority,
+
             "assigned_to": (
-            ticket.assigned_to.full_name
-            if ticket.assigned_to else ""
+                ticket.assigned_to.full_name
+                if ticket.assigned_to else ""
             ),
+
             "created_at": ticket.created_at.strftime("%Y-%m-%d %H:%M"),
+
             "attachments": attachments,
+
             "scheduled_date": ticket.scheduled_date.strftime("%Y-%m-%d") if ticket.scheduled_date else "",
             "scheduled_time": ticket.scheduled_time.strftime("%H:%M") if ticket.scheduled_time else "",
+
             "admin_note": ticket.admin_note or "",
-            "deadline": (ticket.deadline.strftime("%Y-%m-%d %H:%M")if ticket.deadline else ""),
+
+            "deadline": (
+                ticket.deadline.strftime("%Y-%m-%d %H:%M")
+                if ticket.deadline else ""
+            ),
+
+            "ticket_age": ticket.ticket_age,
+
             "is_overdue": ticket.is_overdue,  
         })
     return JsonResponse(data, safe=False)
