@@ -69,7 +69,7 @@ def home(request):
         title="New Ticket",
         body=f"{ticket.user.username} created Ticket #{ticket.id}",
         data={
-            "url": "https://fbmanagement.onrender.com/admin/"
+            "url": "https://fbmanagement.onrender.com/admin/tickets/ticket/"
         }
     )
             
