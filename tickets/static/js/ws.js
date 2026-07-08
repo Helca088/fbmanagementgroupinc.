@@ -11,6 +11,7 @@ function connectWS() {
     socket.onmessage = function (event) {
         const payload = JSON.parse(event.data);
         console.log("🔥 Ticket update:", payload);
+        console.log("Calling upsertTicket...");
         handleTicketEvent(payload);
     };
 
@@ -87,7 +88,9 @@ function handleTicketEvent(payload) {
 
 function upsertTicket(data) {
 
-      const existing = document.querySelector(
+    console.log("UPSERT", data);
+
+    const existing = document.querySelector(
         `[data-ticket-id="${data.id}"]`
     );
 
@@ -98,12 +101,15 @@ function upsertTicket(data) {
 
     const list = document.querySelector(".ticket-list");
 
-    if (!list) return;
+    console.log("LIST =", list);
 
-    list.insertAdjacentHTML(
-        "afterbegin",
-        buildTicketCard(data)
-    );
+    const html = buildTicketCard(data);
+
+    console.log(html);
+
+    list.insertAdjacentHTML("afterbegin", html);
+
+    console.log("AFTER INSERT");
 }
 
     // ========================
