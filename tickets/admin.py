@@ -114,7 +114,7 @@ class TicketAdmin(ModelAdmin):
                     'concern_type', 
                     'status', 
                     'priority',
-                    'ticket_age',
+                    'created_at',
                     'assigned_to',
                     'deadline',
                     'overdue',)
