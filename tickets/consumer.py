@@ -5,7 +5,12 @@ class TicketConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         try:
-            self.group_name = "tickets"
+            user = self.scope["user"]
+
+            if user.is_staff:
+                self.group_name = "tickets"
+            else:
+                self.group_name = f"user_{user.id}"
 
             await self.channel_layer.group_add(
                 self.group_name,
@@ -14,7 +19,7 @@ class TicketConsumer(AsyncWebsocketConsumer):
 
             await self.accept()
 
-            print("🔥 WS CONNECTED SUCCESSFULLY")
+            print(f"🔥 WS CONNECTED: {self.group_name}")
 
         except Exception as e:
             print("❌ CONNECT ERROR:", e)

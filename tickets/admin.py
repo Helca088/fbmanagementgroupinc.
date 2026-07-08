@@ -121,7 +121,7 @@ class TicketAdmin(ModelAdmin):
     readonly_fields = ( 'attachment_preview', 'download_button', 'outlet', 'message')
     list_filter = ('section', 'status', 'priority', 'assigned_to', 'outlet')
 
-    fields = ('outlet', 'message', 'attachment_preview', 'status',
+    fields = ('user', 'outlet', 'message', 'attachment_preview', 'status',
               'scheduled_date', 'scheduled_time', 'admin_note', 'assigned_to',
               'section', 'priority', 'concern_type')
 
@@ -234,25 +234,35 @@ class TicketAdmin(ModelAdmin):
         if obj.status == "resolved" and not obj.resolve_at:
             obj.resolve_at = timezone.now()
 
-        if obj.status != "resolved":
+        elif obj.status != "resolved":
             obj.resolve_at = None    
 
         super().save_model(request, obj, form, change)
 
         if change:
             send_push(
-            user=obj.user,
-            title="Ticket Updated",
-            body=f"Your ticket #{obj.id} has been updated.",
-            data={
-                "ticket_id": str(obj.id),
-                "url": "https://fbmanagement.onrender.com/home/"
-            }
-        )
+                user=obj.user,
+                title="Ticket Updated",
+                body=f"Your ticket #{obj.id} has been updated.",
+                data={
+                    "ticket_id": str(obj.id),
+                    "url": "https://fbmanagement.onrender.com/home/"
+                }
+            )
+        else:
+        # Ticket created from Django Admin
+            send_push(
+                user=obj.user,
+                title="New Ticket",
+                body=f"A new ticket #{obj.id} has been created for you.",
+                data={
+                    "ticket_id": str(obj.id),
+                    "url": "https://fbmanagement.onrender.com/home/"
+                }
+            )
         
-        notify_ticket_update(obj)
+        notify_ticket_update(obj, action="update" if change else "create")
         
-    
 
     def latest_resolution(self, obj):
         last = obj.status_logs.order_by('-changed_at').first()
