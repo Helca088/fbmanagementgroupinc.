@@ -9,7 +9,7 @@ def serialize_ticket(ticket):
         "user": ticket.user.username if ticket.user else "",
 
         "department": ticket.department.name if ticket.department else "",
-        "department_slug": slugify(ticket.departmen.name) if ticket.department else "",
+        "department_slug": slugify(ticket.department.name) if ticket.department else "",
 
         "concern_type": (
             ticket.concern_type.name
