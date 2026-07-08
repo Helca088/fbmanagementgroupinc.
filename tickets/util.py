@@ -5,16 +5,16 @@ def serialize_ticket(ticket):
         "id": ticket.id,
         "title": ticket.title or "",
         "message": ticket.message or "",
-        "status": ticket.status.strip(),
-
+        "status": ticket.status,
         "user": ticket.user.username if ticket.user else "",
-        "outlet": ticket.outlet or "",
-        "outlet_id": ticket.outlet_id,
 
         "section": ticket.section.name if ticket.section else "",
         "section_slug": slugify(ticket.section.name) if ticket.section else "",
 
-        "concern_type": ticket.concern_type.name if ticket.concern_type else "",
+        "concern_type": (
+            ticket.concern_type.name
+            if ticket.concern_type else ""
+        ),
 
         "priority": ticket.priority,
 
@@ -23,8 +23,15 @@ def serialize_ticket(ticket):
             if ticket.assigned_to else ""
         ),
 
-        "scheduled_date": str(ticket.scheduled_date) if ticket.scheduled_date else "",
-        "scheduled_time": str(ticket.scheduled_time) if ticket.scheduled_time else "",
+        "scheduled_date": (
+            ticket.scheduled_date.strftime("%Y-%m-%d")
+            if ticket.scheduled_date else ""
+        ),
+
+        "scheduled_time": (
+            ticket.scheduled_time.strftime("%H:%M")
+            if ticket.scheduled_time else ""
+        ),
 
         "admin_note": ticket.admin_note or "",
 
@@ -33,11 +40,18 @@ def serialize_ticket(ticket):
             if ticket.deadline else ""
         ),
 
-        "ticket_age": ticket.ticket_age(),
-
         "is_overdue": ticket.is_overdue,
 
-        "created_at": ticket.created_at.isoformat(),
+        "created_at": ticket.created_at.strftime("%Y-%m-%d %H:%M"),
 
-        "attachment_url": ticket.attachment.url if ticket.attachment else "",
+        # IMPORTANT
+        "outlet": ticket.outlet.name if ticket.outlet else "",
+        "outlet_id": ticket.outlet.pk if ticket.outlet else None,
+
+        "ticket_age": ticket.ticket_age(),
+
+        "attachment_url": (
+            ticket.attachment.url
+            if ticket.attachment else ""
+        ),
     }

@@ -36,17 +36,17 @@ def ticket_api(request):
         ]
         data.append({
             "id": ticket.id,
-            "title": ticket.title,
+            "title": ticket.title or "",
+            "message": ticket.message or "",
+            "user": ticket.user.username if ticket.user else "",
 
-            "outlet": ticket.outlet,
+            "outlet": ticket.outlet.name if ticket.outlet else "",
+            "outlet_id": ticket.outlet.pk if ticket.outlet else None,
 
-            "message": ticket.message,
-            "user": ticket.user.username if ticket.user else "N/A",
-
-            "section": ticket.section.name if ticket.section else "N/A",
+            "section": ticket.section.name if ticket.section else "",
             "section_slug": slugify(ticket.section.name) if ticket.section else "",
 
-            "concern_type": ticket.concern_type.name if ticket.concern_type else "N/A",
+            "concern_type": ticket.concern_type.name if ticket.concern_type else "",
 
             "status": ticket.status,
             "priority": ticket.priority,
@@ -58,10 +58,15 @@ def ticket_api(request):
 
             "created_at": ticket.created_at.strftime("%Y-%m-%d %H:%M"),
 
-            "attachments": attachments,
+            "scheduled_date": (
+                ticket.scheduled_date.strftime("%Y-%m-%d")
+                if ticket.scheduled_date else ""
+            ),
 
-            "scheduled_date": ticket.scheduled_date.strftime("%Y-%m-%d") if ticket.scheduled_date else "",
-            "scheduled_time": ticket.scheduled_time.strftime("%H:%M") if ticket.scheduled_time else "",
+            "scheduled_time": (
+                ticket.scheduled_time.strftime("%H:%M")
+                if ticket.scheduled_time else ""
+            ),
 
             "admin_note": ticket.admin_note or "",
 
@@ -70,9 +75,15 @@ def ticket_api(request):
                 if ticket.deadline else ""
             ),
 
-            "ticket_age": ticket.ticket_age,
+            "is_overdue": ticket.is_overdue,
+            "ticket_age": ticket.ticket_age(),
 
-            "is_overdue": ticket.is_overdue,  
+            "attachment_url": (
+                ticket.attachment.url
+                if ticket.attachment else ""
+            ),
+
+            "attachments": attachments,  
         })
     return JsonResponse(data, safe=False)
 
