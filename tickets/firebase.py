@@ -10,4 +10,4 @@ def init_firebase():
             raise Exception("FIREBASE_SERVICE_ACCOUNT is not set in environment variables")
 
         cred = credentials.Certificate(path)
-        firebase_admin.initialize_app(cred)
+        firebase_admin.initialize_app(cred) 
