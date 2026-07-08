@@ -79,12 +79,12 @@ def home(request):
         user=request.user
     ).order_by('-created_at')
 
-    department = Department.objects.all()
+    departments = Department.objects.all()
     concerns = ConcernType.objects.all()
 
     return render(request, 'home.html', {
         'tickets': tickets,
-        'department': department,
+        'departments': departments,
         'concerns': concerns
     })
 
