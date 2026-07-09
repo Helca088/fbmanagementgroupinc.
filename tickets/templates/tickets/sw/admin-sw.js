@@ -20,26 +20,28 @@ messaging.onBackgroundMessage((payload) => {
             body: payload.notification.body,
             icon: "/static/icons/FBLG.png",
             data: {
-            url: payload.data?.url || "https://fbmanagement.onrender.com/admin/tickets/ticket/"
-        }
+                url: payload.data?.url || "https://fbmanagement.onrender.com/admin/tickets/ticket/"
+            }
         }
     );
 });
 
-self.addEventListener("install", () => {
+self.addEventListener("install", (event) => {
     self.skipWaiting();
 });
 
-self.addEventListener("fetch", () => {});
+self.addEventListener("activate", (event) => {
+    event.waitUntil(
+        self.clients.claim()
+    );
+});
 
-self.addEventListener("notificationclick", function(event) {
-
+self.addEventListener("notificationclick", (event) => {
     event.notification.close();
 
     const url =
-        event.notification.data?.url || "https://fbmanagement.onrender.com/admin/tickets/ticket/";
+        event.notification.data?.url ||
+        "https://fbmanagement.onrender.com/admin/tickets/ticket/";
 
-    event.waitUntil(
-        clients.openWindow(url)
-    );
+    event.waitUntil(clients.openWindow(url));
 });

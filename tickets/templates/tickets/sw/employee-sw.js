@@ -27,12 +27,11 @@ messaging.onBackgroundMessage((payload) => {
     );
 });
 
-const CACHE_NAME = "fb-employee-v1";
+const CACHE_NAME = "fb-employee-v2";
 
 const urlsToCache = [
     "/static/employee-manifest.json",
-    "/static/js/ws.js",
-    "/static/js/sw_update.js",  
+    "/static/js/ws.js",  
 ];
 
 self.addEventListener("install", (event) => {
@@ -45,8 +44,18 @@ self.addEventListener("install", (event) => {
     self.skipWaiting();
 });
 
-self.addEventListener("activate", (event) => {
-    event.waitUntil(self.clients.claim());
+self.addEventListener("activate", event => {
+    event.waitUntil(
+        caches.keys().then(keys =>
+            Promise.all(
+                keys.map(key => {
+                    if (key !== CACHE_NAME) {
+                        return caches.delete(key);
+                    }
+                })
+            )
+        ).then(() => self.clients.claim())
+    );
 });
 
 self.addEventListener("fetch", (event) => {

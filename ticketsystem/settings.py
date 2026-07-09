@@ -207,39 +207,3 @@ else:
         },
     }
 
-PWA_APP_NAME = "Pho Hoa Ticketing"
-PWA_APP_DESCRIPTION = "Ticket Management System"
-PWA_APP_THEME_COLOR = "#C62828"
-PWA_APP_BACKGROUND_COLOR = "#ffffff"
-PWA_APP_DISPLAY = "standalone"
-PWA_APP_SCOPE= "/"
-PWA_APP_ORIENTATION = "portrait"
-PWA_APP_START_URL = "/"
-PWA_APP_STATUS_BAR_COLOR = "default"
-PWA_APP_ICONS = [
-    {
-        "src": "/static/icons/FBLG.png",
-        "sizes": "192x192"
-    },
-    {
-        "src": "/static/icons/FBLG.png",
-        "sizes": "512x512"
-    }
-]
-PWA_APP_ICONS_APPLE = [
-    {
-        "src": "/static/icons/FBLG.png",
-        "sizes": "192x192"
-    }
-]
-
-PWA_APP_SPLASH_SCREEN = [
-    {
-        "src": "/static/icons/FBLG.png",
-        "media": "(device-width: 320px)"
-    }
-]
-
-PWA_APP_DIR = "ltr"
-
-PWA_APP_LANG = "en-US"

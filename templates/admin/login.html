@@ -5,7 +5,7 @@
     {{ block.super }}
     <meta name="nick-test" content="12345">
 
-<link rel="manifest" href="{% static 'admin-manifest.json' %}">
+<link rel="manifest" href="{% static 'admin-manifest.json' %}"?v=2>
 <meta name="theme-color" content="#5E17EB">
 
 
@@ -13,8 +13,38 @@
 
 
 <script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/admin-sw.js', { scope: '/admin/' });
+if ("serviceWorker" in navigator) {
+
+    navigator.serviceWorker.register("/admin-sw.js", {
+        scope: "/admin/",
+        updateViaCache: "none"
+    })
+    .then(reg => {
+
+        console.log("Admin SW registered");
+
+        // Check for updates immediately
+        reg.update();
+
+        // Check every minute
+        setInterval(() => {
+            reg.update();
+        }, 60000);
+
+        reg.addEventListener("updatefound", () => {
+            console.log("New Admin Service Worker found");
+        });
+
+    })
+    .catch(err => {
+        console.error("Admin SW registration failed:", err);
+    });
+
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+        console.log("Admin SW updated");
+        window.location.reload();
+    });
+
 }
 </script>
 
