@@ -248,6 +248,9 @@ class TicketAdmin(ModelAdmin):
         elif obj.status != "resolved":
             obj.resolve_at = None    
 
+        if not change and not obj.created_by:
+            obj.create_by = request.user
+
         super().save_model(request, obj, form, change)
 
         if change:
