@@ -78,6 +78,9 @@ def ticket_api(request):
             "is_overdue": ticket.is_overdue,
             "ticket_age": ticket.ticket_age(),
 
+            "created_by": ticket.created_by.username if ticket.created_by else "Unknown",
+            "created_by_role": "Admin" if ticket.created_by and ticket.created_by.is_staff else "Employee",
+
             "attachment_url": (
                 ticket.attachment.url
                 if ticket.attachment else ""

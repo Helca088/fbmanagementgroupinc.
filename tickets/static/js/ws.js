@@ -263,6 +263,15 @@ function buildTicketCard(data){
         <div class="ticket-date">
             ${data.created_at}
         </div>
+        <div class="created-by">
+            <strong>Created by:</strong>
+            ${data.created_by}
+            ${
+                data.created_by !== "Unknown"
+                    ? `<span class="badge">${data.created_by_role}</span>`
+                    : ""
+            }
+        </div>
 
         ${data.attachment ? `
             <a

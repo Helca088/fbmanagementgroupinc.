@@ -432,3 +432,14 @@ button:hover{
 .department-badge-maintenance{
     background: #4CAF50;
 }
+
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    margin-left: 6px;
+    border-radius: 12px;
+    background: #007bff;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+}

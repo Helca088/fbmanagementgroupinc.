@@ -44,6 +44,13 @@ def serialize_ticket(ticket):
 
         "created_at": ticket.created_at.strftime("%Y-%m-%d %H:%M"),
 
+        "created_by": ticket.created_by.username if ticket.created_by else "Unknown",
+        "created_by_role": (
+            "Admin"
+            if ticket.created_by and ticket.created_by.is_staff
+            else "Employee"
+        ),
+
         # IMPORTANT
         "outlet": ticket.outlet.name if ticket.outlet else "",
         "outlet_id": ticket.outlet.pk if ticket.outlet else None,

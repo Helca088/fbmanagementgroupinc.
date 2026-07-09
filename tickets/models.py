@@ -100,6 +100,13 @@ class Ticket(models.Model):
         null=True,
         blank=True
     )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_tickets"
+    )
     description = models.TextField()
     assigned_to = models.ForeignKey(
         Technician,

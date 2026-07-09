@@ -40,6 +40,7 @@ def home(request):
         ticket = Ticket.objects.create(
               
             user=request.user,
+            created_by=request.user,
             email=request.user.email,
             outlet=request.user.userprofile.outlet,
             message=message,
@@ -93,7 +94,10 @@ def create_ticket(request):
         form = TicketForm(request.POST, request.FILES)
 
         if form.is_valid():
-            ticket = form.save()
+            ticket = form.save(commit=False)
+            ticket.created_by = request.user
+            ticket.save()
+            form.save_m2m()
 
         if ticket.assigned_to:
          send_push(

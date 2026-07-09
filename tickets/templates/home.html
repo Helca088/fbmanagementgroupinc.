@@ -204,6 +204,22 @@
                     {{ ticket.created_at }}
                 </div>
 
+                <p>
+                <strong>Created by:</strong>
+                {% if ticket.created_by %}
+                    {{ ticket.created_by.username }}
+                    <span class="badge">
+                        {% if ticket.created_by.is_staff %}
+                            Admin
+                        {% else %}
+                            Employee
+                        {% endif %}
+                    </span>
+                        {% else %}
+                            Unknown
+                        {% endif %}
+                </p>
+
                 {% if ticket.attachment %}
 
                 <a 
