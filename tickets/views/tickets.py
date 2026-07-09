@@ -77,7 +77,7 @@ def home(request):
         return redirect('home')
     
     tickets = Ticket.objects.filter(
-        user=request.user
+        outlet=request.user.userprofile.outlet
     ).order_by('-created_at')
 
     departments = Department.objects.all()
