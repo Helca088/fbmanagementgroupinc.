@@ -1,6 +1,6 @@
 {
-    "name": "FB Management",
-    "short_name": "FB Admin",
+    "name": "FB Admins",
+    "short_name": "FB Admins",
     "start_url": "/admin/",
     "scope": "/admin/",
     "display": "standalone",
