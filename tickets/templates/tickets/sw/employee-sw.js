@@ -18,7 +18,7 @@ messaging.onBackgroundMessage((payload) => {
         payload.notification.title,
         {
             body: payload.notification.body,
-            icon: "/static/icons/FBLG.png",
+            icon: "/static/icons/Phmt.png",
 
             data: {
                 url: payload.data?.url || "https://fbmanagement.onrender.com/home/"
