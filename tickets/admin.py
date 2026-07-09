@@ -249,7 +249,7 @@ class TicketAdmin(ModelAdmin):
             obj.resolve_at = None    
 
         if not change and not obj.created_by:
-            obj.create_by = request.user
+            obj.created_by = request.user
 
         super().save_model(request, obj, form, change)
 
