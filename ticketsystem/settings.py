@@ -59,7 +59,6 @@ INSTALLED_APPS = [
     'tickets',
     'cloudinary',
     'cloudinary_storage',
-    'pwa',
 ]
 
 CLOUDINARY_STORAGE = {
