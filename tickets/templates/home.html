@@ -63,13 +63,14 @@
 
             <select name="department"
                     class="border p-2 rounded w-full"
+                    required
                     hx-get="/get-concerns/"
                     hx-trigger="change"
                     hx-target="#concern_type"
                     hx-swap="innerHTML"
                     hx-include="[name='department']">
 
-            <option value="">Select Department</option>
+            <option value="" selected disabled>Select Department</option>
 
             {% for department in departments %}
             <option value="{{ department.id }}">
@@ -87,9 +88,10 @@
 
             <select id="concern_type"
                     name="concern_type"
-                    class="border p-2 rounded w-full">
+                    class="border p-2 rounded w-full"
+                    required>
                     
-            <option value="">
+            <option value="" selected disabled>
             Select Department First
             </option>
             </select>
