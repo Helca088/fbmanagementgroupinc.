@@ -109,7 +109,7 @@ class TicketAdmin(ModelAdmin):
         'concern_type__name'
         ]
 
-    list_display = ('outlet', 
+    list_display = ('outlet_with_badge', 
                     'department', 
                     'concern_type', 
                     'status', 
@@ -119,12 +119,36 @@ class TicketAdmin(ModelAdmin):
                     'deadline',
                     'overdue',)
 
+    @admin.display(description="Outlet")
+    def outlet_with_badge(self, obj):   
+        if not obj.is_opened:
+            return format_html(
+            '{} <span class="inline-flex items-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-medium text-white">NEW</span>',
+            obj.outlet.name,
+        )
+        return obj.outlet
+
     readonly_fields = ( 'attachment_preview', 'download_button', 'message')
     list_filter = ('department', 'status', 'priority', 'assigned_to', 'outlet')
 
     fields = ('user', 'outlet', 'message', 'attachment_preview', 'status',
               'scheduled_date', 'scheduled_time', 'admin_note', 'assigned_to',
               'department', 'priority', 'concern_type')
+
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        ticket = self.get_object(request, object_id)
+
+        if ticket and not ticket.is_opened:
+            ticket.is_opened = True
+            ticket.save(update_fields=["is_opened"])
+
+        return super().change_view(
+            request,
+            object_id,
+            form_url,
+            extra_context,
+        )
 
     def  formfield_for_foreignkey(self, db_field, request, **kwargs):
             object_id = request.resolver_match.kwargs.get("object_id")   
