@@ -116,10 +116,13 @@ if DATABASE_URL:
     DATABASES = {
         'default': dj_database_url.config(
             default=DATABASE_URL,
-            conn_max_age=600,
+            conn_max_age=0,
             ssl_require=True,
         )
     }
+
+    DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
+
 else:
     # Local fallback only — Render's disk is ephemeral, so production
     # must always provide DATABASE_URL (Postgres) via env vars.
