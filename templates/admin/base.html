@@ -1,10 +1,14 @@
 {% extends "admin/base.html" %}
 {% load static %}
 
-
-
 {% block extrahead %}
     {{ block.super }}
     <link rel="icon" href="{% static 'img/favicon.ico' %}">
     <script type="module" src="{% static 'js/firebase.js' %}"></script>
+{% endblock %}
+
+{% block responsive %}
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 {% endblock %}

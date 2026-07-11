@@ -277,27 +277,29 @@ class TicketAdmin(ModelAdmin):
 
         super().save_model(request, obj, form, change)
 
-        if change:
-            send_push(
-                user=obj.user,
-                title="Ticket Updated",
-                body=f"Your ticket #{obj.id} has been updated.",
-                data={
-                    "ticket_id": str(obj.id),
-                    "url": "https://fbmanagement.onrender.com/home/"
-                }
-            )
-        else:
-        
-            send_push(
-                user=obj.user,
-                title="New Ticket",
-                body=f"A new ticket #{obj.id} has been created for you.",
-                data={
-                    "ticket_id": str(obj.id),
-                    "url": "https://fbmanagement.onrender.com/home/"
-                }
-            )
+        profiles = UserProfile.objects.filter(outlet=obj.outlet)
+
+        for profile in profiles:
+            if change:
+                send_push(
+                    user=profile.user,
+                    title="Ticket Updated",
+                    body=f"Ticket #{obj.id} has been updated.",
+                    data={
+                        "ticket_id": str(obj.id),
+                        "url": "https://fbmanagement.onrender.com/home/"
+                    }
+                )
+            else:
+                send_push(
+                    user=profile.user,
+                    title="New Ticket",
+                    body=f"A new ticket has been created for {obj.outlet.name}.",
+                    data={
+                        "ticket_id": str(obj.id),
+                        "url": "https://fbmanagement.onrender.com/home/"
+                    }
+                )
         
         notify_ticket_update(obj, action="update" if change else "create")
         

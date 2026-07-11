@@ -1,6 +1,7 @@
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .util import serialize_ticket
+from .models import UserProfile
 
 def notify_ticket_update(ticket, action="update"):
 
@@ -19,10 +20,13 @@ def notify_ticket_update(ticket, action="update"):
     )
 
     # Send only to the ticket owner
-    async_to_sync(channel_layer.group_send)(
-        f"user_{ticket.user.id}",
-        payload,
-    )
+    profiles = UserProfile.objects.filter(outlet=ticket.outlet)
+
+    for profile in profiles:
+        async_to_sync(channel_layer.group_send)(
+            f"user_{profile.user.id}",
+            payload,
+        )
 
 def notify_ticket_delete(ticket):
 
@@ -43,7 +47,10 @@ def notify_ticket_delete(ticket):
     )
 
     # Ticket owner
-    async_to_sync(channel_layer.group_send)(
-        f"user_{ticket.user.id}",
-        payload,
-    )
+    profiles = UserProfile.objects.filter(outlet=ticket.outlet)
+
+    for profile in profiles:
+        async_to_sync(channel_layer.group_send)(
+            f"user_{profile.user.id}",
+            payload,
+        )

@@ -76,7 +76,7 @@ class Ticket(models.Model):
     ]
 
     is_opened = models.BooleanField(default=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)   
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)   
     email = models.EmailField()
     title = models.CharField(max_length=100)
     message = models.TextField()
