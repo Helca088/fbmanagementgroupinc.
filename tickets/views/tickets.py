@@ -53,7 +53,8 @@ def home(request):
         for f in files:
             TicketAttachment.objects.create(
                 ticket=ticket,
-                file=f
+                file=f,
+                original_filename=f.name
             )
         
         print("Sending WS for ticket", ticket.id)

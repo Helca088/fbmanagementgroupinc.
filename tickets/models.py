@@ -211,11 +211,24 @@ class TicketAttachment(models.Model):
             on_delete=models.CASCADE,
             related_name="attachments"
         )
-        file = CloudinaryField("file")
-        original_filename = models.CharField(max_length=255, blank=True)
+        file = CloudinaryField(
+        "attachment",
+        resource_type="auto"
+        )
+
+        original_filename = models.CharField(
+        max_length=255,
+        blank=True
+        )
+
+        def save(self, *args, **kwargs):
+             if self.file and not self.original_filename:
+                self.original_filename = getattr(self.file, "name", "")
+
+                super().save(*args, **kwargs)
 
         def __str__(self):
-            return f"Attachment {self.ticket.id}"
+            return f"Attachment {self.ticket.id}"    
            
 class TicketStatusLog(models.Model):
     ticket = models.ForeignKey(Ticket,on_delete=models.CASCADE,related_name="status_logs")
