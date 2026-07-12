@@ -100,7 +100,8 @@ class TicketStatusLogInline(TabularInline):
 @admin.register(Ticket)
 class TicketAdmin(ModelAdmin):
     class Media:
-        js = ('js/attach_modal.js',)
+        js = ('js/attach_modal.js',
+              'js/page_loader.js',)
 
     inlines = [TicketStatusLogInline]
     search_fields =[
