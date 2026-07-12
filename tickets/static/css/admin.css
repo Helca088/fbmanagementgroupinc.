@@ -97,17 +97,21 @@ h2 {
     resize: none !important;
     box-sizing: border-box;
 }
-/* Make the whole Hover cell clickable */
-th.field-outlet_with_badge {
-    padding: 0 !important;
+/* Global Unfold admin table spacing */
+#result_list tbody th,
+#result_list tbody td {
+    padding: 10px 12px !important;
+    vertical-align: middle;
 }
 
-th.field-outlet_with_badge > a {
+/* Make all admin object links fill their cells */
+#result_list tbody th > a,
+#result_list tbody td > a {
     display: flex !important;
     align-items: center;
     width: 100%;
-    height: 100%;
-    padding: 6px 12px;
+    height: 60%;
+    padding: 0 !important;
     box-sizing: border-box;
     text-decoration: none !important;
 }
