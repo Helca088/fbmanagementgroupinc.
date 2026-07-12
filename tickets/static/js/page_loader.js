@@ -15,6 +15,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!link) return;
 
+        const xClick = link.getAttribute("x-on:click") || "";
+
+        if (
+            xClick.includes("switchTheme") ||
+            xClick.includes("filterOpen")
+        ) {
+            return;
+        }
         // Ignore anchors, downloads, new tabs
         if (
             link.target === "_blank" ||
