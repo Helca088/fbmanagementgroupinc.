@@ -7,22 +7,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Show loader when clicking links
     document.addEventListener("click", (e) => {
-        const link = e.target.closest("a");
+    const link = e.target.closest("a");
 
-        if (!link) return;
+    if (!link) return;
 
-        // Ignore anchors, downloads, new tabs
-        if (
-            link.target === "_blank" ||
-            link.hasAttribute("download") ||
-            link.href.startsWith("#") ||
-            e.ctrlKey || e.metaKey || e.shiftKey
-        ) {
-            return;
-        }
+    // Ignore anchors, downloads, new tabs
+    if (
+        link.target === "_blank" ||
+        link.hasAttribute("download") ||
+        link.href.startsWith("#") ||
+        e.ctrlKey ||
+        e.metaKey ||
+        e.shiftKey
+    ) {
+        return;
+    }
 
-        overlay.classList.add("show");
-    });
+    // Ignore javascript: links
+    if (link.href.startsWith("javascript:")) {
+        return;
+    }
+
+    // Ignore clicking the current page
+    if (
+        link.pathname === window.location.pathname &&
+        link.search === window.location.search
+    ) {
+        return;
+    }
+
+    overlay.classList.add("show");
+});
 
     // Show loader when submitting forms (e.g. login)
     document.addEventListener("submit", () => {
