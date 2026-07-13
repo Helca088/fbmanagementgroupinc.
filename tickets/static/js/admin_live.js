@@ -1,6 +1,20 @@
 let socket;
-
+let reconnectDelay = 2000;
+let reconnectTimer = null;
+let refreshTimer = null;
+let heartbeatTimer = null;
+let isClosingPage = false;
 function connectWS() {
+
+    if (
+        socket &&
+        (
+            socket.readyState === WebSocket.OPEN ||
+            socket.readyState === WebSocket.CONNECTING
+        )
+    ) {
+        return;
+    }
 
     const protocol =
         window.location.protocol === "https:" ? "wss" : "ws";
@@ -9,40 +23,83 @@ function connectWS() {
         protocol + "://" + window.location.host + "/ws/tickets/"
     );
 
+
     socket.onopen = function () {
         console.log("✅ Admin WebSocket Connected");
+
+        reconnectDelay = 2000;
+        fetchLatestTickets();
+
+        // Start heartbeat
+        clearInterval(heartbeatTimer);
+
+        heartbeatTimer = setInterval(() => {
+
+    try {
+
+        if (socket.readyState === WebSocket.OPEN) {
+
+            socket.send(JSON.stringify({
+                type: "ping"
+            }));
+
+        }
+
+    } catch (err) {
+
+        console.error("Heartbeat failed", err);
+
+    }
+
+}, 30000);
     };
 
     socket.onmessage = function (event) {
 
         const payload = JSON.parse(event.data);
 
+        if (payload.type === "pong") {
+        console.log("💓 Pong received");
+        return;
+    }
+
         console.log("📨 Admin received:", payload);
 
         handleAdminEvent(payload);
     };
 
+    socket.onerror = function (err) {
+    console.error("❌ Admin WebSocket Error", err);
+        
+    if (socket.readyState !== WebSocket.CLOSED) {
+        socket.close();
+    }
+    };
+
     socket.onclose = function (event) {
+    
+    console.log(
+        "WebSocket closed:",
+        event.code,
+        event.reason
+    );
 
-    console.log("========== WS CLOSED ==========");
-    console.log("Code:", event.code);
-    console.log("Reason:", event.reason);
+    clearInterval(heartbeatTimer);
 
-    console.log("Calling fetchLatestTickets()...");
-    fetchLatestTickets();
+    if (isClosingPage) {
+        return;
+    }
 
-    console.log("Scheduling reconnect...");
-    setTimeout(() => {
-        console.log("Reconnecting...");
+    if (reconnectTimer) return;
+
+    reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
         connectWS();
-    }, 2000);
+    }, reconnectDelay);
+
+    reconnectDelay = Math.min(reconnectDelay * 2, 30000);
 };
 
-    socket.onerror = function (err) {
-
-        console.log("❌ Admin WebSocket Error", err);
-
-    };
 
 }
 
@@ -70,7 +127,7 @@ function addTicket(ticket){
 
     console.log("New ticket:", ticket);
 
-    refreshChangeList();
+    scheduleRefresh();
 
 }
 
@@ -78,7 +135,7 @@ function updateTicket(ticket){
 
     console.log("Updated:", ticket);
 
-    refreshChangeList();
+    scheduleRefresh();
 
 }
 
@@ -86,29 +143,32 @@ function removeTicket(id){
 
     console.log("Deleted:", id);
 
-    refreshChangeList();
+    scheduleRefresh();
 
 }
 
-function fetchLatestTickets() {
+async function fetchLatestTickets() {
+    try {
+        const response = await fetch("/api/tickets/");
 
-    fetch("/api/tickets/")
-        .then(response => response.json())
-        .then(tickets => {
+        if (!response.ok) {
+            throw new Error("API request failed");
+        }
 
-            console.log("Fetched", tickets.length, "tickets");
-
-            // For now just reload if anything changed
-            refreshChangeList();
-
-        })
-        .catch(err => console.error(err));
-
+        refreshChangeList();
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 function refreshChangeList() {
     fetch(window.location.href)
-        .then(r => r.text())
+        .then(r => {
+            if (!r.ok) {
+                throw new Error(`HTTP ${r.status}`);
+            }
+            return r.text();
+        })
         .then(html => {
 
             const doc = new DOMParser().parseFromString(html, "text/html");
@@ -123,3 +183,35 @@ function refreshChangeList() {
         })
         .catch(console.error);
 }
+
+function scheduleRefresh() {
+    if (refreshTimer) return;
+
+    refreshTimer = setTimeout(() => {
+        refreshTimer = null;
+        refreshChangeList();
+    }, 200);
+}
+
+document.addEventListener("visibilitychange", () => {
+
+    if (document.visibilityState !== "visible") {
+        return;
+    }
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        fetchLatestTickets();
+    } else {
+        connectWS();
+    }
+});
+
+window.addEventListener("beforeunload", () => {
+    isClosingPage = true;
+
+    clearInterval(heartbeatTimer);
+
+    if (socket) {
+        socket.close();
+    }
+});

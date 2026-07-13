@@ -133,6 +133,7 @@ def edit_ticket(request, id):
 
     return render(request, 'edit_ticket.html', {'form': form, 'ticket': ticket})
 
+@require_POST
 def delete_ticket(request, id):
 
     ticket = get_object_or_404(Ticket, id=id)
@@ -141,7 +142,7 @@ def delete_ticket(request, id):
 
     ticket.delete()
 
-    return redirect("admin_dashboard")
+    return JsonResponse({"success": True})
 
 @require_POST
 def update_status(request, id):

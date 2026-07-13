@@ -20,13 +20,7 @@ def notify_ticket_update(ticket, action="update"):
     )
 
     # Send only to the ticket owner
-    profiles = UserProfile.objects.filter(outlet=ticket.outlet)
-
-    for profile in profiles:
-        async_to_sync(channel_layer.group_send)(
-            f"user_{profile.user.id}",
-            payload,
-        )
+    send_to_outlet_users(ticket.outlet, payload)
 
 def notify_ticket_delete(ticket):
 
@@ -47,7 +41,12 @@ def notify_ticket_delete(ticket):
     )
 
     # Ticket owner
-    profiles = UserProfile.objects.filter(outlet=ticket.outlet)
+    send_to_outlet_users(ticket.outlet, payload)
+    
+def send_to_outlet_users(outlet, payload):
+    channel_layer = get_channel_layer()
+
+    profiles = UserProfile.objects.filter(outlet=outlet)
 
     for profile in profiles:
         async_to_sync(channel_layer.group_send)(

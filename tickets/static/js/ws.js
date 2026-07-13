@@ -1,6 +1,20 @@
 let socket;
+let reconnectDelay = 2000;
+let heartbeatTimer = null;
+let reconnectTimer = null;
 
-function connectWS() {
+function connectWS(){
+
+    if (
+    socket &&
+    (
+        socket.readyState === WebSocket.OPEN ||
+        socket.readyState === WebSocket.CONNECTING
+    )
+    ) {
+    return;
+    }
+
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
 
     socket = new WebSocket(
@@ -12,22 +26,46 @@ function connectWS() {
         const payload = JSON.parse(event.data);
         console.log("🔥 Ticket update:", payload);
         console.log("Calling upsertTicket...");
+
+        if (payload.type === "pong") {
+            return;
+        }
+
         handleTicketEvent(payload);
     };
 
     socket.onclose = function(event) {
-    console.log(
-        "⚠️ WebSocket closed",
-        event.code,
-        event.reason
-    );
 
-    setTimeout(connectWS, 2000);
+    console.log("⚠️ WebSocket closed", event.code, event.reason);
+
+    clearInterval(heartbeatTimer);
+
+    if (reconnectTimer) return;
+
+    reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        connectWS();
+    }, reconnectDelay);
+
+    reconnectDelay = Math.min(reconnectDelay * 2, 30000);
 };
+
     socket.onopen = function(){
 
         console.log("✅ WS OPEN");
 
+        clearInterval(heartbeatTimer);
+
+        heartbeatTimer = setInterval(() => {
+
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: "ping"
+                }));
+            }
+
+        }, 30000);
+        reconnectDelay = 2000;
         fetchLatestTickets();
     };
 
@@ -37,7 +75,6 @@ function connectWS() {
 }
 
 connectWS();
-fetchLatestTickets();
 
 
 function fetchLatestTickets() {
@@ -107,6 +144,10 @@ function upsertTicket(data) {
 
     console.log(html);
 
+    if (!list) {
+    console.error("ticket-list not found");
+    return;
+    }
     list.insertAdjacentHTML("afterbegin", html);
 
     console.log("AFTER INSERT");
@@ -425,15 +466,22 @@ window.deleteTicket = function (id) {
     if (!confirm("Delete this ticket?")) return;
 
     fetch(`/delete-ticket/${id}/`, {
-        method: "GET"
-    })
-    .then(res => {
-        if (res.ok) {
-            console.log("🗑️ Deleted request sent");
-        }
-    });
-};
-
+    method: "POST",
+    headers: {
+        "X-CSRFToken": getCookie("csrftoken")
+    }
+})
+.then(res => {
+    if (!res.ok) {
+        throw new Error("Delete failed");
+    }
+    return res.json();
+})
+.then(data => {
+    console.log("Delete request sent");
+})
+.catch(console.error);
+}
 
 // ========================
 // CSRF HELPER
@@ -515,4 +563,16 @@ document.addEventListener("DOMContentLoaded", () => {
         details.style.display =
             details.style.display === "none" ? "table-row" : "none";
     });
+});
+
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible") {
+        return;
+    }
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        fetchLatestTickets();
+    } else {
+        connectWS();
+    }
 });

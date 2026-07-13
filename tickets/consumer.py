@@ -62,3 +62,16 @@ class TicketConsumer(AsyncWebsocketConsumer):
             )
 
         print("WS CLOSED:", close_code)
+
+    async def receive(self, text_data):
+        try:
+            data = json.loads(text_data)
+        except json.JSONDecodeError:
+            print("Invalid JSON received")
+            return
+
+        if data.get("type") == "ping":
+            await self.send(text_data=json.dumps({
+                "type": "pong"
+            }))
+            return
