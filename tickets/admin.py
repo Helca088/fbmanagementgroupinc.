@@ -98,7 +98,18 @@ class CustomUserAdmin(DjangoUserAdmin, ModelAdmin):
     actions_selection_counter = True
     show_full_result_count = True
     
+    # <-- ADD IT HERE
+    def response_add(self, request, obj, post_url_continue=None):
+        outlet = request.POST.get("outlet")
 
+        UserProfile.objects.update_or_create(
+            user=obj,
+            defaults={
+                "outlet_id": outlet if outlet else None,
+            },
+        )
+
+        return super().response_add(request, obj, post_url_continue)
 
 @admin.register(TicketAssignmentLog)
 class TicketAssignmentLogAdmin(ModelAdmin):
