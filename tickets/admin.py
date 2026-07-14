@@ -13,7 +13,7 @@ from django.utils.safestring import mark_safe
 from .models import DeviceToken
 from tickets.notification import send_push
 from .websocket import notify_ticket_delete
-#from .forms import CustomUserCreationForm
+from .forms import CustomUserCreationForm
 
 admin.site.register(DeviceToken)
 admin.site.site_url = "/reports/"
@@ -35,7 +35,7 @@ admin.site.unregister(User)
 # re-register with custom settings
 @admin.register(User)
 class CustomUserAdmin(DjangoUserAdmin, ModelAdmin):
-    #add_form = CustomUserCreationForm
+    add_form = CustomUserCreationForm
 
     list_display = (
         "username",
