@@ -30,6 +30,8 @@ class CustomUserCreationForm(UserCreationForm):
         )
 
     def save(self, commit=True):
+        print("===== FORM SAVE CALLED =====")
+        print(self.cleaned_data)
         user = super().save(commit=False)
 
         user.is_staff = self.cleaned_data["is_staff"]
