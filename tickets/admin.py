@@ -13,6 +13,7 @@ from django.utils.safestring import mark_safe
 from .models import DeviceToken
 from tickets.notification import send_push
 from .websocket import notify_ticket_delete
+from .forms import CustomUserCreationForm
 
 admin.site.register(DeviceToken)
 admin.site.site_url = "/reports/"
@@ -34,12 +35,63 @@ admin.site.unregister(User)
 # re-register with custom settings
 @admin.register(User)
 class CustomUserAdmin(DjangoUserAdmin, ModelAdmin):
-    list_display = ('username', 'email', 'is_staff', 'is_active')
-    search_fields = ('username', 'email')
-    list_filter = ('is_staff', 'is_active')
+    add_form = CustomUserCreationForm
 
-    actions = ['delete_selected'] 
+    list_display = (
+        "username",
+        "first_name",
+        "last_name",
+        "is_staff",
+        "is_active",
+    )
 
+    search_fields = (
+        "username",
+        "first_name",
+        "last_name",
+    )
+
+    list_filter = (
+        "is_staff",
+        "is_superuser",
+        "is_active",
+    )
+
+    add_fieldsets = (
+        (
+            "Account",
+            {
+                "classes": ("wide",),
+                "fields": (
+                    "username",
+                    "password1",
+                    "password2",
+                ),
+            },
+        ),
+        (
+            "Profile",
+            {
+                "fields": (
+                    "first_name",
+                    "last_name",
+                    "outlet",
+                ),
+            },
+        ),
+        (
+            "Permissions",
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                ),
+            },
+        ),
+    )
+
+    actions = ["delete_selected"]
 
     actions_on_top = True
     actions_on_bottom = True
