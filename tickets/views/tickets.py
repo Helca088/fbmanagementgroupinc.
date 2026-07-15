@@ -10,6 +10,7 @@ from tickets.models import (
     Department,
     ConcernType,
     TicketStatusLog,
+    Technician,
 )
 from tickets.form import TicketForm
 from reportlab.pdfgen import canvas
@@ -18,6 +19,24 @@ from tickets.websocket import (
     notify_ticket_delete,
 )
 import os
+
+
+def get_technicians(request):
+    department_id = request.GET.get("department")
+
+    technicians = Technician.objects.filter(
+        department_id=department_id
+    )
+
+    data = [
+        {
+            "id": tech.id,
+            "name": tech.full_name,
+        }
+        for tech in technicians
+    ]
+
+    return JsonResponse(data, safe=False)
 
 @login_required
 def test_push_view(request):
@@ -153,14 +172,15 @@ def update_status(request, id):
     ticket.status = new_status
     ticket.save()
 
-    send_push(
-    user=ticket.user,
-    title="Ticket Updated",
-    body=f"Your ticket #{ticket.id} is now {ticket.status}.",
-    data={
-        "ticket_id": str(ticket.id),
-        "url": f"/ticket/{ticket.id}/"
-    }
+    if ticket.user:
+        send_push(
+        user=ticket.user,
+        title="Ticket Updated",
+        body=f"Your ticket #{ticket.id} is now {ticket.status}.",
+        data={
+            "ticket_id": str(ticket.id),
+            "url": f"/ticket/{ticket.id}/"
+        }
     )
 
     TicketStatusLog.objects.create(

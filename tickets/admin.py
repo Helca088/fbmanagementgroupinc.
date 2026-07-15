@@ -11,9 +11,11 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.safestring import mark_safe
 from .models import DeviceToken
+from django.urls import path
 from tickets.notification import send_push
 from .websocket import notify_ticket_delete
 from .forms import CustomUserCreationForm
+from tickets.views.tickets import get_technicians
 
 admin.site.register(DeviceToken)
 admin.site.site_url = "/reports/"
@@ -164,7 +166,23 @@ class TicketStatusLogInline(TabularInline):
 class TicketAdmin(ModelAdmin):
     class Media:
         js = ('js/attach_modal.js',
-              'js/page_loader.js',)
+              'js/page_loader.js',
+              'js/ticket_admin.js')
+
+
+    def get_urls(self):
+        urls = super().get_urls()
+
+        custom_urls = [
+            path(
+                "get-technicians/",
+                self.admin_site.admin_view(get_technicians),
+                name="get-technicians",
+            ),
+        ]
+
+        return custom_urls + urls
+
 
     inlines = [TicketStatusLogInline]
     search_fields =[
@@ -196,8 +214,8 @@ class TicketAdmin(ModelAdmin):
     list_filter = ('department', 'status', 'priority', 'assigned_to', 'outlet')
 
     fields = ('outlet', 'message', 'attachment_preview', 'status',
-              'scheduled_date', 'scheduled_time', 'admin_note', 'assigned_to',
-              'department', 'priority', 'concern_type')
+              'scheduled_date', 'scheduled_time', 'admin_note', 'department',
+              'assigned_to', 'priority', 'concern_type')
 
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
