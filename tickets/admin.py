@@ -78,6 +78,7 @@ class CustomUserAdmin(DjangoUserAdmin, ModelAdmin):
                     "first_name",
                     "last_name",
                     "outlet",
+                    "account_type"
                 ),
             },
         ),
@@ -103,11 +104,13 @@ class CustomUserAdmin(DjangoUserAdmin, ModelAdmin):
     # <-- ADD IT HERE
     def response_add(self, request, obj, post_url_continue=None):
         outlet = request.POST.get("outlet")
+        account_type = request.POST.get("account_type")
 
         UserProfile.objects.update_or_create(
             user=obj,
             defaults={
                 "outlet_id": outlet if outlet else None,
+                "account_type": account_type,
             },
         )
 

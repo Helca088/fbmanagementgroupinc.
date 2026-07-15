@@ -53,7 +53,8 @@
 
             <textarea 
                 name="message" 
-                placeholder="Message"
+                required
+                placeholder="Enter your message"
             ></textarea>
 
             <input type="file" name="files" multiple>
@@ -334,6 +335,16 @@ document.addEventListener("DOMContentLoaded", function () {
         </div>
     </div>
 </div>
+<script>
+document.querySelector("form").addEventListener("submit", function (e) {
+    const message = document.querySelector("[name='message']").value.trim();
+
+    if (!message) {
+        e.preventDefault();
+        alert("Please enter a message before submitting.");
+    }
+});
+</script>
 <script src="{% static 'js/sw_update.js' %}"></script>
 <script type="module" src="{% static 'js/firebase.js' %}"></script>
 <script src="{% static 'js/page_loader.js' %}" defer></script>

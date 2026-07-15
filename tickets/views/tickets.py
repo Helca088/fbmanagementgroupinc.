@@ -19,7 +19,9 @@ from tickets.websocket import (
     notify_ticket_delete,
 )
 import os
-
+from datetime import timedelta
+from django.utils import timezone
+from django.db.models import Q
 
 def get_technicians(request):
     department_id = request.GET.get("department")
@@ -95,9 +97,18 @@ def home(request):
             
         return redirect('home')
     
-    tickets = Ticket.objects.filter(
-        outlet=request.user.userprofile.outlet
-    ).order_by('-created_at')
+    cutoff = timezone.now() - timedelta(days=7)
+
+    tickets = (
+        Ticket.objects.filter(
+            outlet=request.user.userprofile.outlet
+        )
+        .filter(
+            Q(status__iexact="resolved", resolve_at__gte=cutoff) |
+            ~Q(status__iexact="resolved")
+        )
+        .order_by("-created_at")
+    )
 
     departments = Department.objects.all()
     concerns = ConcernType.objects.all()
@@ -182,7 +193,7 @@ def update_status(request, id):
             "url": f"/ticket/{ticket.id}/"
         }
     )
-
+        
     TicketStatusLog.objects.create(
         ticket = ticket,
         old_status = old_status,

@@ -17,6 +17,10 @@ class Outlet(models.Model):
         return self.name
 
 class UserProfile(models.Model):
+    ACCOUNT_TYPES = [
+        ("admin", "Admin"),
+        ("outlet", "Outlet"),
+    ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     outlet = models.ForeignKey(
         Outlet,
@@ -24,6 +28,23 @@ class UserProfile(models.Model):
         null=True,
         blank=True
     )
+    account_type = models.CharField(
+        max_length=20,
+        choices=ACCOUNT_TYPES,
+        default="outlet",
+    )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.account_type == "admin":
+            self.user.is_staff = True
+            self.user.is_active = True
+        else:  # Outlet
+            self.user.is_staff = False
+            self.user.is_active = True
+
+        self.user.save(update_fields=["is_staff", "is_active"])
 
    
     
@@ -79,7 +100,7 @@ class Ticket(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)   
     email = models.EmailField()
     title = models.CharField(max_length=100)
-    message = models.TextField()
+    message = models.TextField(blank=False)
     status = models.CharField(max_length=20,choices=status_choices, default='pending')
     attachment = models.FileField(upload_to='tickets/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -146,6 +167,14 @@ class Ticket(models.Model):
         )
 
             self.outlet_ticket_no = (last_number or 0) + 1
+
+        # Set resolved timestamp # new
+        if self.status.lower() == "resolved":
+            if self.resolve_at is None:
+                self.resolve_at = timezone.now()
+        else:
+            # Clear it if the ticket is reopened
+            self.resolve_at = None
 
         super().save(*args, **kwargs)
 

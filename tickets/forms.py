@@ -11,6 +11,14 @@ class CustomUserCreationForm(UserCreationForm):
         required=False,
     )
 
+    account_type = forms.ChoiceField(
+        choices=[
+            ("admin", "Admin"),
+            ("outlet", "Outlet"),
+        ],
+        initial="outlet",
+    )
+
     is_staff = forms.BooleanField(required=False)
     is_superuser = forms.BooleanField(required=False)
     is_active = forms.BooleanField(required=False, initial=True)
@@ -24,6 +32,7 @@ class CustomUserCreationForm(UserCreationForm):
             "password1",
             "password2",
             "outlet",
+            "account_type",
             "is_staff",
             "is_superuser",
             "is_active",

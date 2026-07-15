@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
+from django.contrib.auth.models import User
 
 #Login Function
 def email_login(request):
@@ -14,6 +15,13 @@ def email_login(request):
             return render(request, "login.html", {
                 "error": "Username and password required"
             })
+
+        # Find the user ignoring uppercase/lowercase
+        try:
+            user_obj = User.objects.get(username__iexact=username)
+            username = user_obj.username  # Get the correct stored username
+        except User.DoesNotExist:
+            user_obj = None
 
         user = authenticate(request, username=username, password=password)
 
