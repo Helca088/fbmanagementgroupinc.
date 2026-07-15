@@ -86,8 +86,6 @@ class CustomUserAdmin(DjangoUserAdmin, ModelAdmin):
             "Permissions",
             {
                 "fields": (
-                    "is_active",
-                    "is_staff",
                     "is_superuser",
                 ),
             },

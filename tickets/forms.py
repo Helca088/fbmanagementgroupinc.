@@ -19,9 +19,9 @@ class CustomUserCreationForm(UserCreationForm):
         initial="outlet",
     )
 
-    is_staff = forms.BooleanField(required=False)
+    #is_staff = forms.BooleanField(required=False)
     is_superuser = forms.BooleanField(required=False)
-    is_active = forms.BooleanField(required=False, initial=True)
+    #is_active = forms.BooleanField(required=False, initial=True)
 
     class Meta(UserCreationForm.Meta):
         model = User
@@ -33,19 +33,17 @@ class CustomUserCreationForm(UserCreationForm):
             "password2",
             "outlet",
             "account_type",
-            "is_staff",
-            "is_superuser",
-            "is_active",
         )
 
     def save(self, commit=True):
         print("===== FORM SAVE CALLED =====")
         print(self.cleaned_data)
+
         user = super().save(commit=False)
 
-        user.is_staff = self.cleaned_data["is_staff"]
+        #user.is_staff = self.cleaned_data["is_staff"]
         user.is_superuser = self.cleaned_data["is_superuser"]
-        user.is_active = self.cleaned_data["is_active"]
+        #user.is_active = self.cleaned_data["is_active"]
 
         if commit:
             user.save()
