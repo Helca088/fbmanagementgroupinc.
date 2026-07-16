@@ -36,6 +36,8 @@ def ticket_api(request):
         ]
         data.append({
             "id": ticket.id,
+            "outlet_ticket_no": ticket.outlet_ticket_no,
+            
             "title": ticket.title or "",
             "message": ticket.message or "",
             "user": ticket.user.username if ticket.user else "",

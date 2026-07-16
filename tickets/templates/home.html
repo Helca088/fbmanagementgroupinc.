@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="manifest" href="{% static 'employee-manifest.json' %}">
     <meta name="theme-color" content="#008000">
 
@@ -60,7 +60,7 @@
             <input type="file" name="files" multiple>
 
             <div>
-                <label>Department</label>
+                <strong>Department: </strong>
 
             <select name="department"
                     class="border p-2 rounded w-full"
@@ -85,7 +85,7 @@
 
             <div>
             
-            <label>Concerns Type</label>
+            <strong>Concerns Type: </strong>
 
             <select id="concern_type"
                     name="concern_type"
@@ -118,13 +118,32 @@
 
             <div class="ticket-card department-{{ ticket.department.name|slugify }}" data-ticket-id="{{ ticket.id }}">
 
+            <div class="ticket-header">
+
             <span class="dept-badge department-badge-{{ ticket.department.name|slugify }}">
                 {{ ticket.department.name }}
-             </span>
+            </span>
 
+            <span class="ticket-number">
+                #{{ ticket.display_ticket_no }}
+            </span>
+
+            </div>
                 <h3>{{ ticket.outlet }}</h3>
 
-                <p>{{ ticket.message }}</p>
+                <div class="message-wrapper">
+
+                <span class="concern-badge">
+                    {{ ticket.concern_type }}
+                </span>
+
+                <div class="message-box">
+                <div class="message-text">
+                    {{ ticket.message }}
+                </div>
+            </div>
+
+            </div>
 
                 <select class="ticket-select status" data-current-status="{{ ticket.status }}"
                 onchange="openReasonModal('{{ ticket.id }}', this)">

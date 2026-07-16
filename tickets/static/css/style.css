@@ -140,7 +140,7 @@ button:hover{
     width:100%;
 
     max-width:1200px;
-   font-family: "Playfair Display", serif;
+    font-family: "Inter", sans-serif;
 }
 
 
@@ -478,4 +478,83 @@ html.dark #page-loader {
     to {
         transform: rotate(360deg);
     }
+}
+.ticket-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+}
+
+.ticket-number{
+    font-size:16px;
+    font-weight:700;
+    color:#555;
+    white-space:nowrap;
+}
+.message-wrapper{
+    position: relative;
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.concern-badge{
+    position: absolute;
+    top: -8px;
+    left: 16px;
+    
+    display: inline-block;
+    padding: 6px 14px;
+
+    background: #6c5ce7;
+    color: #fff;
+
+    border-radius: 18px;
+    font-size: 13px;
+    font-weight: 600;
+
+    z-index: 10;
+}
+
+.message-box{
+    display:block !important;
+    text-align: left;
+    width:100%;
+    max-width: 100%;
+    box-sizing:border-box;
+
+    padding: 12px 16px; 
+    margin-top:5px;
+    padding-top:10px;
+
+    background:#ede9fe;
+    border:1px solid #caa8ff;
+    border-radius:16px;
+
+    height:fit-content !important;
+    min-height:unset !important;
+    max-height:none !important;
+
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap:anywhere;
+}
+.concern-badge::after{
+    content:"";
+    position:absolute;
+    left:18px;
+    bottom:-6px;
+
+    width:12px;
+    height:12px;
+
+    background:#6c5ce7;
+    transform:rotate(45deg);
+}
+.message-text{
+    text-align: left;
+    line-height: 1.5;
+    margin-top: 20px;
 }

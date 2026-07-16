@@ -182,6 +182,12 @@ class Ticket(models.Model):
         if self.outlet:
             return f"{self.outlet.name} ({self.outlet_ticket_no})"
         return f"Ticket ({self.id})"
+    
+    @property
+    def display_ticket_no(self):
+        if self.outlet_ticket_no:
+            return f"{self.outlet_ticket_no:04d}"
+        return "0000"
 
     @property
     def is_overdue(self):

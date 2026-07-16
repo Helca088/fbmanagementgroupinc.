@@ -3,6 +3,8 @@ from django.utils.text import slugify
 def serialize_ticket(ticket):
     return {
         "id": ticket.id,
+        "outlet_ticket_no": ticket.outlet_ticket_no,
+        
         "title": ticket.title or "",
         "message": ticket.message or "",
         "status": ticket.status,

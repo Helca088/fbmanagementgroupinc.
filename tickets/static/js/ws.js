@@ -201,15 +201,35 @@ function buildTicketCard(data){
 
     return `
         <div class="ticket-card department-${data.department_slug}"
-         data-ticket-id="${data.id}">
+     data-ticket-id="${data.id}">
+
+    <div class="ticket-header">
 
         <span class="dept-badge department-badge-${data.department_slug}">
             ${data.department}
         </span>
 
+        <span class="ticket-number">
+            #${data.outlet_ticket_no}
+        </span>
+
+    </div>
+
         <h3>${data.outlet}</h3>
 
-        <p>${data.message}</p>
+        <div class="message-wrapper">
+
+        <span class="concern-badge">
+            ${data.concern_type}
+        </span>
+
+        <div class="message-box">
+        <div class="message-text">
+            ${data.message || ""}
+        </div>
+        </div>
+
+        </div>
 
         <select
             class="ticket-select status"
