@@ -233,23 +233,23 @@ class TicketAdmin(ModelAdmin):
             extra_context,
         )
 
-    def  formfield_for_foreignkey(self, db_field, request, **kwargs):
-            object_id = request.resolver_match.kwargs.get("object_id")   
-            if db_field.name == "assigned_to":
-             if object_id:
-                 ticket = Ticket.objects.get(pk=object_id)
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "assigned_to":
 
-                 kwargs["queryset"] = Technician.objects.filter(
-                     department=ticket.department
-                 )
-             else:
-                kwargs["queryset"] = Technician.objects.none()
+            department_id = request.POST.get("department")
 
-            return super().formfield_for_foreignkey(
-             db_field,
-             request,
-             **kwargs
-         )       
+            if department_id:
+                kwargs["queryset"] = Technician.objects.filter(
+                    department_id=department_id
+                )
+            else:
+                kwargs["queryset"] = Technician.objects.all()
+
+        return super().formfield_for_foreignkey(
+            db_field,
+            request,
+            **kwargs
+        )       
 
     def attachment_preview(self, obj):
         images = obj.attachments.all()
