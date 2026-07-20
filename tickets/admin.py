@@ -132,6 +132,7 @@ class TechnicianAdmin(ModelAdmin):
 class TicketStatuslogAdmin(ModelAdmin):
     list_display = (
     'ticket',
+    'created_by',
     'old_status',
     'new_status',
     'changed_at'    
@@ -156,6 +157,7 @@ class TicketStatusLogInline(TabularInline):
     can_delete = False
 
     readonly_fields = (
+        'created_by',
         'old_status',
         'reasons',
         'new_status',
@@ -211,10 +213,10 @@ class TicketAdmin(ModelAdmin):
         )
         return obj.outlet
 
-    readonly_fields = ( 'attachment_preview', 'download_button', 'message')
+    readonly_fields = ( 'attachment_preview', 'download_button', 'message', 'user')
     list_filter = ('department', 'status', 'priority', 'assigned_to', 'outlet')
 
-    fields = ('outlet', 'message', 'attachment_preview', 'status',
+    fields = ('user', 'outlet', 'message', 'attachment_preview', 'status',
               'scheduled_date', 'scheduled_time', 'admin_note', 'department',
               'assigned_to', 'priority', 'concern_type')
 
@@ -344,6 +346,7 @@ class TicketAdmin(ModelAdmin):
             if old_obj.status != obj.status:
                 TicketStatusLog.objects.create(
                     ticket=obj,
+                    created_by=request.user,
                     old_status=old_obj.status,
                     new_status=obj.status,
                     technician=obj.assigned_to,
@@ -355,8 +358,12 @@ class TicketAdmin(ModelAdmin):
         elif obj.status != "resolved":
             obj.resolve_at = None    
 
-        if not change and not obj.created_by:
-            obj.created_by = request.user
+        if not change:
+            if not obj.created_by:
+                obj.created_by = request.user
+
+            if not obj.user:
+                obj.user = request.user
 
         super().save_model(request, obj, form, change)
 

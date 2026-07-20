@@ -33,7 +33,7 @@
                 <label>Department</label>
                 <select name="department">
                     <option value="">All Departments</option>
-                    <option value="I.T" {% if request.GET.department == "I.T" %}selected{% endif %}>IT</option>
+                    <option value="I.T" {% if request.GET.department == "IT" %}selected{% endif %}>IT</option>
                     <option value="Maintenance" {% if request.GET.department == "Maintenance" %}selected{% endif %}>Maintenance</option>
                 </select>
             </div>

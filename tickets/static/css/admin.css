@@ -151,3 +151,55 @@ html.dark #page-loader {
         transform: rotate(360deg);
     }
 }
+td.field-created_by a.text-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 4px 10px;
+    border-radius: 9999px;
+
+    background: #22c55e;
+    color: #fff !important;
+
+    font-size: 18px;
+    font-weight: 600;
+    text-decoration: none !important;
+
+    transition: all .2s ease;
+}
+
+td.field-created_by a.text-link:hover {
+    background: #16a34a;
+    color: #fff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(34, 197, 94, .35);
+}
+/* Password fields */
+input[type="password"] {
+    background: #1e293b !important;
+    color: #ffffff !important;
+    border: 1px solid #475569 !important;
+    border-radius: 8px;
+}
+
+input[type="password"]:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59,130,246,.25);
+}
+
+/* Text inputs */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+textarea,
+select {
+    background: #1e293b !important;
+    color: #ffffff !important;
+    border: 1px solid #475569 !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #94a3b8 !important;
+}

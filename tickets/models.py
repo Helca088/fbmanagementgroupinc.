@@ -254,6 +254,13 @@ class TicketAttachment(models.Model):
            
 class TicketStatusLog(models.Model):
     ticket = models.ForeignKey(Ticket,on_delete=models.CASCADE,related_name="status_logs")
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="ticket_status_logs",
+    )
     old_status = models.CharField(max_length=20)
     technician = models.ForeignKey(
         Technician,
