@@ -174,6 +174,7 @@ def delete_ticket(request, id):
 
     return JsonResponse({"success": True})
 
+@login_required
 @require_POST
 def update_status(request, id):
     ticket = get_object_or_404(Ticket, id=id)
@@ -196,6 +197,7 @@ def update_status(request, id):
         
     TicketStatusLog.objects.create(
         ticket = ticket,
+        created_by=request.user,
         old_status = old_status,
         new_status = new_status,
         technician = ticket.assigned_to,
