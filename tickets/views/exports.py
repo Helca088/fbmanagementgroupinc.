@@ -286,7 +286,7 @@ def export_pdf(request):
 
     ticket_table = Table(
         ticket_data,
-        colWidths=[40, 70, 80, 80, 60, 90]
+        colWidths=[40, 100, 80, 80, 60, 60]
     )
 
     ticket_table.setStyle(TableStyle([
