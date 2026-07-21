@@ -23,6 +23,15 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Q
 
+def get_concerns(request):
+    department = request.GET.get("department")
+
+    concerns = ConcernType.objects.filter(
+        department_id=department
+    ).values("id", "name")
+
+    return JsonResponse(list(concerns), safe=False)
+
 def get_technicians(request):
     department_id = request.GET.get("department")
 

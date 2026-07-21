@@ -175,17 +175,19 @@ class TicketAdmin(ModelAdmin):
 
     def get_urls(self):
         urls = super().get_urls()
-
         custom_urls = [
             path(
                 "get-technicians/",
-                self.admin_site.admin_view(get_technicians),
-                name="get-technicians",
+                self.admin_site.admin_view(self.get_technicians),
+                name="get_technicians",
+            ),
+            path(
+                "get-concerns/",
+                self.admin_site.admin_view(self.get_concerns),
+                name="get_concerns",
             ),
         ]
-
-        return custom_urls + urls
-
+        return custom_urls + urls  
 
     inlines = [TicketStatusLogInline]
     search_fields =[
@@ -236,10 +238,10 @@ class TicketAdmin(ModelAdmin):
         )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
+
+        department_id = request.POST.get("department")
+
         if db_field.name == "assigned_to":
-
-            department_id = request.POST.get("department")
-
             if department_id:
                 kwargs["queryset"] = Technician.objects.filter(
                     department_id=department_id
@@ -247,11 +249,19 @@ class TicketAdmin(ModelAdmin):
             else:
                 kwargs["queryset"] = Technician.objects.all()
 
+        elif db_field.name == "concern_type":
+            if department_id:
+                kwargs["queryset"] = ConcernType.objects.filter(
+                    department_id=department_id
+                )
+            else:
+                kwargs["queryset"] = ConcernType.objects.all()
+
         return super().formfield_for_foreignkey(
             db_field,
             request,
             **kwargs
-        )       
+        )     
 
     def attachment_preview(self, obj):
         images = obj.attachments.all()

@@ -43,8 +43,14 @@ urlpatterns = [
 
     path('test-push/', views.test_push_view, name='test_push'),
     path(
+        "get-concerns/",
+        views.get_concerns,
+        name="get_concerns",
+    ),
+    path(
         "get-technicians/",
         views.get_technicians,
         name="get-technicians",
     ),
+    
 ]

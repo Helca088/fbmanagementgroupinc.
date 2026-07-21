@@ -2,10 +2,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const department = document.getElementById("id_department");
     const technician = document.getElementById("id_assigned_to");
+    const concern = document.getElementById("id_concern_type");
 
-    if (!department || !technician) return;
+    if (!department) return;
 
     function loadTechnicians() {
+        if (!technician) return;
 
         const departmentId = department.value;
 
@@ -16,26 +18,39 @@ document.addEventListener("DOMContentLoaded", function () {
         fetch(`/get-technicians/?department=${departmentId}`)
             .then(response => response.json())
             .then(data => {
-
-                console.log("Returned data:", data);
-
                 data.forEach(function (tech) {
-
                     const option = document.createElement("option");
-
                     option.value = tech.id;
                     option.textContent = tech.name;
-
                     technician.appendChild(option);
                 });
-
-                console.log("Options count:", technician.options.length);
-                console.log(technician.innerHTML);
-
             });
-
     }
 
-    department.addEventListener("change", loadTechnicians);
+    function loadConcerns() {
+        if (!concern) return;
+
+        const departmentId = department.value;
+
+        concern.innerHTML = '<option value="">---------</option>';
+
+        if (!departmentId) return;
+
+        fetch(`/get-concerns/?department=${departmentId}`)
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(function (item) {
+                    const option = document.createElement("option");
+                    option.value = item.id;
+                    option.textContent = item.name;
+                    concern.appendChild(option);
+                });
+            });
+    }
+
+    department.addEventListener("change", function () {
+        loadTechnicians();
+        loadConcerns();
+    });
 
 });
