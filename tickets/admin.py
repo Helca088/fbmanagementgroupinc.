@@ -15,7 +15,7 @@ from django.urls import path
 from tickets.notification import send_push
 from .websocket import notify_ticket_delete
 from .forms import CustomUserCreationForm
-from tickets.views.tickets import get_technicians
+from tickets.views.tickets import get_technicians, get_concerns
 
 admin.site.register(DeviceToken)
 admin.site.site_url = "/reports/"
@@ -178,12 +178,12 @@ class TicketAdmin(ModelAdmin):
         custom_urls = [
             path(
                 "get-technicians/",
-                self.admin_site.admin_view(self.get_technicians),
+                self.admin_site.admin_view(get_technicians),
                 name="get-technicians",
             ),
             path(
                 "get-concerns/",
-                self.admin_site.admin_view(self.get_concerns),
+                self.admin_site.admin_view(get_concerns),
                 name="get-concerns",
             ),
         ]
