@@ -179,15 +179,15 @@ class TicketAdmin(ModelAdmin):
             path(
                 "get-technicians/",
                 self.admin_site.admin_view(self.get_technicians),
-                name="get_technicians",
+                name="get-technicians",
             ),
             path(
                 "get-concerns/",
                 self.admin_site.admin_view(self.get_concerns),
-                name="get_concerns",
+                name="get-concerns",
             ),
         ]
-        return custom_urls + urls  
+        return custom_urls + urls
 
     inlines = [TicketStatusLogInline]
     search_fields =[
