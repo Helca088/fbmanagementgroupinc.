@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (!departmentId) return;
 
-        fetch(`/get-concerns/?department=${departmentId}`)
+        fetch(`/admin/tickets/ticket/get-concerns/?department=${departmentId}`)
             .then(response => response.json())
             .then(data => {
                 data.forEach(function (item) {
