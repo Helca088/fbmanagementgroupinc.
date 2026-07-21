@@ -239,29 +239,42 @@ class TicketAdmin(ModelAdmin):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
 
-        department_id = request.POST.get("department")
+        ticket_id = request.resolver_match.kwargs.get("object_id")
+        department = None
+
+        # Editing an existing ticket
+        if ticket_id:
+            ticket = Ticket.objects.filter(pk=ticket_id).select_related("department").first()
+            if ticket:
+                department = ticket.department
+
+        # Adding a new ticket (after POST)
+        if not department:
+            department_id = request.POST.get("department")
+            if department_id:
+                department = Department.objects.filter(pk=department_id).first()
 
         if db_field.name == "assigned_to":
-            if department_id:
+            if department:
                 kwargs["queryset"] = Technician.objects.filter(
-                    department_id=department_id
+                    department=department
                 )
             else:
-                kwargs["queryset"] = Technician.objects.all()
+                kwargs["queryset"] = Technician.objects.none()
 
         elif db_field.name == "concern_type":
-            if department_id:
+            if department:
                 kwargs["queryset"] = ConcernType.objects.filter(
-                    department_id=department_id
+                    department=department
                 )
             else:
-                kwargs["queryset"] = ConcernType.objects.all()
+                kwargs["queryset"] = ConcernType.objects.none()
 
         return super().formfield_for_foreignkey(
             db_field,
             request,
             **kwargs
-        )     
+        )  
 
     def attachment_preview(self, obj):
         images = obj.attachments.all()

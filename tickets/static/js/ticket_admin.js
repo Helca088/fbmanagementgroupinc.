@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const departmentId = department.value;
 
-        concern.innerHTML = '<option value="">---------</option>';
+        concern.innerHTML = '<option value="">Pumili ng concern</option>';
 
         if (!departmentId) return;
 
