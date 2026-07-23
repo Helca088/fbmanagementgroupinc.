@@ -27,7 +27,7 @@ def reports(request):
     overdue = tickets.filter(
         deadline__lt=timezone.now()
          ).exclude( 
-        status="resolved"
+        status__in=["resolved", "cancelled"]  
         ).count()
     resolved_on_time = tickets.filter(
         status="resolved",
@@ -89,6 +89,7 @@ def reports(request):
         "pending": tickets.filter(status="pending").count(),
         "progress": tickets.filter(status="progress").count(),
         "resolved": tickets.filter(status="resolved").count(),
+        "cancelled": tickets.filter(status="cancelled").count(),
         "overdue": overdue,
         "resolved_on_time": resolved_on_time,
         "technician_stats": technician_stats,

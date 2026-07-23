@@ -88,7 +88,8 @@ class Ticket(models.Model):
     status_choices = [
     ('pending', 'Pending'),
     ('progress', 'In Progress'), 
-    ('resolved', 'Resolved'),       
+    ('resolved', 'Resolved'),
+    ('cancelled', 'Cancelled'),       
     ]     
     PRIORITY_CHOICES = [
     ('Low', 'Low'),
@@ -96,6 +97,10 @@ class Ticket(models.Model):
     ('High', 'High'),   
     ]
 
+    cancelled_at = models.DateTimeField(
+    null=True,
+    blank=True,
+    )
     is_opened = models.BooleanField(default=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)   
     email = models.EmailField()
@@ -175,6 +180,12 @@ class Ticket(models.Model):
         else:
             # Clear it if the ticket is reopened
             self.resolve_at = None
+
+        if self.status.lower() == "cancelled":
+            if self.cancelled_at is None:
+                self.cancelled_at = timezone.now()
+        else:
+            self.cancelled_at = None
 
         super().save(*args, **kwargs)
 

@@ -199,7 +199,7 @@ class TicketAdmin(ModelAdmin):
     list_display = ('outlet_with_badge', 
                     'department', 
                     'concern_type', 
-                    'status', 
+                    'colored_status', 
                     'priority',
                     'created_at',
                     'assigned_to',
@@ -374,12 +374,19 @@ class TicketAdmin(ModelAdmin):
                     new_status=obj.status,
                     technician=obj.assigned_to,
             )
-            
-        if obj.status == "resolved" and not obj.resolve_at:
-            obj.resolve_at = timezone.now()
+        # Handle resolved timestamp    
+        if obj.status == "resolved":
+            if not obj.resolve_at:
+                obj.resolve_at = timezone.now()
+        else:
+            obj.resolve_at = None
 
-        elif obj.status != "resolved":
-            obj.resolve_at = None    
+        # Handle cancelled timestamp
+        if obj.status == "cancelled":
+            if not obj.cancelled_at:
+                obj.cancelled_at = timezone.now()
+        else:
+            obj.cancelled_at = None    
 
         if not change:
             if not obj.created_by:
@@ -394,10 +401,27 @@ class TicketAdmin(ModelAdmin):
 
         for profile in profiles:
             if change:
+
+                if obj.status == "cancelled":
+                    title = "Ticket Cancelled"
+                    body = f"Ticket #{obj.id} has been cancelled."
+
+                elif obj.status == "resolved":
+                    title = "Ticket Resolved"
+                    body = f"Ticket #{obj.id} has been resolved."
+
+                elif obj.status == "progress":
+                    title = "Ticket In Progress"
+                    body = f"Ticket #{obj.id} is now in progress."
+
+                else:
+                    title = "Ticket Updated"
+                    body = f"Ticket #{obj.id} has been updated."
+
                 send_push(
                     user=profile.user,
-                    title="Ticket Updated",
-                    body=f"Ticket #{obj.id} has been updated.",
+                    title=title,
+                    body=body,
                     data={
                         "ticket_id": str(obj.id),
                         "url": "https://fbmanagement.onrender.com/home/"
@@ -455,12 +479,20 @@ class TicketAdmin(ModelAdmin):
     download_button.short_description = "Download File" 
 
     def colored_status(self, obj):
-        color = "orange" if obj.status == "pending" else "green"
+        colors = {
+            "pending": "#f59e0b",
+            "progress": "#3b82f6",
+            "resolved": "#22c55e",
+            "cancelled": "#ef4444",
+        }
+
+        color = colors.get(obj.status, "#6b7280")
+
         return format_html(
-        '<span style="color:{}; font-weight:bold;">{}</span>',
-        color,
-     obj.status
-    )
+            '<strong style="color:{} !important;">{}</strong>',
+            color,
+            obj.get_status_display(),
+        )
 
     colored_status.short_description = "Status"
 

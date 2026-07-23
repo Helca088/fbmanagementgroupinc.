@@ -1,16 +1,37 @@
 new Chart(document.getElementById('statusChart'), {
     type: 'doughnut',
     data: {
-        labels: ['Pending', 'In Progress', 'Resolved', 'Overdue'],
+        labels: [
+            'Pending',
+            'In Progress',
+            'Resolved',
+            'Overdue',
+            'Cancelled',
+            
+        ],
         datasets: [{
             data: statusData,
-            backgroundColor: ['#fbbf24', '#60a5fa', '#34d399', '#f87171'],
+            backgroundColor: [
+                '#fbbf24', // Pending
+                '#60a5fa', // In Progress
+                '#34d399', // Resolved
+                '#ef4444', // Cancelled
+                '#f87171'  // Overdue
+            ],
             borderWidth: 2,
             borderColor: '#fff',
         }]
     },
     options: {
-        plugins: { legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 16 } } },
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    font: { size: 12 },
+                    padding: 16
+                }
+            }
+        },
         cutout: '65%',
     }
 });

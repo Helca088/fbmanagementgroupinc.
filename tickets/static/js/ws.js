@@ -251,7 +251,10 @@ function buildTicketCard(data){
                 ${data.status === "resolved" ? "selected" : ""}>
                 Resolved
             </option>
-
+            <option value="cancelled"
+                ${data.status === "cancelled" ? "selected" : ""}>
+                Cancelled
+            </option>
         </select>
 
         <br>

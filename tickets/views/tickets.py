@@ -106,7 +106,7 @@ def home(request):
             
         return redirect('home')
     
-    cutoff = timezone.now() - timedelta(days=7)
+    cutoff = timezone.now() - timedelta(days=1)
 
     tickets = (
         Ticket.objects.filter(

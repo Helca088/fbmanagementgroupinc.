@@ -76,6 +76,10 @@
             <p class="stat-value color-green">{{ resolved }}</p>
         </div>
         <div class="stat-card">
+        <p class="stat-label" style="color:#dc2626;">Cancelled</p>
+        <p class="stat-value" style="color:#dc2626;">{{ cancelled }}</p>
+        </div>
+        <div class="stat-card">
             <p class="stat-label color-red">Overdue</p>
             <p class="stat-value color-red">{{ overdue }}</p>
         </div>
@@ -216,7 +220,7 @@
 </div>
 
 <script>
-    const statusData  = [{{ pending }}, {{ progress }}, {{ resolved }}, {{ overdue }}];
+    const statusData  = [{{ pending }}, {{ progress }}, {{ resolved }}, {{ overdue }}, {{ cancelled }}];
     const deptLabels  = [{% for d in departments %}"{{ d.department__name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
     const deptData    = [{% for d in departments %}{{ d.total }}{% if not forloop.last %},{% endif %}{% endfor %}];
     const concernLabels = [{% for c in concerns %}"{{ c.concern_type__name }}"{% if not forloop.last %},{% endif %}{% endfor %}];

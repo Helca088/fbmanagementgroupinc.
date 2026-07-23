@@ -161,6 +161,11 @@
                 <option value="resolved" {% if ticket.status == "resolved" %}selected{% endif %}>
                 Resolved
                 </option>
+
+                <option value="cancelled"
+                {% if ticket.status == "cancelled" %}selected{% endif %}>
+                Cancelled
+                </option>
                 </select>
                 <br>
    

@@ -19,14 +19,14 @@ def ticket_api(request):
 
     tickets = tickets.annotate(
     status_order=Case(
-        When(status='Pending', then=0),
-        When(status='Open', then=1),
-        When(status='Resolved', then=2),
+        When(status="pending", then=0),
+        When(status="progress", then=1),
+        When(status="resolved", then=2),
+        When(status="cancelled", then=3),
         default=99,
         output_field=IntegerField(),
     )
-
-).order_by('status_order', '-created_at')
+).order_by("status_order", "-created_at")
     data = []
     for ticket in tickets:
 
