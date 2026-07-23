@@ -3,6 +3,8 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from ..models import DeviceToken
 from django.http import JsonResponse
+from django.utils import timezone
+from datetime import timedelta
 from django.shortcuts import render
 from django.db.models import Case, When, IntegerField
 from django.utils.text import slugify
@@ -12,10 +14,25 @@ from ..models import (
 )
 @login_required
 def ticket_api(request):
+    cutoff = timezone.now() - timedelta(days=1)
+
     if request.user.is_staff:
-        tickets = Ticket.objects.all()
+        tickets = (
+            Ticket.objects
+            .exclude(
+                status__iexact="resolved",
+                resolve_at__lt=cutoff
+            )
+        )
     else:
-        tickets = Ticket.objects.filter(user=request.user)
+        tickets = (
+            Ticket.objects
+            .filter(user=request.user)
+            .exclude(
+                status__iexact="resolved",
+                resolve_at__lt=cutoff
+            )
+        )
 
     tickets = tickets.annotate(
     status_order=Case(
