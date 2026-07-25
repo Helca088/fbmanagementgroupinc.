@@ -181,12 +181,12 @@ textarea,
 select {
     background: #44ff00 !important;
     color: #000000 !important;
-    border: 1px solid #475569 !important;
+    border: 1px solid #91ff00 !important;
 }
 
 input::placeholder,
 textarea::placeholder {
-    color: #f8f8f9 !important;
+    color: #000000 !important;
 }
 .loader-content {
     text-align: center;
