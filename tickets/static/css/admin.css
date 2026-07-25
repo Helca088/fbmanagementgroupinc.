@@ -136,21 +136,6 @@ html.dark #page-loader {
     display: flex;
 }
 
-/* Spinner */
-.loader {
-    width: 44px;
-    height: 44px;
-    border: 4px solid #ddd;
-    border-top-color: #1877F2; 
-    border-radius: 50%;
-    animation: spin .8s linear infinite;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
 td.field-created_by a.text-link {
     display: inline-flex;
     align-items: center;
@@ -202,4 +187,12 @@ select {
 input::placeholder,
 textarea::placeholder {
     color: #94a3b8 !important;
+}
+.loader-content {
+    text-align: center;
+}
+
+#lottie-animation {
+    width: 220px;
+    height: 220px;
 }

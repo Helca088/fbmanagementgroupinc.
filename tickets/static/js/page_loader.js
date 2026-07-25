@@ -1,11 +1,17 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // Create overlay
     const overlay = document.createElement("div");
     overlay.id = "page-loader";
-    overlay.innerHTML = '<div class="loader"></div>';
+    overlay.innerHTML = '<div id="lottie-animation"></div>';
     document.body.appendChild(overlay);
 
-    // Show loader when clicking links
+    lottie.loadAnimation({
+        container: document.getElementById("lottie-animation"),
+        renderer: "svg",
+        loop: true,
+        autoplay: true,
+        path: "/static/animations/loading.json"
+    });
+
     document.addEventListener("click", (e) => {
         // Ignore Django Unfold theme switch links
         if (e.target.closest('a[x-on\\:click^="switchTheme"]')) {
