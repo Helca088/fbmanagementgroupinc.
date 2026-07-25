@@ -179,9 +179,9 @@ input[type="email"],
 input[type="number"],
 textarea,
 select {
-    background: #1e88e5 !important;
-    color: #ffffff !important;
-    border: 1px solid #91ff00 !important;
+    background: #32e51e !important;
+    color: #000000 !important;
+    border: 1px solid #00f7ff !important;
     border-radius: 8px;
 }
 
@@ -200,10 +200,10 @@ textarea::placeholder {
 
 html.dark table tbody td select,
 html.dark table tbody td option {
-    color: #ffffff !important;
+    color: #000000 !important;
 }
 
 html.dark table tbody td select {
-    background: #1e88e5 !important;
-    color: #ffffff !important;
+    background: #32e51e !important;
+    color: #000000 !important;
 }
