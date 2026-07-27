@@ -179,15 +179,15 @@ input[type="email"],
 input[type="number"],
 textarea,
 select {
-    background: #32e51e !important;
-    color: #000000 !important;
+    background: #1e88e5 !important;
+    color: #ffffff !important;
     border: 1px solid #00f7ff !important;
     border-radius: 8px;
 }
 
 input::placeholder,
 textarea::placeholder {
-    color: #000000 !important;
+    color: #ffffff !important;
 }
 .loader-content {
     text-align: center;
