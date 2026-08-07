@@ -52,5 +52,10 @@ urlpatterns = [
         views.get_technicians,
         name="get-technicians",
     ),
+    path(
+    "store-logs/",
+    views.store_logs,
+    name="store_logs",
+    )
     
-]
+] 
