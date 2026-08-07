@@ -16,6 +16,16 @@ from tickets.notification import send_push
 from .websocket import notify_ticket_delete
 from .forms import CustomUserCreationForm
 from tickets.views.tickets import get_technicians, get_concerns
+from .models import TicketAdditionalAssignmentLog
+
+@admin.register(TicketAdditionalAssignmentLog)
+class TicketAdditionalAssignmentLogAdmin(ModelAdmin):
+    list_display = (
+        "ticket",
+        "technician",
+        "action",
+        "assigned_at",
+    )
 
 admin.site.register(DeviceToken)
 admin.site.site_url = "/reports/"
@@ -203,8 +213,16 @@ class TicketAdmin(ModelAdmin):
                     'priority',
                     'created_at',
                     'assigned_to',
+                    'additional_techs',
                     'deadline',
                     'overdue',)
+    
+    @admin.display(description="Additional Technicians")
+    def additional_techs(self, obj):
+        return ", ".join(
+            tech.full_name
+            for tech in obj.additional_technicians.all()
+        ) or "-"
 
     @admin.display(description="Outlet")
     def outlet_with_badge(self, obj):   
@@ -220,8 +238,19 @@ class TicketAdmin(ModelAdmin):
 
     fields = ('user', 'outlet', 'message', 'attachment_preview', 'status',
               'scheduled_date', 'scheduled_time', 'admin_note', 'department',
-              'assigned_to', 'priority', 'concern_type')
+              'assigned_to', 'additional_technicians', 'priority', 'concern_type')
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        if request.user.is_superuser:
+            return qs
+
+        profile = getattr(request.user, "userprofile", None)
+        if profile and profile.department:
+            return qs.filter(department=profile.department)
+
+        return qs.none()
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         ticket = self.get_object(request, object_id)
@@ -236,6 +265,23 @@ class TicketAdmin(ModelAdmin):
             form_url,
             extra_context,
         )
+
+    def _get_department(self, request):
+        
+        ticket_id = request.resolver_match.kwargs.get("object_id")
+
+        # Editing an existing ticket
+        if ticket_id:
+            ticket = Ticket.objects.filter(pk=ticket_id).select_related("department").first()
+            if ticket:
+                return ticket.department
+
+        
+        department_id = request.POST.get("department")
+        if department_id:
+            return Department.objects.filter(pk=department_id).first()
+
+        return None
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
 
@@ -357,6 +403,17 @@ class TicketAdmin(ModelAdmin):
 
         if change:
             old_obj = Ticket.objects.get(pk=obj.pk)
+
+            old_additional = set()
+
+            if change:
+                old_obj = Ticket.objects.get(pk=obj.pk)
+
+                old_additional = set(
+                    old_obj.additional_technicians.values_list("id", flat=True)
+                )
+
+                self.old_additional = old_additional
         
             if old_obj.assigned_to != obj.assigned_to:
                 TicketAssignmentLog.objects.create(
@@ -438,7 +495,47 @@ class TicketAdmin(ModelAdmin):
                     }
                 )
         
-        notify_ticket_update(obj, action="update" if change else "create")
+    def save_related(self, request, form, formsets, change):
+            super().save_related(request, form, formsets, change)
+
+            ticket = form.instance
+
+            new_additional = set(
+                ticket.additional_technicians.values_list("id", flat=True)
+            )
+
+            if change:
+                old_additional = getattr(self, "old_additional", set())
+
+                added = new_additional - old_additional
+                removed = old_additional - new_additional
+
+                for tech_id in added:
+                    TicketAdditionalAssignmentLog.objects.create(
+                        ticket=ticket,
+                        technician_id=tech_id,
+                        action="added",
+                    )
+
+                for tech_id in removed:
+                    TicketAdditionalAssignmentLog.objects.create(
+                        ticket=ticket,
+                        technician_id=tech_id,
+                        action="removed",
+                    )
+
+            else:
+                for tech_id in new_additional:
+                    TicketAdditionalAssignmentLog.objects.create(
+                        ticket=ticket,
+                        technician_id=tech_id,
+                        action="added",
+                    )
+
+            notify_ticket_update(
+                ticket,
+                action="update" if change else "create"
+            )
         
 
     def latest_resolution(self, obj):

@@ -1,7 +1,7 @@
 {
     "name": "FB Admin",
     "short_name": "FB Admin",
-    "start_url": "/admin/",
+    "start_url": "/admin/tickets/ticket/",
     "scope": "/admin/",
     "display": "standalone",
     "theme_color": "#5E17EB",

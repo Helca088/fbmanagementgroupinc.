@@ -22,6 +22,7 @@ import os
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Q
+from django.core.paginator import Paginator
 
 def get_concerns(request):
     department = request.GET.get("department")
@@ -48,6 +49,33 @@ def get_technicians(request):
     ]
 
     return JsonResponse(data, safe=False)
+
+@login_required
+def store_logs(request):
+    cutoff = timezone.now() - timedelta(minutes=1)
+
+    tickets = Ticket.objects.filter(
+        user=request.user,
+        status="resolved",
+        resolve_at__lt=cutoff
+    ).order_by("-resolve_at")
+
+    search = request.GET.get("search")
+
+    if search:
+        tickets = tickets.filter(
+            Q(message__icontains=search)|
+            Q(outlet_ticket_no__iexact=search)
+        )
+
+    paginator = Paginator(tickets, 10)
+
+    page = request.GET.get("page")
+    tickets = paginator.get_page(page)
+
+    return render(request, "store_logs.html", {
+        "tickets": tickets,
+    })
 
 @login_required
 def test_push_view(request):
@@ -118,6 +146,13 @@ def home(request):
         )
         .order_by("-created_at")
     )
+    search = request.GET.get("search")
+    
+    if search:
+            tickets = tickets.filter(
+                Q(message__icontains=search)|
+                Q(outlet_ticket_no__iexact=search)
+            )
 
     departments = Department.objects.all()
     concerns = ConcernType.objects.all()

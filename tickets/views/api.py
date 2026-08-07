@@ -75,6 +75,14 @@ def ticket_api(request):
                 if ticket.assigned_to else ""
             ),
 
+            "additional_technicians": [
+            {
+                "id": tech.id,
+                "name": tech.full_name,
+            }
+                for tech in ticket.additional_technicians.all()
+            ],
+
             "created_at": ticket.created_at.strftime("%Y-%m-%d %H:%M"),
 
             "scheduled_date": (

@@ -11,7 +11,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <link rel="manifest" href="{% static 'employee-manifest.json' %}">
     <meta name="theme-color" content="#008000">
 
@@ -54,75 +53,20 @@
 </header>
 <div class="container1">
 
-    <!-- FORM -->
-
-    <div class="form-box">
-
-        <form id="ticketForm" method="POST" enctype="multipart/form-data">
-
-            {% csrf_token %}
-
-
-
-            <textarea 
-                name="message" 
-                required
-                placeholder="Enter your message"
-            ></textarea>
-
-            <input type="file" name="files" multiple>
-
-            <div>
-                <strong>Department: </strong>
-
-            <select name="department"
-                    class="border p-2 rounded w-full"
-                    required
-                    hx-get="/get-concerns/"
-                    hx-trigger="change"
-                    hx-target="#concern_type"
-                    hx-swap="innerHTML"
-                    hx-include="[name='department']">
-
-            <option value="" selected disabled>Select Department</option>
-
-            {% for department in departments %}
-            <option value="{{ department.id }}">
-            {{ department.name }}
-            </option>
-            {% endfor %}
-            </select>
-            </div>
-
-            <br></br>
-
-            <div>
-            
-            <strong>Concerns Type: </strong>
-
-            <select id="concern_type"
-                    name="concern_type"
-                    class="border p-2 rounded w-full"
-                    required>
-                    
-            <option value="" selected disabled>
-            Select Department First
-            </option>
-            </select>
-            </div>
-            <br></br>
-            <button type="submit" id="submitBtn">
-                Send
-            </button>
-        
-        </form>
-        </div>
-
-
     <div class="ticket-wrapper">
-
+    <div class="search-container">
+    <form method="GET" class="search-form">
+        <input
+            type="text"
+            name="search"
+            placeholder="Search ..."
+            value="{{ search }}"
+        >
+        <button type="submit">Search</button>
+    </form>
+</div>
         <h2 class="ticket-title">
-            Your Ticket List
+            Ticket Logs
         </h2>
 
         <div class="ticket-list">
@@ -138,7 +82,7 @@
             </span>
 
             <span class="ticket-number">
-                #{{ ticket.display_ticket_no }}
+                #{{ ticket.outlet_ticket_no }}
             </span>
 
             </div>
@@ -285,15 +229,39 @@
             {% endfor %}
 
         </div>
+<div class="pagination">
 
+    {% if tickets.has_previous %}
+        <a href="?page=1{% if search %}&search={{ search }}{% endif %}">
+            First
+        </a>
+
+        <a href="?page={{ tickets.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">
+            Previous
+        </a>
+    {% endif %}
+
+    <span>
+        Page {{ tickets.number }} of {{ tickets.paginator.num_pages }}
+    </span>
+
+    {% if tickets.has_next %}
+        <a href="?page={{ tickets.next_page_number }}{% if search %}&search={{ search }}{% endif %}">
+            Next
+        </a>
+
+        <a href="?page={{ tickets.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}">
+            Last
+        </a>
+    {% endif %}
+
+</div>
     </div>
 
 </div>
+</div>
 <script>
-let selectedTicketId = null;
-let selectedStatus = null;
-let selectedDropdown = null;
-let previousStatus = null;
+
 
 function openReasonModal(ticketId, dropdown){
 
@@ -337,35 +305,6 @@ function submitStatusReason(){
     document.getElementById("reasonModal").style.display = "none";
 }
 </script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("ticketForm");
-    const button = document.getElementById("submitBtn");
-
-    let submitting = false;
-
-    form.addEventListener("submit", function (e) {
-
-        const message = document.querySelector("[name='message']").value.trim();
-
-        if (!message) {
-            e.preventDefault();
-            alert("Please enter a message before submitting.");
-            return;
-        }
-
-        if (submitting) {
-            e.preventDefault();
-            return;
-        }
-
-        submitting = true;
-        button.disabled = true;
-        button.innerHTML = `<span class="spinner"></span>Sending...`;
-    });
-});
-</script>
-<script src="{% static 'js/ws.js' %}?v=3"></script>
 
 <div id="reasonModal" class="modal">
 
@@ -392,6 +331,6 @@ document.addEventListener("DOMContentLoaded", function () {
 </div>
 <script src="{% static 'js/sw_update.js' %}"></script>
 <script type="module" src="{% static 'js/firebase.js' %}"></script>
-<script src="{% static 'js/page_loader.js' %}" defer></script>
+<script src="{% static 'js/store_logs.js' %}?v=3"></script>
 </body>
 </html>

@@ -25,6 +25,14 @@ def serialize_ticket(ticket):
             if ticket.assigned_to else ""
         ),
 
+        "additional_technicians": [
+        {
+            "id": tech.id,
+            "name": tech.full_name,
+        }
+            for tech in ticket.additional_technicians.all()
+        ],
+
         "scheduled_date": (
             ticket.scheduled_date.strftime("%Y-%m-%d")
             if ticket.scheduled_date else ""

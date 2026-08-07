@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.db.models import Count, F
+from django.db.models import Count, F, Q
 from django.utils import timezone
 from tickets.models import (
     Ticket,
@@ -48,8 +48,9 @@ def reports(request):
     for tech in technicians:
 
         current_assigned = tickets.filter(
-            assigned_to=tech
-        ).count()
+            Q(assigned_to=tech) |
+            Q(additional_technicians=tech)
+        ).distinct().count()
 
         total_assigned = TicketAssignmentLog.objects.filter(
             new_technician=tech,
@@ -63,10 +64,11 @@ def reports(request):
         ).count()
 
         resolved_on_time = tickets.filter(
-            assigned_to=tech,
+            Q(assigned_to=tech) |
+            Q(additional_technicians=tech),
             status="resolved",
             resolve_at__lte=F("deadline")
-        ).count()
+        ).distinct().count()
 
         reopened = TicketStatusLog.objects.filter(
             technician=tech,

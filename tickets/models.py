@@ -16,12 +16,19 @@ class Outlet(models.Model):
     def __str__(self):
         return self.name
 
+class Department(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
 class UserProfile(models.Model):
     ACCOUNT_TYPES = [
         ("admin", "Admin"),
         ("outlet", "Outlet"),
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name="users", null=True, blank=True)
     outlet = models.ForeignKey(
         Outlet,
         on_delete=models.SET_NULL,
@@ -47,12 +54,6 @@ class UserProfile(models.Model):
         self.user.save(update_fields=["is_staff", "is_active"])
 
    
-    
-class Department(models.Model):
-    name = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.name
 
 class Technician(models.Model):
 
@@ -136,11 +137,18 @@ class Ticket(models.Model):
     )
     description = models.TextField()
     assigned_to = models.ForeignKey(
+    Technician,
+    on_delete=models.SET_NULL,
+    null=True,
+    blank=True,
+    related_name="primary_tickets",
+    )
+
+    additional_technicians = models.ManyToManyField(
         Technician,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-        )
+        blank=True,
+        related_name="additional_tickets",
+    )
 
     def ticket_age(self):
 
@@ -317,3 +325,25 @@ class TicketAssignmentLog(models.Model):
         old = self.old_technician.full_name if self.old_technician else "None"
         new = self.new_technician.full_name if self.new_technician else "None"
         return f"Ticket {self.ticket.id}: {old} → {new}"
+
+class TicketAdditionalAssignmentLog(models.Model):
+    ticket = models.ForeignKey(
+        Ticket,
+        on_delete=models.CASCADE,
+        related_name="additional_assignment_logs",
+    )
+
+    technician = models.ForeignKey(
+        Technician,
+        on_delete=models.CASCADE,
+    )
+
+    action = models.CharField(
+        max_length=10,
+        choices=[
+            ("added", "Added"),
+            ("removed", "Removed"),
+        ],
+    )
+
+    assigned_at = models.DateTimeField(auto_now_add=True)

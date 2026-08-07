@@ -1,6 +1,6 @@
 from django.http import HttpResponse
 from django.utils import timezone
-from django.db.models import Count, F
+from django.db.models import Count, F, Q
 from reportlab.platypus import (
     SimpleDocTemplate,
     Paragraph,
@@ -18,6 +18,7 @@ from tickets.models import (
     Technician,
     TicketStatusLog,
     TicketAssignmentLog,
+    TicketAdditionalAssignmentLog,
 )
 
 def export_pdf(request):
@@ -209,28 +210,40 @@ def export_pdf(request):
     for tech in technicians:
 
         current_assigned = tickets.filter(
-            assigned_to=tech
+            Q(assigned_to=tech) |
+            Q(additional_technicians=tech)
+        ).distinct().count()
+
+        primary_total = TicketAssignmentLog.objects.filter(
+            new_technician=tech,
+            ticket__in=tickets,
         ).count()
 
-        total_assigned = TicketAssignmentLog.objects.filter(
-            new_technician=tech,
-            ticket__in=tickets
+        additional_total = TicketAdditionalAssignmentLog.objects.filter(
+            technician=tech,
+            action="added",
+            ticket__in=tickets,
         ).count()
+
+        total_assigned = primary_total + additional_total
 
         resolved = tickets.filter(
-            assigned_to=tech,
-            status="resolved"
-        ).count()
+            Q(assigned_to=tech) |
+            Q(additional_technicians=tech),
+            status="resolved",
+        ).distinct().count()
 
         on_time = tickets.filter(
-            assigned_to=tech,
+            Q(assigned_to=tech) |
+            Q(additional_technicians=tech),
             status="resolved",
-            resolve_at__lte=F("deadline")
-        ).count()
+            resolve_at__lte=F("deadline"),
+        ).distinct().count()
 
         reopened = TicketStatusLog.objects.filter(
-            ticket__assigned_to=tech,
-            old_status="resolved"
+            technician=tech,
+            old_status="resolved",
+            ticket__in=tickets,
         ).count()
 
         tech_data.append([
@@ -278,9 +291,18 @@ def export_pdf(request):
             ticket.department.name if ticket.department else "",
             ticket.concern_type.name if ticket.concern_type else "",
             ticket.status,
-            (
-                ticket.assigned_to.full_name
-                if ticket.assigned_to else ""
+            ", ".join(
+            filter(
+                None,
+                [
+                    ticket.assigned_to.full_name
+                    if ticket.assigned_to else None,
+                    *[
+                        tech.full_name
+                        for tech in ticket.additional_technicians.all()
+                    ],
+                ],
+            )
             )
         ])
 
@@ -373,7 +395,19 @@ def export_excel(request):
         ticket.department.name if ticket.department else "",
         ticket.concern_type.name if ticket.concern_type else "",
         ticket.status,
-        ticket.assigned_to.full_name if ticket.assigned_to else "",
+        ", ".join(
+        filter(
+            None,
+            [
+                ticket.assigned_to.full_name
+                if ticket.assigned_to else None,
+                *[
+                    tech.full_name
+                    for tech in ticket.additional_technicians.all()
+                ],
+            ],
+        )
+       ),
         ticket.created_at.strftime("%Y-%m-%d %H:%M"),
         ticket.deadline.strftime("%Y-%m-%d %H:%M") if ticket.deadline else ""
     ])
@@ -441,28 +475,40 @@ def export_excel(request):
     for tech in technicians:
 
         current_assigned = tickets.filter(
-            assigned_to=tech
+            Q(assigned_to=tech) |
+            Q(additional_technicians=tech)
+        ).distinct().count()
+
+        primary_total = TicketAssignmentLog.objects.filter(
+            new_technician=tech,
+            ticket__in=tickets,
         ).count()
 
-        total_assigned =TicketAssignmentLog.objects.filter(
-            new_technician=tech,
-            ticket__in=tickets
+        additional_total = TicketAdditionalAssignmentLog.objects.filter(
+            technician=tech,
+            action="added",
+            ticket__in=tickets,
         ).count()
+
+        total_assigned = primary_total + additional_total
 
         resolved = tickets.filter(
-            assigned_to=tech,
-            status="resolved"
-        ).count()
+            Q(assigned_to=tech) |
+            Q(additional_technicians=tech),
+            status="resolved",
+        ).distinct().count()
 
         on_time = tickets.filter(
-            assigned_to=tech,
+            Q(assigned_to=tech) |
+            Q(additional_technicians=tech),
             status="resolved",
-            resolve_at__lte=F("deadline")
-        ).count()
+            resolve_at__lte=F("deadline"),
+        ).distinct().count()
 
         reopened = TicketStatusLog.objects.filter(
-            ticket__assigned_to=tech,
-            old_status="resolved"
+            technician=tech,
+            old_status="resolved",
+            ticket__in=tickets,
         ).count()
 
         ws5.append([
