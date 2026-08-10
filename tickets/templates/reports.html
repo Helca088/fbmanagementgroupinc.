@@ -70,15 +70,15 @@
                
                 <button type="submit" class="btn btn-primary">Generate</button>
 
-                <a href="{% url 'export_pdf' %}?{{ request.GET.urlencode }}"
-                    class="btn btn-danger">
-                        Export PDF
-                    </a>
+                <a href="{% url 'export_pdf' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}"
+                class="btn btn-danger">
+                    Export PDF
+                </a>
 
-                    <a href="{% url 'export_excel' %}?{{ request.GET.urlencode }}"
-                    class="btn btn-success">
-                        Export Excel
-                    </a>
+                <a href="{% url 'export_excel' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}"
+                class="btn btn-success">
+                    Export Excel
+                </a>
             </div>
         </form>
     </div>
