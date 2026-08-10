@@ -35,7 +35,10 @@ def export_pdf(request):
             created_at__date__range=[start, end])
         
     if department:
-        tickets = tickets.filter(department__name =department)
+        tickets = tickets.filter(department__name=department)
+
+    if outlet:
+        tickets = tickets.filter(outlet_id=outlet)
 
     overdue = tickets.filter(
         deadline__lt=timezone.now()
@@ -434,15 +437,21 @@ def export_excel(request):
 
     tickets = Ticket.objects.all()
 
-    start = request.GET.get("start")
-    end = request.GET.get("end")
-    department =request.GET.get("department")
+    start = request.GET.get("start", "").strip()
+    end = request.GET.get("end", "").strip()
+    department = request.GET.get("department", "").strip()
+    outlet = request.GET.get("outlet", "").strip()
 
     if start and end:
         tickets = tickets.filter(
             created_at__date__range=[start, end])
     if department:
         tickets = tickets.filter(department__name=department)
+
+    if outlet:
+        tickets = tickets.filter(
+            outlet_id=outlet
+        )
 
     wb = Workbook()
 
