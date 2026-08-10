@@ -25,9 +25,10 @@ def export_pdf(request):
 
     tickets = Ticket.objects.all()
 
-    start = request.GET.get("start")
-    end = request.GET.get("end")
-    department = request.GET.get("department")
+    start = request.GET.get("start", "").strip()
+    end = request.GET.get("end", "").strip()
+    department = request.GET.get("department", "").strip()
+    outlet = request.GET.get("outlet", "").strip()
 
     if start and end:
         tickets = tickets.filter(
@@ -58,8 +59,35 @@ def export_pdf(request):
 
     filename = "ticket_report.pdf"
 
-    if department:
+    if department and outlet:
+        outlet_name = (
+            Ticket.objects
+            .filter(outlet_id=outlet)
+            .values_list("outlet__name", flat=True)
+            .first()
+        )
+
+        filename = (
+            f"{department.lower()}_"
+            f"{outlet_name.lower() if outlet_name else 'outlet'}_"
+            f"ticket_report.pdf"
+        )
+
+    elif department:
         filename = f"{department.lower()}_ticket_report.pdf"
+
+    elif outlet:
+        outlet_name = (
+            Ticket.objects
+            .filter(outlet_id=outlet)
+            .values_list("outlet__name", flat=True)
+            .first()
+        )
+
+        filename = (
+            f"{outlet_name.lower() if outlet_name else 'outlet'}_"
+            f"ticket_report.pdf"
+        )
 
     response["Content-Disposition"] = (
         f'attachment; filename="{filename}"'
@@ -120,6 +148,72 @@ def export_pdf(request):
     elements.append(Spacer(1, 20))
 
     # =====================
+    # OUTLETS
+    # =====================
+
+    elements.append(
+        Paragraph("Outlets", styles["Heading2"])
+    )
+
+    outlet_data = [[
+        "Outlet",
+        "Total",
+        "Pending",
+        "Progress",
+        "Resolved",
+        "Cancelled"
+    ]]
+
+    outlets = tickets.values(
+        "outlet__name"
+    ).annotate(
+        total=Count("id"),
+        pending=Count(
+            "id",
+            filter=Q(status="pending")
+        ),
+        progress=Count(
+            "id",
+            filter=Q(status="progress")
+        ),
+        resolved=Count(
+            "id",
+            filter=Q(status="resolved")
+        ),
+        cancelled=Count(
+            "id",
+            filter=Q(status="cancelled")
+        )
+    ).order_by("outlet__name")
+
+    for item in outlets:
+        outlet_data.append([
+            item["outlet__name"] or "N/A",
+            item["total"],
+            item["pending"],
+            item["progress"],
+            item["resolved"],
+            item["cancelled"],
+        ])
+
+    outlet_table = Table(
+        outlet_data,
+        colWidths=[100, 55, 60, 60, 60, 60]
+    )
+
+    outlet_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+        ("GRID", (0, 0), (-1, -1), 1, colors.black),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
+    ]))
+
+    elements.append(outlet_table)
+
+    elements.append(Spacer(1, 20))
+
+
+    # =====================
     # DEPARTMENTS
     # =====================
 
@@ -153,37 +247,50 @@ def export_pdf(request):
     elements.append(Spacer(1, 20))
 
     # =====================
-    # CONCERNS
+    # OUTLET & CONCERN SUMMARY
     # =====================
 
-    concerns = tickets.values(
-        "concern_type__name"
+    elements.append(
+        Paragraph("Outlet & Concern Summary", styles["Heading2"])
+    )
+
+    outlet_concern_data = [
+        ["Outlet", "Concern", "Total"]
+    ]
+
+    outlet_concerns = tickets.values(
+    "department__name",
+    "outlet__name",
+    "concern_type__name"
     ).annotate(
         total=Count("id")
+    ).order_by(
+        "department__name",
+        "outlet__name",
+        "concern_type__name"
     )
 
-    elements.append(
-        Paragraph("Concerns", styles["Heading2"])
-    )
-
-    concern_data = [["Concern", "Total"]]
-
-    for c in concerns:
-        concern_data.append([
-            c["concern_type__name"] or "N/A",
-            c["total"]
+    for item in outlet_concerns:
+        outlet_concern_data.append([
+            item["outlet__name"] or "N/A",
+            item["concern_type__name"] or "N/A",
+            item["total"]
         ])
 
-    concern_table = Table(concern_data)
+    outlet_concern_table = Table(
+        outlet_concern_data,
+        colWidths=[150, 150, 70]
+    )
 
-    concern_table.setStyle(TableStyle([
-        ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
-        ("GRID", (0,0), (-1,-1), 1, colors.black),
+    outlet_concern_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+        ("GRID", (0, 0), (-1, -1), 1, colors.black),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
     ]))
 
-    elements.append(concern_table)
+    elements.append(outlet_concern_table)
 
-    elements.append(PageBreak())
+    elements.append(Spacer(1, 20))
 
     # =====================
     # TECHNICIANS
@@ -372,6 +479,52 @@ def export_excel(request):
     ws.append(["Reopened", reopened])
 
     # =====================
+    # OUTLETS
+    # =====================
+
+    ws_outlets = wb.create_sheet("Outlets")
+
+    ws_outlets.append([
+        "Outlet",
+        "Total",
+        "Pending",
+        "Progress",
+        "Resolved",
+        "Cancelled"
+    ])
+
+    outlets = tickets.values(
+        "outlet__name"
+    ).annotate(
+        total=Count("id"),
+        pending=Count(
+            "id",
+            filter=Q(status="pending")
+        ),
+        progress=Count(
+            "id",
+            filter=Q(status="progress")
+        ),
+        resolved=Count(
+            "id",
+            filter=Q(status="resolved")
+        ),
+        cancelled=Count(
+            "id",
+            filter=Q(status="cancelled")
+        )
+    ).order_by("outlet__name")
+
+    for outlet_data_row in outlets:
+        ws_outlets.append([
+            outlet_data_row["outlet__name"] or "N/A",
+            outlet_data_row["total"],
+            outlet_data_row["pending"],
+            outlet_data_row["progress"],
+            outlet_data_row["resolved"],
+            outlet_data_row["cancelled"],
+        ])
+    # =====================
     # TICKETS
     # =====================
 
@@ -433,23 +586,34 @@ def export_excel(request):
         ])
 
     # =====================
-    # CONCERNS
+    # OUTLET & CONCERN SUMMARY
     # =====================
 
-    ws4 = wb.create_sheet("Concerns")
+    ws4 = wb.create_sheet("Outlet Concerns")
 
-    ws4.append(["Concern", "Total"])
+    ws4.append([
+        "Outlet",
+        "Concern",
+        "Total"
+    ])
 
-    concerns = tickets.values(
-        "concern_type__name"
+    outlet_concerns = tickets.values(
+    "department__name",
+    "outlet__name",
+    "concern_type__name"
     ).annotate(
         total=Count("id")
+    ).order_by(
+        "department__name",
+        "outlet__name",
+        "concern_type__name"
     )
 
-    for c in concerns:
+    for item in outlet_concerns:
         ws4.append([
-            c["concern_type__name"],
-            c["total"]
+            item["outlet__name"] or "N/A",
+            item["concern_type__name"] or "N/A",
+            item["total"]
         ])
 
     # =====================

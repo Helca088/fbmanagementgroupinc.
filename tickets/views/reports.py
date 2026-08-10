@@ -6,6 +6,7 @@ from tickets.models import (
     Technician,
     TicketStatusLog,
     TicketAssignmentLog,
+    Outlet,
 )
 
 def reports(request):
@@ -15,6 +16,7 @@ def reports(request):
     start = request.GET.get("start")
     end = request.GET.get("end")
     department =request.GET.get("department")
+    outlet = request.GET.get("outlet")
 
     if start and end:
         tickets = tickets.filter(
@@ -23,6 +25,9 @@ def reports(request):
 
     if department:
         tickets = tickets.filter(department__name=department)
+
+    if outlet:
+        tickets = tickets.filter(outlet_id=outlet)
 
     overdue = tickets.filter(
         deadline__lt=timezone.now()
@@ -84,7 +89,50 @@ def reports(request):
             "reopened": reopened,
     })
 
+    outlet_summary = (
+            tickets.values(
+                "outlet__name"
+            )
+            .annotate(
+                total=Count("id"),
+                pending=Count(
+                    "id",
+                    filter=Q(status="pending")
+                ),
+                progress=Count(
+                    "id",
+                    filter=Q(status="progress")
+                ),
+                resolved=Count(
+                    "id",
+                    filter=Q(status="resolved")
+                ),
+                cancelled=Count(
+                    "id",
+                    filter=Q(status="cancelled")
+                ),
+            )
+            .order_by("outlet__name")
+        )
+
+    concerns_per_outlet = (
+            tickets.values(
+                "outlet__name",
+                "concern_type__name"
+            )
+            .annotate(
+                total=Count("id")
+            )
+            .order_by(
+                "outlet__name",
+                "-total"
+            )
+        )
+    
     context = {
+        "concerns_per_outlet": concerns_per_outlet,
+        "outlet_summary": outlet_summary,
+        "context_outlets": Outlet.objects.all(),
         "reopened_total": reopened_total,
         "tickets": tickets,
         "total": tickets.count(),
