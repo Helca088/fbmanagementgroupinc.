@@ -27,25 +27,58 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
-CSRF_TRUSTED_ORIGINS = ['https://fbmanagement.onrender.com',]
-CORS_ALLOWED_ORIGINS = ['https://fbmanagement.onrender.com',]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://fbmanagement.onrender.com",
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "https://fbmanagement.onrender.com",
+]
 
 CORS_ALLOW_CREDENTIALS = True
 
+
+# =========================
+# SESSION
+# =========================
+
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 14  # 14 days
+
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 14
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_SAVE_EVERY_REQUEST = True
-SESSION_COOKIE_SECURE = True      # On Render (HTTPS)
-CSRF_COOKIE_SECURE = True
+
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
+
+
+# =========================
+# CSRF
+# =========================
+
+CSRF_COOKIE_SECURE = True
+
+# Allow JavaScript to read csrftoken if needed
+CSRF_COOKIE_HTTPONLY = False
+
 CSRF_COOKIE_SAMESITE = "Lax"
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-# Application definition
+
+CSRF_COOKIE_PATH = "/"
+
+
+# =========================
+# RENDER HTTPS
+# =========================
+
+SECURE_PROXY_SSL_HEADER = (
+    "HTTP_X_FORWARDED_PROTO",
+    "https",
+)
 
 INSTALLED_APPS = [
     'daphne',

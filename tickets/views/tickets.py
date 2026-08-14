@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.cache import never_cache
 from tickets.notification import send_push
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
@@ -85,6 +86,7 @@ def test_push_view(request):
 
 @login_required(login_url='login')
 @ensure_csrf_cookie
+@never_cache
 def home(request):
 
 
