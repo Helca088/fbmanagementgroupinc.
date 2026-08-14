@@ -58,14 +58,16 @@
 
     <div class="form-box">
 
-        <form id="ticketForm" method="POST" enctype="multipart/form-data">
-
+            <form
+            id="ticketForm"
+            method="POST"
+            action="{% url 'home' %}"
+            enctype="multipart/form-data">
+            
             {% csrf_token %}
 
-
-
-            <textarea 
-                name="message" 
+            <textarea
+                name="message"
                 required
                 placeholder="Enter your message"
             ></textarea>

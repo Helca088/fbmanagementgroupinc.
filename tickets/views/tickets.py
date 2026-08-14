@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.csrf import ensure_csrf_cookie
 from tickets.notification import send_push
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
@@ -83,6 +84,7 @@ def test_push_view(request):
     return HttpResponse("Push attempted — check Render logs.")
 
 @login_required(login_url='login')
+@ensure_csrf_cookie
 def home(request):
 
 
