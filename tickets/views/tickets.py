@@ -110,13 +110,25 @@ def home(request):
             concern_type=concern
         )
 
-        files = request.FILES.getlist('files')
+        files = request.FILES.getlist("files")
+
+        print("========== UPLOAD DEBUG ==========")
+        print("request.FILES:", request.FILES)
+        print("number of files:", len(files))
 
         for f in files:
+            print("filename:", f.name)
+            print("size:", f.size)
+            print("content_type:", f.content_type)
+            print("class:", type(f))
+
             TicketAttachment.objects.create(
                 ticket=ticket,
-                file=f
+                file=f,
+                original_filename=f.name
             )
+
+        print("========== END UPLOAD DEBUG ==========")
         
         print("Sending WS for ticket", ticket.id)
         notify_ticket_update(ticket, action="create")
