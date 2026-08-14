@@ -112,15 +112,17 @@ def home(request):
 
         files = request.FILES.getlist("files")
 
-        print("========== UPLOAD DEBUG ==========")
-        print("request.FILES:", request.FILES)
-        print("number of files:", len(files))
-
         for f in files:
-            print("filename:", f.name)
-            print("size:", f.size)
-            print("content_type:", f.content_type)
-            print("class:", type(f))
+
+            print(
+                "UPLOAD:",
+                f.name,
+                f.content_type,
+                f.size
+            )
+
+            if not f.content_type.startswith("image/"):
+                continue
 
             TicketAttachment.objects.create(
                 ticket=ticket,

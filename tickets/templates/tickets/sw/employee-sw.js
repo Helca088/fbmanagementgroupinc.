@@ -58,11 +58,14 @@ self.addEventListener("activate", event => {
     );
 });
 
+// REMOVE THIS FOR TESTING
+/*
 self.addEventListener("fetch", (event) => {
     event.respondWith(
         fetch(event.request).catch(() => caches.match(event.request))
     );
 });
+*/
 
 self.addEventListener("notificationclick", function(event) {
 
