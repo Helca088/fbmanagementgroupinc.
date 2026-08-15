@@ -1,66 +1,35 @@
-/* ==========================================
-   UNFOLD ADMIN COLLAPSIBLE FILTERS
-   ========================================== */
-
-.admin-filter-toggle {
-    margin-left: auto !important;
-
-    width: 28px !important;
-    height: 28px !important;
-
+.individual-filter-toggle {
     display: inline-flex !important;
 
     align-items: center !important;
     justify-content: center !important;
 
+    width: 28px !important;
+    height: 28px !important;
+
+    margin-left: auto !important;
+
     padding: 0 !important;
 
-    border: none !important;
+    border: 0 !important;
     border-radius: 6px !important;
 
     background: transparent !important;
 
     color: inherit !important;
 
-    font-size: 12px !important;
+    font-size: 11px !important;
     font-weight: 700 !important;
 
     cursor: pointer !important;
 
     flex-shrink: 0 !important;
-
-    transition:
-        background-color 0.15s ease,
-        transform 0.15s ease !important;
 }
 
-
-.admin-filter-toggle:hover {
+.individual-filter-toggle:hover {
     background: rgba(255, 255, 255, 0.08) !important;
 }
 
-
-.admin-filter-toggle:active {
-    transform: scale(0.92);
-}
-
-
-/*
- * Make the filter title look clickable
- */
 h3.font-semibold.text-important {
-    display: flex !important;
-
-    align-items: center !important;
-    justify-content: space-between !important;
-
     width: 100% !important;
-}
-
-
-/*
- * When collapsed, reduce the spacing
- */
-.admin-filter-collapsed {
-    margin-bottom: 8px !important;
 }

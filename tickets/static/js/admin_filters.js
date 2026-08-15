@@ -1,145 +1,175 @@
 (function () {
     "use strict";
 
-    const STORAGE_KEY = "ticket_admin_filter_states";
+    const STORAGE_KEY = "ticket_filter_states";
 
     function getStates() {
         try {
             return JSON.parse(
                 localStorage.getItem(STORAGE_KEY)
             ) || {};
-        } catch (error) {
+        } catch (e) {
             return {};
         }
     }
 
     function saveStates(states) {
-        try {
-            localStorage.setItem(
-                STORAGE_KEY,
-                JSON.stringify(states)
-            );
-        } catch (error) {
-            // Ignore localStorage errors
-        }
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(states)
+        );
     }
 
-    function getFilterKey(title) {
-        return title
+    function getKey(heading) {
+        return heading.textContent
             .trim()
             .toLowerCase()
             .replace(/^by\s+/, "")
             .replace(/\s+/g, "_");
     }
 
-    function initFilters() {
+    function setupFilters() {
 
-        const headings = document.querySelectorAll(
-            "h3.font-semibold.text-important"
-        );
+        const headings = Array.from(
+            document.querySelectorAll(
+                "h3.font-semibold.text-important"
+            )
+        ).filter(function (heading) {
 
-        headings.forEach(function (heading) {
+            return heading.textContent
+                .trim()
+                .toLowerCase()
+                .startsWith("by ");
 
-            const title = heading.textContent.trim();
+        });
 
-            if (!title.startsWith("By ")) {
-                return;
-            }
+        if (!headings.length) {
+            return;
+        }
 
-            // Don't add the button twice
+        const states = getStates();
+
+        headings.forEach(function (heading, index) {
+
+            /*
+             * Don't initialize twice
+             */
             if (
-                heading.querySelector(
-                    ".admin-filter-toggle"
-                )
+                heading.dataset.filterInitialized === "true"
             ) {
                 return;
             }
 
-            const key = getFilterKey(title);
+            heading.dataset.filterInitialized = "true";
+
+            const key = getKey(heading);
 
             /*
-             * The filter container is the parent of the H3.
+             * Find everything between this heading
+             * and the next "By ..." heading.
              */
-            const container = heading.parentElement;
+            const content = [];
 
-            if (!container) {
-                return;
+            let element =
+                heading.nextElementSibling;
+
+            while (element) {
+
+                if (
+                    element.matches(
+                        "h3.font-semibold.text-important"
+                    )
+                ) {
+                    break;
+                }
+
+                content.push(element);
+
+                element =
+                    element.nextElementSibling;
             }
 
             /*
-             * Create toggle button
+             * Create arrow
              */
-            const button = document.createElement("button");
+            const arrow =
+                document.createElement("button");
 
-            button.type = "button";
-            button.className = "admin-filter-toggle";
+            arrow.type = "button";
 
-            button.setAttribute(
+            arrow.className =
+                "individual-filter-toggle";
+
+            arrow.innerHTML = "▶";
+
+            arrow.setAttribute(
                 "aria-label",
-                `Hide or show ${title}`
+                "Show or hide filter"
             );
 
-            button.title = "Hide / Show filter";
-
             /*
-             * Put arrow on the right side
-             */
-            button.innerHTML = "▼";
-
-            /*
-             * Make heading a flex row
+             * Make heading layout
              */
             heading.style.display = "flex";
             heading.style.alignItems = "center";
-            heading.style.justifyContent = "space-between";
-            heading.style.width = "100%";
-
-            heading.appendChild(button);
+            heading.style.justifyContent =
+                "space-between";
 
             /*
-             * Find everything inside the filter container
-             * except the heading.
+             * Add arrow
              */
-            const contents = Array.from(
-                container.children
-            ).filter(function (element) {
-                return element !== heading;
-            });
+            heading.appendChild(arrow);
 
             /*
-             * Restore saved state
+             * IMPORTANT:
+             *
+             * Default is COLLAPSED.
+             *
+             * Only restore expanded state if the user
+             * previously opened this filter.
              */
-            const states = getStates();
+            let collapsed;
 
-            let collapsed = states[key] === true;
+           collapsed = true;
 
             function applyState() {
 
-                contents.forEach(function (element) {
+                content.forEach(function (element) {
+
                     element.style.display =
-                        collapsed ? "none" : "";
+                        collapsed
+                            ? "none"
+                            : "";
+
                 });
 
-                button.innerHTML =
-                    collapsed ? "▶" : "▼";
+                arrow.textContent =
+                    collapsed
+                        ? "▶"
+                        : "▼";
 
-                button.setAttribute(
+                arrow.setAttribute(
                     "aria-expanded",
-                    collapsed ? "false" : "true"
+                    collapsed
+                        ? "false"
+                        : "true"
                 );
 
-                container.classList.toggle(
-                    "admin-filter-collapsed",
+                heading.classList.toggle(
+                    "filter-collapsed",
                     collapsed
                 );
             }
 
+            /*
+             * Initial state
+             */
             applyState();
 
             /*
-             * Toggle
+             * Click arrow
              */
-            button.addEventListener(
+            arrow.addEventListener(
                 "click",
                 function (event) {
 
@@ -148,46 +178,40 @@
 
                     collapsed = !collapsed;
 
-                    const currentStates =
-                        getStates();
-
-                    currentStates[key] =
+                    states[key] =
                         collapsed;
 
-                    saveStates(
-                        currentStates
-                    );
+                    saveStates(states);
 
                     applyState();
                 }
             );
+
         });
     }
 
     /*
-     * Run after page loads
+     * Initial page load
      */
     document.addEventListener(
         "DOMContentLoaded",
         function () {
+
             setTimeout(
-                initFilters,
-                100
+                setupFilters,
+                300
             );
+
         }
     );
 
     /*
-     * Run again after everything loads
+     * Unfold may render the filter sheet
+     * after the initial page load.
      */
-    window.addEventListener(
-        "load",
-        function () {
-            setTimeout(
-                initFilters,
-                300
-            );
-        }
+    setTimeout(
+        setupFilters,
+        800
     );
 
 })();
