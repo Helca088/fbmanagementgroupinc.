@@ -1,69 +1,66 @@
-/* =========================================
-   COLLAPSIBLE ADMIN FILTERS
-   Django Unfold 0.98.0
-   ========================================= */
+/* ==========================================
+   UNFOLD ADMIN COLLAPSIBLE FILTERS
+   ========================================== */
 
-.admin-filter-heading-with-toggle {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    width: 100% !important;
-    gap: 8px !important;
-}
-
-
-/* Collapse / expand button */
-
-.admin-filter-collapse-button {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+.admin-filter-toggle {
+    margin-left: auto !important;
 
     width: 28px !important;
     height: 28px !important;
 
-    padding: 0 !important;
-    margin-left: auto !important;
+    display: inline-flex !important;
 
-    border: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 0 !important;
+
+    border: none !important;
+    border-radius: 6px !important;
+
     background: transparent !important;
 
-    color: #9ca3af !important;
+    color: inherit !important;
 
     font-size: 12px !important;
     font-weight: 700 !important;
 
-    line-height: 1 !important;
-
     cursor: pointer !important;
-
-    border-radius: 6px !important;
 
     flex-shrink: 0 !important;
 
     transition:
         background-color 0.15s ease,
-        color 0.15s ease,
         transform 0.15s ease !important;
 }
 
 
-.admin-filter-collapse-button:hover {
+.admin-filter-toggle:hover {
     background: rgba(255, 255, 255, 0.08) !important;
-    color: #ffffff !important;
 }
 
 
-/* Collapsed heading */
-
-.admin-filter-collapsed
-.admin-filter-heading-with-toggle {
-    margin-bottom: 0 !important;
+.admin-filter-toggle:active {
+    transform: scale(0.92);
 }
 
 
-/* Small visual separation */
+/*
+ * Make the filter title look clickable
+ */
+h3.font-semibold.text-important {
+    display: flex !important;
 
+    align-items: center !important;
+    justify-content: space-between !important;
+
+    width: 100% !important;
+}
+
+
+/*
+ * When collapsed, reduce the spacing
+ */
 .admin-filter-collapsed {
-    padding-bottom: 4px !important;
+    margin-bottom: 8px !important;
 }
