@@ -186,7 +186,6 @@ class TicketAdmin(ModelAdmin):
 
         js = (
             "js/attach_modal.js",
-            "js/page_loader.js",
             "js/ticket_admin.js",
             "js/admin_filters.js",
         )

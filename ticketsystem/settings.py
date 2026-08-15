@@ -108,6 +108,10 @@ UNFOLD = {
     "SITE_HEADER": "FB MANAGEMENT", 
     "STYLES": ["/static/css/admin.css",
     ],
+    "SCRIPTS": [
+        lambda request: "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js",
+        lambda request: "/static/js/page_loader.js",
+    ],
 }
 
 MIDDLEWARE = [
