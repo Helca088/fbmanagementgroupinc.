@@ -374,32 +374,27 @@ def reports(request):
 
         technician_stats.append({
 
-            "id":
-                tech.id,
+            "id": tech.id,
 
-            "name":
-                tech.full_name,
+            "name": tech.full_name,
 
-            "department":
-                department_name,
+            "department": department_name,
 
-            "total":
-                assigned_total,
+            "total": assigned_total,
 
-            "current_assigned":
-                current_assigned,
+            "current_assigned": current_assigned,
 
-            "total_assigned":
-                total_assigned,
+            "total_assigned": total_assigned,
 
-            "open":
-                open_count,
+            "open": open_count,
 
-            "progress":
-                progress_count,
+            "progress": progress_count,
 
-            "resolved":
-                resolved_count,
+            "resolved": resolved_count,
+
+            "resolved_on_time": resolved_on_time_tech,
+
+            "reopened": reopened,
         })
 
         # ========================================================
