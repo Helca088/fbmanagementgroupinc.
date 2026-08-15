@@ -178,9 +178,18 @@ class TicketStatusLogInline(TabularInline):
 @admin.register(Ticket)
 class TicketAdmin(ModelAdmin):
     class Media:
-        js = ('js/attach_modal.js',
-              'js/page_loader.js',
-              'js/ticket_admin.js')
+        css = {
+            "all": (
+                "css/admin_filters.css",
+            )
+        }
+
+        js = (
+            "js/attach_modal.js",
+            "js/page_loader.js",
+            "js/ticket_admin.js",
+            "js/admin_filters.js",
+        )
 
 
     def get_urls(self):

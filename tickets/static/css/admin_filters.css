@@ -1,0 +1,69 @@
+/* =========================================
+   COLLAPSIBLE ADMIN FILTERS
+   Django Unfold 0.98.0
+   ========================================= */
+
+.admin-filter-heading-with-toggle {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 8px !important;
+}
+
+
+/* Collapse / expand button */
+
+.admin-filter-collapse-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    width: 28px !important;
+    height: 28px !important;
+
+    padding: 0 !important;
+    margin-left: auto !important;
+
+    border: 0 !important;
+    background: transparent !important;
+
+    color: #9ca3af !important;
+
+    font-size: 12px !important;
+    font-weight: 700 !important;
+
+    line-height: 1 !important;
+
+    cursor: pointer !important;
+
+    border-radius: 6px !important;
+
+    flex-shrink: 0 !important;
+
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease,
+        transform 0.15s ease !important;
+}
+
+
+.admin-filter-collapse-button:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+}
+
+
+/* Collapsed heading */
+
+.admin-filter-collapsed
+.admin-filter-heading-with-toggle {
+    margin-bottom: 0 !important;
+}
+
+
+/* Small visual separation */
+
+.admin-filter-collapsed {
+    padding-bottom: 4px !important;
+}
