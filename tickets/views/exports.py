@@ -251,6 +251,10 @@ def export_tickets_pdf(request):
 
     styles = getSampleStyleSheet()
 
+    # ============================================================
+    # STYLES
+    # ============================================================
+
     title_style = ParagraphStyle(
         "ReportTitle",
         parent=styles["Title"],
@@ -259,7 +263,21 @@ def export_tickets_pdf(request):
         spaceAfter=15,
     )
 
+    # Message style
+    # This allows long messages to wrap inside the table cell
+    message_style = ParagraphStyle(
+        "MessageStyle",
+        parent=styles["Normal"],
+        fontSize=8,
+        leading=10,
+        wordWrap="CJK",
+    )
+
     elements = []
+
+    # ============================================================
+    # TITLE
+    # ============================================================
 
     elements.append(
         Paragraph(
@@ -271,6 +289,10 @@ def export_tickets_pdf(request):
     elements.append(
         Spacer(1, 10)
     )
+
+    # ============================================================
+    # TABLE DATA
+    # ============================================================
 
     data = [[
         "Outlet",
@@ -297,23 +319,39 @@ def export_tickets_pdf(request):
             ticket.concern_type.name
             if ticket.concern_type else "",
 
-            ticket.message or "",
+            # IMPORTANT:
+            # Use Paragraph here so long messages wrap
+            # instead of overflowing outside the table.
+            Paragraph(
+                str(ticket.message or ""),
+                message_style
+            ),
         ])
+
+    # ============================================================
+    # TABLE
+    # ============================================================
 
     table = Table(
         data,
         repeatRows=1,
         colWidths=[
-            100,
-            100,
-            100,
-            130,
-            300,
+            100,  # Outlet
+            100,  # Created
+            100,  # Department
+            130,  # Concern Type
+            300,  # Message
         ]
     )
 
+    # ============================================================
+    # TABLE STYLE
+    # ============================================================
+
     table.setStyle(
         TableStyle([
+
+            # Header background
             (
                 "BACKGROUND",
                 (0, 0),
@@ -321,6 +359,7 @@ def export_tickets_pdf(request):
                 colors.HexColor("#2563EB")
             ),
 
+            # Header text
             (
                 "TEXTCOLOR",
                 (0, 0),
@@ -328,6 +367,7 @@ def export_tickets_pdf(request):
                 colors.white
             ),
 
+            # Header font
             (
                 "FONTNAME",
                 (0, 0),
@@ -335,6 +375,7 @@ def export_tickets_pdf(request):
                 "Helvetica-Bold"
             ),
 
+            # Grid
             (
                 "GRID",
                 (0, 0),
@@ -343,6 +384,7 @@ def export_tickets_pdf(request):
                 colors.HexColor("#E5E7EB")
             ),
 
+            # Vertical alignment
             (
                 "VALIGN",
                 (0, 0),
@@ -350,6 +392,7 @@ def export_tickets_pdf(request):
                 "TOP"
             ),
 
+            # Font size
             (
                 "FONTSIZE",
                 (0, 0),
@@ -357,6 +400,36 @@ def export_tickets_pdf(request):
                 8
             ),
 
+            # Cell padding
+            (
+                "LEFTPADDING",
+                (0, 0),
+                (-1, -1),
+                6
+            ),
+
+            (
+                "RIGHTPADDING",
+                (0, 0),
+                (-1, -1),
+                6
+            ),
+
+            (
+                "TOPPADDING",
+                (0, 0),
+                (-1, -1),
+                5
+            ),
+
+            (
+                "BOTTOMPADDING",
+                (0, 0),
+                (-1, -1),
+                5
+            ),
+
+            # Alternating row colors
             (
                 "ROWBACKGROUNDS",
                 (0, 1),
@@ -371,9 +444,17 @@ def export_tickets_pdf(request):
 
     elements.append(table)
 
+    # ============================================================
+    # BUILD PDF
+    # ============================================================
+
     document.build(elements)
 
     output.seek(0)
+
+    # ============================================================
+    # RESPONSE
+    # ============================================================
 
     response = HttpResponse(
         output.getvalue(),
