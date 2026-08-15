@@ -1,11 +1,20 @@
 let socket;
+
 let reconnectDelay = 2000;
 let reconnectTimer = null;
 let refreshTimer = null;
 let heartbeatTimer = null;
+
 let isClosingPage = false;
+
+
+// ============================================================
+// WEBSOCKET CONNECTION
+// ============================================================
+
 function connectWS() {
 
+    // Prevent duplicate WebSocket connections
     if (
         socket &&
         (
@@ -16,202 +25,681 @@ function connectWS() {
         return;
     }
 
+
     const protocol =
-        window.location.protocol === "https:" ? "wss" : "ws";
+        window.location.protocol === "https:"
+            ? "wss"
+            : "ws";
+
 
     socket = new WebSocket(
-        protocol + "://" + window.location.host + "/ws/tickets/"
+        protocol +
+        "://" +
+        window.location.host +
+        "/ws/tickets/"
     );
 
 
-    socket.onopen = function () {
-        console.log("✅ Admin WebSocket Connected");
+    // ========================================================
+    // CONNECTED
+    // ========================================================
 
+    socket.onopen = function () {
+
+        console.log(
+            "✅ Admin WebSocket Connected"
+        );
+
+
+        // Reset reconnect delay
         reconnectDelay = 2000;
-        fetchLatestTickets();
+
+
+        // Clear old heartbeat
+        clearInterval(
+            heartbeatTimer
+        );
+
 
         // Start heartbeat
-        clearInterval(heartbeatTimer);
+        heartbeatTimer = setInterval(
+            function () {
 
-        heartbeatTimer = setInterval(() => {
+                try {
 
-    try {
+                    if (
+                        socket &&
+                        socket.readyState ===
+                        WebSocket.OPEN
+                    ) {
 
-        if (socket.readyState === WebSocket.OPEN) {
+                        socket.send(
+                            JSON.stringify({
+                                type: "ping"
+                            })
+                        );
 
-            socket.send(JSON.stringify({
-                type: "ping"
-            }));
+                    }
 
-        }
+                } catch (error) {
 
-    } catch (err) {
+                    console.error(
+                        "❌ Heartbeat failed:",
+                        error
+                    );
 
-        console.error("Heartbeat failed", err);
+                }
 
-    }
+            },
+            30000
+        );
 
-}, 30000);
     };
+
+
+    // ========================================================
+    // MESSAGE RECEIVED
+    // ========================================================
 
     socket.onmessage = function (event) {
 
-        const payload = JSON.parse(event.data);
+        try {
 
-        if (payload.type === "pong") {
-        console.log("💓 Pong received");
-        return;
-    }
+            const payload =
+                JSON.parse(event.data);
 
-        console.log("📨 Admin received:", payload);
 
-        handleAdminEvent(payload);
+            // Ignore heartbeat response
+            if (
+                payload.type === "pong"
+            ) {
+
+                console.log(
+                    "💓 Pong received"
+                );
+
+                return;
+            }
+
+
+            console.log(
+                "📨 Admin received:",
+                payload
+            );
+
+
+            handleAdminEvent(
+                payload
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "❌ WebSocket message error:",
+                error
+            );
+
+        }
+
     };
 
-    socket.onerror = function (err) {
-    console.error("❌ Admin WebSocket Error", err);
-        
-    if (socket.readyState !== WebSocket.CLOSED) {
-        socket.close();
-    }
+
+    // ========================================================
+    // ERROR
+    // ========================================================
+
+    socket.onerror = function (error) {
+
+        console.error(
+            "❌ Admin WebSocket Error:",
+            error
+        );
+
     };
+
+
+    // ========================================================
+    // CLOSED
+    // ========================================================
 
     socket.onclose = function (event) {
-    
-    console.log(
-        "WebSocket closed:",
-        event.code,
-        event.reason
-    );
 
-    clearInterval(heartbeatTimer);
+        console.log(
+            "🔌 WebSocket closed:",
+            event.code,
+            event.reason
+        );
 
-    if (isClosingPage) {
-        return;
-    }
 
-    if (reconnectTimer) return;
+        clearInterval(
+            heartbeatTimer
+        );
 
-    reconnectTimer = setTimeout(() => {
-        reconnectTimer = null;
-        connectWS();
-    }, reconnectDelay);
 
-    reconnectDelay = Math.min(reconnectDelay * 2, 30000);
-};
+        // Don't reconnect while leaving page
+        if (isClosingPage) {
+            return;
+        }
 
+
+        // Prevent multiple reconnect timers
+        if (reconnectTimer) {
+            return;
+        }
+
+
+        reconnectTimer = setTimeout(
+            function () {
+
+                reconnectTimer = null;
+
+                console.log(
+                    "🔄 Reconnecting WebSocket..."
+                );
+
+                connectWS();
+
+            },
+            reconnectDelay
+        );
+
+
+        // Exponential reconnect delay
+        reconnectDelay =
+            Math.min(
+                reconnectDelay * 2,
+                30000
+            );
+
+    };
 
 }
 
+
+// Start WebSocket
 connectWS();
+
+
+// ============================================================
+// HANDLE ADMIN EVENTS
+// ============================================================
 
 function handleAdminEvent(payload) {
 
-    console.log(payload);
+    console.log(
+        "📩 Admin event:",
+        payload
+    );
 
-    if (payload.action === "create") {
-        addTicket(payload.data);
-    }
 
-    if (payload.action === "update") {
-        updateTicket(payload.data);
-    }
+    // New ticket
+    if (
+        payload.action === "create"
+    ) {
 
-    if (payload.action === "delete") {
-        removeTicket(payload.data.id);
-    }
+        addTicket(
+            payload.data
+        );
 
-}
-
-function addTicket(ticket){
-
-    console.log("New ticket:", ticket);
-
-    scheduleRefresh();
-
-}
-
-function updateTicket(ticket){
-
-    console.log("Updated:", ticket);
-
-    scheduleRefresh();
-
-}
-
-function removeTicket(id){
-
-    console.log("Deleted:", id);
-
-    scheduleRefresh();
-
-}
-
-async function fetchLatestTickets() {
-    try {
-        const response = await fetch("/api/tickets/");
-
-        if (!response.ok) {
-            throw new Error("API request failed");
-        }
-
-        refreshChangeList();
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-function refreshChangeList() {
-    fetch(window.location.href)
-        .then(r => {
-            if (!r.ok) {
-                throw new Error(`HTTP ${r.status}`);
-            }
-            return r.text();
-        })
-        .then(html => {
-
-            const doc = new DOMParser().parseFromString(html, "text/html");
-
-            const newList = doc.querySelector("#changelist");
-            const currentList = document.querySelector("#changelist");
-
-            if (newList && currentList) {
-                currentList.replaceWith(newList);
-            }
-
-        })
-        .catch(console.error);
-}
-
-function scheduleRefresh() {
-    if (refreshTimer) return;
-
-    refreshTimer = setTimeout(() => {
-        refreshTimer = null;
-        refreshChangeList();
-    }, 200);
-}
-
-document.addEventListener("visibilitychange", () => {
-
-    if (document.visibilityState !== "visible") {
         return;
     }
 
-    if (socket && socket.readyState === WebSocket.OPEN) {
-        fetchLatestTickets();
+
+    // Updated ticket
+    if (
+        payload.action === "update"
+    ) {
+
+        updateTicket(
+            payload.data
+        );
+
+        return;
+    }
+
+
+    // Deleted ticket
+    if (
+        payload.action === "delete"
+    ) {
+
+        if (
+            payload.data &&
+            payload.data.id
+        ) {
+
+            removeTicket(
+                payload.data.id
+            );
+
+        }
+
+        return;
+    }
+
+}
+
+
+// ============================================================
+// NEW TICKET
+// ============================================================
+
+function addTicket(ticket) {
+
+    console.log(
+        "🟢 New ticket received:",
+        ticket
+    );
+
+
+    /*
+     * Refresh only the ticket table.
+     *
+     * We DO NOT replace:
+     *
+     * #changelist
+     * #changelist-filter
+     *
+     * Therefore:
+     *
+     * ✅ Filters remain
+     * ✅ Filter open/closed state remains
+     * ✅ Search remains
+     * ✅ Pagination remains
+     * ✅ Scroll is restored
+     */
+
+    scheduleRefresh();
+
+}
+
+
+// ============================================================
+// UPDATED TICKET
+// ============================================================
+
+function updateTicket(ticket) {
+
+    console.log(
+        "🔵 Ticket updated:",
+        ticket
+    );
+
+
+    scheduleRefresh();
+
+}
+
+
+// ============================================================
+// DELETED TICKET
+// ============================================================
+
+function removeTicket(id) {
+
+    console.log(
+        "🔴 Ticket deleted:",
+        id
+    );
+
+
+    scheduleRefresh();
+
+}
+
+
+// ============================================================
+// SCHEDULE TABLE REFRESH
+// ============================================================
+
+function scheduleRefresh() {
+
+    // Prevent multiple refreshes
+    if (refreshTimer) {
+        return;
+    }
+
+
+    /*
+     * Wait 200ms.
+     *
+     * This prevents multiple WebSocket events
+     * arriving at almost the same time from
+     * causing multiple HTTP requests.
+     */
+
+    refreshTimer = setTimeout(
+        function () {
+
+            refreshTimer = null;
+
+            refreshTicketTable();
+
+        },
+        200
+    );
+
+}
+
+
+// ============================================================
+// REFRESH ONLY TICKET TABLE
+// ============================================================
+
+function refreshTicketTable() {
+
+    const currentTable =
+        document.querySelector(
+            "#result_list"
+        );
+
+
+    // Table doesn't exist
+    if (!currentTable) {
+
+        console.warn(
+            "⚠️ #result_list not found"
+        );
+
+        return;
+    }
+
+
+    // ========================================================
+    // SAVE SCROLL POSITION
+    // ========================================================
+
+    /*
+     * Unfold uses a SimpleBar scrolling container.
+     *
+     * Find the closest scroll container.
+     */
+
+    const scrollContainer =
+        currentTable.closest(
+            ".simplebar-content-wrapper"
+        );
+
+
+    let scrollTop = 0;
+    let scrollLeft = 0;
+
+
+    if (scrollContainer) {
+
+        scrollTop =
+            scrollContainer.scrollTop;
+
+        scrollLeft =
+            scrollContainer.scrollLeft;
+
     } else {
+
+        scrollTop =
+            window.scrollY;
+
+        scrollLeft =
+            window.scrollX;
+
+    }
+
+
+    console.log(
+        "📍 Saving scroll:",
+        scrollTop
+    );
+
+
+    // ========================================================
+    // FETCH CURRENT FILTERED PAGE
+    // ========================================================
+
+    fetch(
+        window.location.href,
+        {
+            method: "GET",
+
+            headers: {
+                "X-Requested-With":
+                    "XMLHttpRequest"
+            },
+
+            credentials: "same-origin"
+        }
+    )
+        .then(function (response) {
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `HTTP ${response.status}`
+                );
+
+            }
+
+            return response.text();
+
+        })
+        .then(function (html) {
+
+            // =================================================
+            // PARSE NEW PAGE
+            // =================================================
+
+            const parser =
+                new DOMParser();
+
+
+            const doc =
+                parser.parseFromString(
+                    html,
+                    "text/html"
+                );
+
+
+            // =================================================
+            // FIND NEW TABLE
+            // =================================================
+
+            const newTable =
+                doc.querySelector(
+                    "#result_list"
+                );
+
+
+            const oldTable =
+                document.querySelector(
+                    "#result_list"
+                );
+
+
+            if (!newTable) {
+
+                console.warn(
+                    "⚠️ New #result_list not found"
+                );
+
+                return;
+
+            }
+
+
+            if (!oldTable) {
+
+                console.warn(
+                    "⚠️ Current #result_list not found"
+                );
+
+                return;
+
+            }
+
+
+            // =================================================
+            // REPLACE ONLY TABLE
+            // =================================================
+
+            oldTable.replaceWith(
+                newTable
+            );
+
+
+            console.log(
+                "🔄 Ticket table updated"
+            );
+
+
+            // =================================================
+            // RESTORE SCROLL
+            // =================================================
+
+            requestAnimationFrame(
+                function () {
+
+                    const newScrollContainer =
+                        document
+                            .querySelector(
+                                "#result_list"
+                            )
+                            ?.closest(
+                                ".simplebar-content-wrapper"
+                            );
+
+
+                    if (
+                        newScrollContainer
+                    ) {
+
+                        newScrollContainer.scrollTop =
+                            scrollTop;
+
+                        newScrollContainer.scrollLeft =
+                            scrollLeft;
+
+
+                        console.log(
+                            "📍 Scroll restored:",
+                            scrollTop
+                        );
+
+                    } else {
+
+                        window.scrollTo(
+                            scrollLeft,
+                            scrollTop
+                        );
+
+                    }
+
+                }
+            );
+
+        })
+        .catch(function (error) {
+
+            console.error(
+                "❌ Ticket table refresh failed:",
+                error
+            );
+
+        });
+
+}
+
+
+// ============================================================
+// TAB VISIBILITY
+// ============================================================
+
+document.addEventListener(
+    "visibilitychange",
+    function () {
+
+        /*
+         * IMPORTANT:
+         *
+         * We DO NOT refresh the table simply
+         * because the user returned to the tab.
+         *
+         * This prevents the filter UI from
+         * unexpectedly changing.
+         */
+
+
+        if (
+            document.visibilityState !==
+            "visible"
+        ) {
+
+            return;
+
+        }
+
+
+        // WebSocket still connected
+        if (
+            socket &&
+            socket.readyState ===
+            WebSocket.OPEN
+        ) {
+
+            console.log(
+                "👁 Admin tab visible - WebSocket still connected"
+            );
+
+            return;
+
+        }
+
+
+        // WebSocket disconnected
+        console.log(
+            "🔄 Admin tab visible - reconnecting WebSocket"
+        );
+
+
         connectWS();
+
     }
-});
+);
 
-window.addEventListener("beforeunload", () => {
-    isClosingPage = true;
 
-    clearInterval(heartbeatTimer);
+// ============================================================
+// PAGE CLOSE
+// ============================================================
 
-    if (socket) {
-        socket.close();
+window.addEventListener(
+    "beforeunload",
+    function () {
+
+        isClosingPage = true;
+
+
+        // Stop heartbeat
+        clearInterval(
+            heartbeatTimer
+        );
+
+
+        // Stop pending refresh
+        clearTimeout(
+            refreshTimer
+        );
+
+
+        // Stop reconnect
+        clearTimeout(
+            reconnectTimer
+        );
+
+
+        // Close WebSocket
+        if (socket) {
+
+            socket.close();
+
+        }
+
     }
-});
+);
