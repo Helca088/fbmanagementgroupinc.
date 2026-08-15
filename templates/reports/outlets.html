@@ -1,0 +1,583 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Outlets — FB Management</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/report.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/sidebar.css' %}"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     TOP NAV
+========================================================= -->
+
+<div class="topnav">
+
+    <div class="topnav-brand">
+
+        <div class="topnav-icon">
+            🏪
+        </div>
+
+        <span class="topnav-title">
+            FB Management — Outlets
+        </span>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     MAIN LAYOUT
+========================================================= -->
+
+<div class="reports-layout">
+
+
+    <!-- SIDEBAR -->
+
+    {% include "report_sidebar.html" %}
+
+
+    <!-- CONTENT -->
+
+    <main class="reports-content">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <div class="report-page-header">
+
+            <div>
+
+                <h1>
+                    Outlets
+                </h1>
+
+                <p>
+                    View ticket performance by outlet.
+                </p>
+
+            </div>
+
+            <div class="ticket-count">
+
+                {{ total }} Tickets
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             FILTER
+        ================================================== -->
+
+        <div class="filter-card">
+
+            <form
+                method="get"
+                class="filter-form"
+            >
+
+
+                <!-- OUTLET -->
+
+                <div class="filter-field">
+
+                    <label>
+                        Outlet
+                    </label>
+
+                    <select name="outlet">
+
+                        <option value="">
+                            All Outlets
+                        </option>
+
+
+                        {% for outlet in context_outlets %}
+
+                            <option
+                                value="{{ outlet.id }}"
+                                {% if selected_outlet == outlet.id|stringformat:"s" %}
+                                    selected
+                                {% endif %}
+                            >
+
+                                {{ outlet.name }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- DEPARTMENT -->
+
+                <div class="filter-field">
+
+                    <label>
+                        Department
+                    </label>
+
+                    <select name="department">
+
+                        <option value="">
+                            All Departments
+                        </option>
+
+                        <option
+                            value="I.T"
+                            {% if selected_department == "I.T" %}
+                                selected
+                            {% endif %}
+                        >
+                            IT
+                        </option>
+
+                        <option
+                            value="Maintenance"
+                            {% if selected_department == "Maintenance" %}
+                                selected
+                            {% endif %}
+                        >
+                            Maintenance
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- START DATE -->
+
+                <div class="filter-field">
+
+                    <label>
+                        Start Date
+                    </label>
+
+                    <input
+                        type="date"
+                        name="start"
+                        value="{{ selected_start }}"
+                    >
+
+                </div>
+
+
+                <!-- END DATE -->
+
+                <div class="filter-field">
+
+                    <label>
+                        End Date
+                    </label>
+
+                    <input
+                        type="date"
+                        name="end"
+                        value="{{ selected_end }}"
+                    >
+
+                </div>
+
+
+                <!-- ACTIONS -->
+
+                <!-- =============================================
+                    FILTER / EXPORT BUTTONS
+                ================================================ -->
+
+                               <div class="filter-actions">
+
+                    <!-- FILTER -->
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Filter
+                    </button>
+
+                    <!-- CLEAR -->
+                    <a
+                        href="{% url 'report_outlets' %}"
+                        class="btn-clear"
+                    >
+                        Clear
+                    </a>
+
+                    <!-- EXPORT PDF -->
+                    <a
+                        href="{% url 'export_outlets_pdf' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}"
+                        class="btn btn-danger"
+                    >
+                        Export PDF
+                    </a>
+
+                    <!-- EXPORT EXCEL -->
+                    <a
+                        href="{% url 'export_outlets_excel' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}"
+                        class="btn btn-success"
+                    >
+                        Export Excel
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+
+        <!-- =================================================
+             TABLE 1 — OUTLET SUMMARY
+        ================================================== -->
+
+
+        <!-- =================================================
+             TABLE 1 — OUTLET SUMMARY
+        ================================================== -->
+
+        <div class="table-card">
+
+
+            <div class="table-header">
+
+                <div>
+
+                    <h3>
+                        Outlets
+                    </h3>
+
+                    <p class="table-subtitle">
+                        Ticket summary by outlet
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-scroll">
+
+                <table class="tickets-table">
+
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Outlet
+                            </th>
+
+                            <th>
+                                Total
+                            </th>
+
+                            <th>
+                                Pending
+                            </th>
+
+                            <th>
+                                Progress
+                            </th>
+
+                            <th>
+                                Resolved
+                            </th>
+
+                            <th>
+                                Cancelled
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                        {% for outlet in outlet_summary %}
+
+                        <tr>
+
+
+                            <!-- OUTLET -->
+
+                            <td>
+
+                                <div class="outlet-name">
+
+                                    {{ outlet.outlet__name|default:"—" }}
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- TOTAL -->
+
+                            <td>
+
+                                {{ outlet.total }}
+
+                            </td>
+
+
+                            <!-- PENDING -->
+
+                            <td>
+
+                                {{ outlet.pending }}
+
+                            </td>
+
+
+                            <!-- PROGRESS -->
+
+                            <td>
+
+                                {{ outlet.progress }}
+
+                            </td>
+
+
+                            <!-- RESOLVED -->
+
+                            <td>
+
+                                {{ outlet.resolved }}
+
+                            </td>
+
+
+                            <!-- CANCELLED -->
+
+                            <td>
+
+                                {{ outlet.cancelled }}
+
+                            </td>
+
+
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+
+                            <td
+                                colspan="6"
+                                class="empty-table"
+                            >
+
+                                <div class="empty-icon">
+                                    🏪
+                                </div>
+
+                                <strong>
+                                    No outlet data found
+                                </strong>
+
+                                <p>
+                                    No tickets match the selected filters.
+                                </p>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             SPACE
+        ================================================== -->
+
+        <div style="height: 22px;"></div>
+
+
+
+        <!-- =================================================
+             TABLE 2 — CONCERNS PER OUTLET
+        ================================================== -->
+
+        <div class="table-card">
+
+
+            <div class="table-header">
+
+                <div>
+
+                    <h3>
+                        Concerns per Outlet
+                    </h3>
+
+                    <p class="table-subtitle">
+                        Ticket concerns grouped by outlet
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-scroll">
+
+                <table class="tickets-table">
+
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Outlet
+                            </th>
+
+                            <th>
+                                Concern
+                            </th>
+
+                            <th>
+                                Total
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                        {% for item in concerns_per_outlet %}
+
+                        <tr>
+
+
+                            <!-- OUTLET -->
+
+                            <td>
+
+                                <div class="outlet-name">
+
+                                    {{ item.outlet__name|default:"—" }}
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- CONCERN -->
+
+                            <td>
+
+                                <span class="concern-badge">
+
+                                    {{ item.concern_type__name|default:"None" }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- TOTAL -->
+
+                            <td>
+
+                                {{ item.total }}
+
+                            </td>
+
+
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+
+                            <td
+                                colspan="3"
+                                class="empty-table"
+                            >
+
+                                <div class="empty-icon">
+                                    📊
+                                </div>
+
+                                <strong>
+                                    No concern data found
+                                </strong>
+
+                                <p>
+                                    No tickets match the selected filters.
+                                </p>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+    </main>
+
+</div>
+
+
+</body>
+
+</html>

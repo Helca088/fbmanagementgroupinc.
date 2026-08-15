@@ -1,0 +1,49 @@
+<div class="reports-sidebar">
+    
+    <div class="reports-sidebar-title">
+        REPORTS
+    </div>
+
+    <a href="{% url 'reports' %}"
+       class="report-nav-item {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
+        <span>📊</span>
+        <span>Dashboard</span>
+    </a>
+    <br>
+
+    <a href="{% url 'report_tickets' %}"
+       class="report-nav-item {% if request.resolver_match.url_name == 'report_tickets' %}active{% endif %}">
+        <span>📋</span>
+        <span>Tickets</span>
+    </a>
+    <br>
+
+    <a href="{% url 'report_outlets' %}"
+       class="report-nav-item {% if request.resolver_match.url_name == 'report_outlets' %}active{% endif %}">
+        <span>🏪</span>
+        <span>Outlets</span>
+    </a>
+    <br>
+
+    <a href="{% url 'report_departments' %}"
+       class="report-nav-item {% if request.resolver_match.url_name == 'report_departments' %}active{% endif %}">
+        <span>🏢</span>
+        <span>Departments</span>
+    </a>
+    <br>
+
+    <a href="{% url 'report_technicians' %}"
+       class="report-nav-item {% if request.resolver_match.url_name == 'report_technicians' %}active{% endif %}">
+        <span>🧑‍🔧</span>
+        <span>Technicians</span>
+    </a>
+    <br>
+
+    <a href="{% url 'report_concerns' %}"
+       class="report-nav-item {% if request.resolver_match.url_name == 'report_concerns' %}active{% endif %}">
+        <span>📝</span>
+        <span>Concerns</span>
+    </a>
+    <br>
+
+</div>

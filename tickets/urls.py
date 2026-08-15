@@ -1,5 +1,20 @@
 from django.urls import path, include
 
+from tickets.views.exports import (
+    export_tickets_pdf,
+    export_tickets_excel,
+    export_outlets_pdf,
+    export_outlets_excel,
+    export_departments_excel,
+    export_departments_pdf,
+    export_technicians_pdf,
+    export_technicians_excel,
+    export_concerns_excel,
+    export_concerns_pdf,
+    export_reports_pdf,
+    export_reports_excel,
+)
+
 from. import views
 
 urlpatterns = [      
@@ -22,40 +37,86 @@ urlpatterns = [
     path('edit/<int:id>/', views.edit_ticket, name='edit_ticket'),
     path('delete-ticket/<int:id>/', views.delete_ticket, name='delete_ticket'),
     path("get-concerns/", views.get_concerns, name="get_concerns"),
+    #NEW 7/27
+    path("store/logs/", views.store_logs, name="store_logs"),
+    #8/11
+    path("reports/", views.reports, name="reports"),
+    path("reports/tickets/", views.report_tickets, name="report_tickets"),
+    path("reports/outlets/", views.report_outlets, name="report_outlets"),
+    path("reports/departments/", views.report_departments, name="report_departments"),
+    path("reports/technicians/", views.report_technicians, name="report_technicians"),
+    path("reports/concerns/", views.report_concerns, name="report_concerns"),
     path(
-    "reports/",
-    views.reports,
-    name="reports"
+    "reports/tickets/export/pdf/",
+    export_tickets_pdf,
+    name="export_tickets_pdf"
+    ),
+
+    path(
+        "reports/tickets/export/excel/",
+        export_tickets_excel,
+        name="export_tickets_excel"
+    ),
+    path(
+    "reports/outlets/export/pdf/",
+    export_outlets_pdf,
+    name="export_outlets_pdf"
+    ),
+
+    path(
+        "reports/outlets/export/excel/",
+        export_outlets_excel,
+        name="export_outlets_excel"
+    ),
+    path(
+    "reports/departments/export/pdf/",
+    export_departments_pdf,
+    name="export_departments_pdf",
+    ),
+
+    path(
+        "reports/departments/export/excel/",
+        export_departments_excel,
+        name="export_departments_excel",
+    ),
+    path(
+    "reports/technicians/export/pdf/",
+    export_technicians_pdf,
+    name="export_technicians_pdf",
+    ),
+
+    path(
+        "reports/technicians/export/excel/",
+        export_technicians_excel,
+        name="export_technicians_excel",
+    ),
+    path(
+    "reports/concerns/export/pdf/",
+    export_concerns_pdf,
+    name="export_concerns_pdf"
+    ),
+
+    path(
+        "reports/concerns/export/excel/",
+    export_concerns_excel,
+        name="export_concerns_excel"
     ),
     path(
     "reports/export/pdf/",
-    views.export_pdf,
-    name="export_pdf"
+    export_reports_pdf,
+    name="export_reports_pdf"
     ),
 
     path(
-    "reports/export/excel/",
-    views.export_excel,
-    name="export_excel"
+        "reports/export/excel/",
+        export_reports_excel,
+        name="export_reports_excel"
     ),
-    
+        
     path('test-push/', views.test_push_view, name='test_push'),
-
-    path('test-push/', views.test_push_view, name='test_push'),
-    path(
-        "get-concerns/",
-        views.get_concerns,
-        name="get_concerns",
-    ),
     path(
         "get-technicians/",
         views.get_technicians,
         name="get-technicians",
     ),
-    path(
-    "store-logs/",
-    views.store_logs,
-    name="store_logs",
-    )
-    
-] 
+]

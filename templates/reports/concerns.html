@@ -1,0 +1,639 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Concerns — FB Management</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/report.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/sidebar.css' %}"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     TOP NAV
+===================================================== -->
+
+<div class="topnav">
+
+    <div class="topnav-brand">
+
+        <div class="topnav-icon">
+            📝
+        </div>
+
+        <span class="topnav-title">
+            FB Management — Concerns
+        </span>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     LAYOUT
+===================================================== -->
+
+<div class="reports-layout">
+
+
+    <!-- SIDEBAR -->
+
+    {% include "report_sidebar.html" %}
+
+
+    <!-- MAIN CONTENT -->
+
+    <main class="reports-content">
+
+
+        <!-- =================================================
+             PAGE HEADER
+        ================================================== -->
+
+        <div class="report-page-header">
+
+            <div>
+
+                <h1>
+                    Concerns
+                </h1>
+
+                <p>
+                    Concern ticket volume and performance.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             FILTER CARD
+        ================================================== -->
+
+        <div class="filter-card">
+
+            <form
+                method="get"
+                class="filter-form"
+            >
+
+
+            
+
+
+                <!-- DEPARTMENT -->
+
+                <div class="filter-field">
+
+                    <label for="department">
+                        Department
+                    </label>
+
+                    <select
+                        name="department"
+                        id="department"
+                    >
+
+                        <option value="">
+                            All Departments
+                        </option>
+
+                        {% for department in context_departments %}
+
+                            <option
+                                value="{{ department.name }}"
+                                {% if selected_department == department.name %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ department.name }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- CONCERN -->
+
+                <div class="filter-field">
+
+                    <label for="concern">
+                        Concern
+                    </label>
+
+                    <select
+                        name="concern"
+                        id="concern"
+                    >
+
+                        <option value="">
+                            All Concerns
+                        </option>
+
+                        {% for concern in context_concerns %}
+
+                            <option
+                                value="{{ concern.id }}"
+                                {% if selected_concern == concern.id|stringformat:"s" %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ concern.name }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- START DATE -->
+
+                <div class="filter-field">
+
+                    <label for="start">
+                        Start Date
+                    </label>
+
+                    <input
+                        type="date"
+                        name="start"
+                        id="start"
+                        value="{{ selected_start }}"
+                    >
+
+                </div>
+
+
+                <!-- END DATE -->
+
+                <div class="filter-field">
+
+                    <label for="end">
+                        End Date
+                    </label>
+
+                    <input
+                        type="date"
+                        name="end"
+                        id="end"
+                        value="{{ selected_end }}"
+                    >
+
+                </div>
+
+
+                <!-- ACTIONS -->
+
+                <div class="filter-actions">
+
+
+                    <!-- FILTER -->
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Filter
+                    </button>
+
+
+                    <!-- CLEAR -->
+
+                    <a
+                        href="{% url 'report_concerns' %}"
+                        class="btn-clear"
+                    >
+                        Clear
+                    </a>
+
+
+                    <!-- PDF -->
+
+                    <a
+                        href="{% url 'export_concerns_pdf' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}&concern={{ request.GET.concern|urlencode }}"
+                        class="btn btn-danger"
+                    >
+                        Export PDF
+                    </a>
+
+
+                    <!-- EXCEL -->
+
+                    <a
+                        href="{% url 'export_concerns_excel' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}&concern={{ request.GET.concern|urlencode }}"
+                        class="btn btn-success"
+                    >
+                        Export Excel
+                    </a>
+
+
+                </div>
+
+            </form>
+
+        </div>
+
+
+        <!-- =================================================
+             TABLE 1 — CONCERN SUMMARY
+        ================================================== -->
+
+        <div class="table-card concern-table-card">
+
+
+            <div class="table-header">
+
+                <div>
+
+                    <h3>
+                        Concern Summary
+                    </h3>
+
+                    <p class="table-subtitle">
+                        Ticket volume by concern type.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-scroll">
+
+                <table class="report-table concern-table">
+
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Concern
+                            </th>
+
+                            <th>
+                                Department
+                            </th>
+
+                            <th>
+                                Total
+                            </th>
+
+                            <th>
+                                Open
+                            </th>
+
+                            <th>
+                                In Progress
+                            </th>
+
+                            <th>
+                                Resolved
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                        {% for concern in concerns %}
+
+                        <tr>
+
+
+                            <!-- CONCERN -->
+
+                            <td>
+
+                                <div class="outlet-name">
+
+                                    {{ concern.name|default:"—" }}
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- DEPARTMENT -->
+
+                            <td>
+
+                                {{ concern.department_name|default:"—" }}
+
+                            </td>
+
+
+                            <!-- TOTAL -->
+
+                            <td>
+
+                                {{ concern.total }}
+
+                            </td>
+
+
+                            <!-- OPEN -->
+
+                            <td>
+
+                                <span class="table-number table-open">
+
+                                    {{ concern.open }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- IN PROGRESS -->
+
+                            <td>
+
+                                <span class="table-number table-progress">
+
+                                    {{ concern.progress }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- RESOLVED -->
+
+                            <td>
+
+                                <span class="table-number table-resolved">
+
+                                    {{ concern.resolved }}
+
+                                </span>
+
+                            </td>
+
+
+                        </tr>
+
+
+                        {% empty %}
+
+
+                        <tr>
+
+                            <td
+                                colspan="6"
+                                class="empty-table"
+                            >
+
+                                <div class="empty-icon">
+                                    📝
+                                </div>
+
+                                <strong>
+                                    No concern data found
+                                </strong>
+
+                                <span>
+                                    No concerns match the selected filters.
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             TABLE 2 — CONCERN PERFORMANCE
+        ================================================== -->
+
+        <div class="table-card concern-performance-card">
+
+
+            <div class="table-header">
+
+                <div>
+
+                    <h3>
+                        Concern Performance
+                    </h3>
+
+                    <p class="table-subtitle">
+                        Resolution performance by concern type.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-scroll">
+
+                <table class="report-table concern-performance-table">
+
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Concern
+                            </th>
+
+                            <th>
+                                Avg. Resolution Time
+                            </th>
+
+                            <th>
+                                Overdue
+                            </th>
+
+                            <th>
+                                Resolution Rate
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                        {% for concern in concern_performance %}
+
+                        <tr>
+
+
+                            <!-- CONCERN -->
+
+                            <td>
+
+                                <div class="outlet-name">
+
+                                    {{ concern.name|default:"—" }}
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- AVG RESOLUTION -->
+
+                            <td>
+
+                                <span class="resolution-time">
+
+                                    {{ concern.average_days }}
+                                    day{{ concern.average_days|pluralize }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- OVERDUE -->
+
+                            <td>
+
+                                {% if concern.overdue > 0 %}
+
+                                    <span class="performance-overdue">
+
+                                        {{ concern.overdue }}
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="performance-good">
+
+                                        0
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- RESOLUTION RATE -->
+
+                            <td>
+
+                                <div class="rate-cell">
+
+
+                                    <div class="rate-bar">
+
+                                        <div
+                                            class="rate-fill"
+                                            style="--rate-width: {{ concern.resolution_rate|default:0 }}%;"
+                                        ></div>
+
+                                    </div>
+
+
+                                    <span class="rate-value">
+
+                                        {{ concern.resolution_rate|default:0|floatformat:1 }}%
+
+                                    </span>
+
+
+                                </div>
+
+                            </td>
+
+
+                        </tr>
+
+
+                        {% empty %}
+
+
+                        <tr>
+
+                            <td
+                                colspan="4"
+                                class="empty-table"
+                            >
+
+                                <div class="empty-icon">
+                                    📈
+                                </div>
+
+                                <strong>
+                                    No performance data found
+                                </strong>
+
+                                <span>
+                                    No concern performance matches the selected filters.
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+    </main>
+
+</div>
+
+
+</body>
+
+</html>

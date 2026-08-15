@@ -1,0 +1,636 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Technicians — FB Management</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/report.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/sidebar.css' %}"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     TOP NAV
+===================================================== -->
+
+<div class="topnav">
+
+    <div class="topnav-brand">
+
+        <div class="topnav-icon">
+            🧑‍🔧
+        </div>
+
+        <span class="topnav-title">
+            FB Management — Technicians
+        </span>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     LAYOUT
+===================================================== -->
+
+<div class="reports-layout">
+
+
+    <!-- =================================================
+         SIDEBAR
+    ================================================== -->
+
+    {% include "report_sidebar.html" %}
+
+
+
+    <!-- =================================================
+         MAIN CONTENT
+    ================================================== -->
+
+    <main class="reports-content">
+
+
+        <!-- =================================================
+             PAGE HEADER
+        ================================================== -->
+
+        <div class="report-page-header">
+
+            <div>
+
+                <h1>
+                    Technicians
+                </h1>
+
+                <p>
+                    Technician ticket workload and performance.
+                </p>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             FILTER CARD
+        ================================================== -->
+
+        <div class="filter-card">
+
+            <form
+                method="get"
+                class="filter-form"
+            >
+
+
+                <!-- =================================================
+                     OUTLET
+                ================================================== -->
+
+                <div class="filter-field">
+
+                    <label for="outlet">
+                        Outlet
+                    </label>
+
+                    <select
+                        name="outlet"
+                        id="outlet"
+                    >
+
+                        <option value="">
+                            All Outlets
+                        </option>
+
+                        {% for outlet in context_outlets %}
+
+                            <option
+                                value="{{ outlet.id }}"
+                                {% if selected_outlet == outlet.id|stringformat:"s" %}
+                                    selected
+                                {% endif %}
+                            >
+
+                                {{ outlet.name }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+
+                <!-- =================================================
+                     DEPARTMENT
+                ================================================== -->
+
+                <div class="filter-field">
+
+                    <label for="department">
+                        Department
+                    </label>
+
+                    <select
+                        name="department"
+                        id="department"
+                    >
+
+                        <option value="">
+                            All Departments
+                        </option>
+
+
+                        <option
+                            value="I.T"
+                            {% if selected_department == "I.T" %}
+                                selected
+                            {% endif %}
+                        >
+                            IT
+                        </option>
+
+
+                        <option
+                            value="Maintenance"
+                            {% if selected_department == "Maintenance" %}
+                                selected
+                            {% endif %}
+                        >
+                            Maintenance
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+
+                <!-- =================================================
+                     START DATE
+                ================================================== -->
+
+                <div class="filter-field">
+
+                    <label for="start">
+                        Start Date
+                    </label>
+
+                    <input
+                        type="date"
+                        name="start"
+                        id="start"
+                        value="{{ selected_start }}"
+                    >
+
+                </div>
+
+
+
+                <!-- =================================================
+                     END DATE
+                ================================================== -->
+
+                <div class="filter-field">
+
+                    <label for="end">
+                        End Date
+                    </label>
+
+                    <input
+                        type="date"
+                        name="end"
+                        id="end"
+                        value="{{ selected_end }}"
+                    >
+
+                </div>
+
+
+
+                <!-- =================================================
+                     ACTION BUTTONS
+                ================================================== -->
+
+                <div class="filter-actions">
+
+
+                    <!-- FILTER -->
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Filter
+                    </button>
+
+
+                    <!-- CLEAR -->
+
+                    <a
+                        href="{% url 'report_technicians' %}"
+                        class="btn-clear"
+                    >
+                        Clear
+                    </a>
+
+
+                    <!-- EXPORT PDF -->
+
+                    <a
+                        href="{% url 'export_technicians_pdf' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}"
+                        class="btn btn-danger"
+                    >
+                        Export PDF
+                    </a>
+
+
+                    <!-- EXPORT EXCEL -->
+
+                    <a
+                        href="{% url 'export_technicians_excel' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}"
+                        class="btn btn-success"
+                    >
+                        Export Excel
+                    </a>
+
+
+                </div>
+
+
+            </form>
+
+        </div>
+
+
+
+        <!-- =================================================
+             TABLE 1
+             TECHNICIAN WORKLOAD
+        ================================================== -->
+
+        <div class="table-card technician-table-card">
+
+
+            <!-- TABLE HEADER -->
+
+            <div class="table-header">
+
+                <div>
+
+                    <h3>
+                        Technician Workload
+                    </h3>
+
+                    <p class="table-subtitle">
+                        Ticket volume and current workload by technician.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- TABLE -->
+
+            <div class="table-scroll">
+
+                <table class="report-table technician-table">
+
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Technician
+                            </th>
+
+                            <th>
+                                Total
+                            </th>
+
+                            <th>
+                                Open
+                            </th>
+
+                            <th>
+                                In Progress
+                            </th>
+
+                            <th>
+                                Resolved
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+
+                    <tbody>
+
+                        {% for technician in technician_stats %}
+
+                        <tr>
+
+                            <td>
+                                <div class="outlet-name">
+                                    {{ technician.name }}
+                                </div>
+                            </td>
+
+                            <td>
+                                {{ technician.total }}
+                            </td>
+
+                            <td>
+                                <span class="table-number table-open">
+                                    {{ technician.open }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="table-number table-progress">
+                                    {{ technician.progress }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="table-number table-resolved">
+                                    {{ technician.resolved }}
+                                </span>
+                            </td>
+
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+
+                            <td colspan="5" class="empty-table">
+
+                                <div class="empty-icon">
+                                    🧑‍🔧
+                                </div>
+
+                                <strong>
+                                    No technician data found
+                                </strong>
+
+                                <span>
+                                    No technicians match the selected filters.
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             TABLE 2
+             TECHNICIAN PERFORMANCE
+        ================================================== -->
+
+        <div class="table-card technician-performance-card">
+
+
+            <!-- TABLE HEADER -->
+
+            <div class="table-header">
+
+                <div>
+
+                    <h3>
+                        Technician Performance
+                    </h3>
+
+                    <p class="table-subtitle">
+                        Resolution performance and efficiency by technician.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- TABLE -->
+
+            <div class="table-scroll">
+
+                <table class="report-table technician-performance-table">
+
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Technician
+                            </th>
+
+                            <th>
+                                Avg. Resolution Time
+                            </th>
+
+                            <th>
+                                Overdue
+                            </th>
+
+                            <th>
+                                Resolution Rate
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+
+                    <tbody>
+
+
+                        {% for technician in technician_performance %}
+
+                        <tr>
+
+
+                            <!-- =================================================
+                                 TECHNICIAN
+                            ================================================== -->
+
+                            <td>
+
+                                <div class="technician-name">
+
+                                    {{ technician.name|default:"—" }}
+
+                                </div>
+
+                            </td>
+
+
+
+                            <!-- =================================================
+                                 AVG RESOLUTION
+                            ================================================== -->
+
+                            <td>
+
+                                <span class="resolution-time">
+
+                                    {{ technician.average_days }}
+                                    day{{ technician.average_days|pluralize }}
+
+                                </span>
+
+                            </td>
+
+
+
+                            <!-- =================================================
+                                 OVERDUE
+                            ================================================== -->
+
+                            <td>
+
+                                {% if technician.overdue > 0 %}
+
+                                    <span class="performance-overdue">
+
+                                        {{ technician.overdue }}
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="performance-good">
+
+                                        0
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+
+                            <!-- =================================================
+                                 RESOLUTION RATE
+                            ================================================== -->
+
+                            <td>
+
+                                <div class="rate-cell">
+
+                                    <div class="rate-bar">
+
+                                        <div
+                                            class="rate-fill"
+                                            style="--rate-width: {{ technician.resolution_rate|default:0 }}%;"
+                                        ></div>
+
+                                    </div>
+
+                                    <span class="rate-value">
+
+                                        {{ technician.resolution_rate|default:0|floatformat:1 }}%
+
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+
+                        </tr>
+
+
+                        {% empty %}
+
+
+                        <tr>
+
+                            <td
+                                colspan="4"
+                                class="empty-table"
+                            >
+
+                                <div class="empty-icon">
+                                    📈
+                                </div>
+
+                                <strong>
+                                    No technician performance data found
+                                </strong>
+
+                                <p>
+                                    No technician performance matches the selected filters.
+                                </p>
+
+                            </td>
+
+                        </tr>
+
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+    </main>
+
+</div>
+
+
+</body>
+
+</html>
