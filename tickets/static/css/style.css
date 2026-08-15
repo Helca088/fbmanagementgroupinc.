@@ -476,54 +476,7 @@ button:hover{
     font-size: 12px;
     font-weight: 600;
 }
-/* Full-screen loading overlay */
-#page-loader {
-    position: fixed;
-    inset: 0;
 
-    width: 100vw;
-    height: 100vh;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: rgba(15, 23, 42, 0.80);
-
-    z-index: 2147483647;
-
-    opacity: 0;
-    visibility: hidden;
-
-    pointer-events: none;
-
-    transition: opacity 0.15s ease;
-}
-
-
-html.dark #page-loader {
-    background: rgba(17,24,39,.65);
-}
-
-#page-loader.show {
-    display: flex;
-}
-
-/* Spinner */
-.loader {
-    width: 44px;
-    height: 44px;
-    border: 4px solid #ddd;
-    border-top-color: #1877F2; /* Facebook blue */
-    border-radius: 50%;
-    animation: spin .8s linear infinite;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
 .ticket-header{
     display:flex;
     justify-content:space-between;
@@ -717,24 +670,39 @@ html.dark #page-loader {
 }
 
 /* lottie page loader */
-
 #page-loader {
-    position: fixed;
-    inset: 0;
-    backdrop-filter: blur(3px);
-    display: none;
+    position: fixed !important;
+
+    inset: 0 !important;
+
+    width: 100vw !important;
+    height: 100vh !important;
+
+    display: flex !important;
+
     align-items: center;
     justify-content: center;
-    z-index: 999999;
-}
 
-html.dark #page-loader {
-    background: rgba(17,24,39,.65);
+    background: rgba(15, 23, 42, 0.82);
+
+    z-index: 2147483647 !important;
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    pointer-events: none;
+
+    transition:
+        opacity 0.15s ease,
+        visibility 0.15s ease;
 }
 
 #page-loader.show {
-    opacity: 1;
-    visibility: visible;
+    opacity: 1 !important;
+
+    visibility: visible !important;
+
     pointer-events: all;
 }
 
@@ -744,13 +712,14 @@ html.dark #page-loader {
 }
 
 
-/* Backup loader if Lottie isn't available */
+/* Backup if Lottie doesn't load */
 
 .simple-loader {
     width: 50px;
     height: 50px;
 
     border: 5px solid rgba(255,255,255,0.3);
+
     border-top-color: white;
 
     border-radius: 50%;
@@ -759,7 +728,13 @@ html.dark #page-loader {
 }
 
 @keyframes loader-spin {
+
+    from {
+        transform: rotate(0deg);
+    }
+
     to {
         transform: rotate(360deg);
     }
+
 }

@@ -1,17 +1,29 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    const overlay = document.createElement("div");
+    // ==========================================
+    // CREATE LOADER
+    // ==========================================
 
-    overlay.id = "page-loader";
+    let overlay = document.getElementById("page-loader");
 
-    overlay.innerHTML = `
-        <div id="lottie-animation"></div>
-    `;
+    if (!overlay) {
 
-    document.body.appendChild(overlay);
+        overlay = document.createElement("div");
+
+        overlay.id = "page-loader";
+
+        overlay.innerHTML = `
+            <div id="lottie-animation"></div>
+        `;
+
+        document.body.appendChild(overlay);
+    }
 
 
-    // Load Lottie
+    // ==========================================
+    // START LOTTIE
+    // ==========================================
+
     if (typeof lottie !== "undefined") {
 
         lottie.loadAnimation({
@@ -30,10 +42,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    // ==========================================
+    // SHOW / HIDE
+    // ==========================================
+
     function showLoader() {
         overlay.classList.add("show");
     }
-
 
     function hideLoader() {
         overlay.classList.remove("show");
@@ -41,10 +56,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // ==========================================
-    // ADMIN NAVIGATION
+    // CHECK IF WE ARE ARRIVING FROM ANOTHER PAGE
     // ==========================================
 
-    document.addEventListener("click", function (e) {
+    const pageLoading = sessionStorage.getItem("pageLoading");
+
+    if (pageLoading === "true") {
+
+        // Remove flag immediately
+        sessionStorage.removeItem("pageLoading");
+
+        // Show loader on the NEW page
+        showLoader();
+
+        // Keep it visible long enough to actually see it
+        setTimeout(() => {
+            hideLoader();
+        }, 350);
+    }
+
+
+    // ==========================================
+    // NAVIGATION
+    // ==========================================
+
+    document.addEventListener("click", (e) => {
 
         const link = e.target.closest("a");
 
@@ -53,33 +89,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        console.log("CLICKED:", link);
-
-
-        // Django Unfold theme
-        const xClick = link.getAttribute("x-on:click") || "";
-
-        if (
-            xClick.includes("switchTheme") ||
-            xClick.includes("filterOpen")
-        ) {
-            return;
-        }
-
-
-        // Don't show loader for new tabs
+        // Ignore new tabs
         if (link.target === "_blank") {
             return;
         }
 
 
-        // Don't show loader for downloads
+        // Ignore downloads
         if (link.hasAttribute("download")) {
             return;
         }
 
 
-        // Don't show loader for Ctrl/CMD/Shift click
+        // Ignore special clicks
         if (
             e.ctrlKey ||
             e.metaKey ||
@@ -90,54 +112,85 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        // Only same website
+        // Ignore anchors
+        const href = link.getAttribute("href");
+
+        if (!href || href.startsWith("#")) {
+            return;
+        }
+
+
+        // Ignore external websites
         if (link.origin !== window.location.origin) {
             return;
         }
 
 
-        // Ignore #
-        if (link.getAttribute("href")?.startsWith("#")) {
+        // Ignore theme/filter buttons
+        const xClick = link.getAttribute("x-on:click") || "";
+
+        if (
+            xClick.includes("switchTheme") ||
+            xClick.includes("filterOpen")
+        ) {
             return;
         }
 
 
         // ==========================================
-        // ADMIN PAGE
+        // CHECK IF THIS IS ACTUALLY A NEW PAGE
         // ==========================================
 
-        if (link.href.includes("/admin/")) {
+        const currentURL =
+            window.location.pathname +
+            window.location.search;
 
-            console.log("ADMIN NAVIGATION:", link.href);
+        const targetURL =
+            link.pathname +
+            link.search;
 
-            showLoader();
-
-            // Let browser navigate normally
+        if (currentURL === targetURL) {
             return;
         }
 
 
-        // Normal site links
+        // ==========================================
+        // TELL THE NEXT PAGE TO SHOW LOADER
+        // ==========================================
+
+        sessionStorage.setItem("pageLoading", "true");
+
+        console.log("PAGE NAVIGATION:", link.href);
+
+        // Show it here too
         showLoader();
 
+        // Allow normal browser navigation
     });
 
 
     // ==========================================
-    // FORM SUBMIT
+    // FORM SUBMISSION
     // ==========================================
 
-    document.addEventListener("submit", function () {
+    document.addEventListener("submit", () => {
+
+        sessionStorage.setItem("pageLoading", "true");
+
         showLoader();
     });
 
 
     // ==========================================
-    // PAGE RESTORED
+    // BROWSER BACK / FORWARD
     // ==========================================
 
-    window.addEventListener("pageshow", function () {
-        hideLoader();
+    window.addEventListener("pageshow", () => {
+
+        // Don't leave loader stuck
+        if (!sessionStorage.getItem("pageLoading")) {
+            hideLoader();
+        }
     });
 
 });
