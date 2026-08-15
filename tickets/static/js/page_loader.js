@@ -1,10 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    // ==============================
-    // CREATE LOADER
-    // ==============================
-
     const overlay = document.createElement("div");
+
     overlay.id = "page-loader";
 
     overlay.innerHTML = `
@@ -14,10 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(overlay);
 
 
-    // ==============================
-    // LOAD LOTTIE IF AVAILABLE
-    // ==============================
-
+    // Load Lottie
     if (typeof lottie !== "undefined") {
 
         lottie.loadAnimation({
@@ -30,46 +24,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } else {
 
-        // Lottie is not loaded.
-        // Still allow the loader to work.
-        console.warn("Lottie is not loaded.");
-
         document.getElementById("lottie-animation").innerHTML = `
             <div class="simple-loader"></div>
         `;
     }
 
 
-    // ==============================
-    // SHOW LOADER
-    // ==============================
-
     function showLoader() {
         overlay.classList.add("show");
     }
 
-
-    // ==============================
-    // HIDE LOADER
-    // ==============================
 
     function hideLoader() {
         overlay.classList.remove("show");
     }
 
 
-    // ==============================
-    // LINK CLICK
-    // ==============================
+    // ==========================================
+    // ADMIN NAVIGATION
+    // ==========================================
 
-    document.addEventListener("click", (e) => {
+    document.addEventListener("click", function (e) {
 
         const link = e.target.closest("a");
 
-        if (!link) return;
+        if (!link) {
+            return;
+        }
 
 
-        // Ignore theme switch
+        console.log("CLICKED:", link);
+
+
+        // Django Unfold theme
         const xClick = link.getAttribute("x-on:click") || "";
 
         if (
@@ -80,18 +67,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        // Ignore special links
-        if (
-            link.target === "_blank" ||
-            link.hasAttribute("download") ||
-            link.href.startsWith("#") ||
-            link.href.startsWith("javascript:")
-        ) {
+        // Don't show loader for new tabs
+        if (link.target === "_blank") {
             return;
         }
 
 
-        // Ignore Ctrl / CMD / Shift clicks
+        // Don't show loader for downloads
+        if (link.hasAttribute("download")) {
+            return;
+        }
+
+
+        // Don't show loader for Ctrl/CMD/Shift click
         if (
             e.ctrlKey ||
             e.metaKey ||
@@ -102,45 +90,53 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        // Ignore external links
+        // Only same website
         if (link.origin !== window.location.origin) {
             return;
         }
 
 
-        // Ignore current page
-        if (
-            link.pathname === window.location.pathname &&
-            link.search === window.location.search
-        ) {
+        // Ignore #
+        if (link.getAttribute("href")?.startsWith("#")) {
             return;
         }
 
 
-        console.log("PAGE LOADER: clicked", link.href);
+        // ==========================================
+        // ADMIN PAGE
+        // ==========================================
 
+        if (link.href.includes("/admin/")) {
+
+            console.log("ADMIN NAVIGATION:", link.href);
+
+            showLoader();
+
+            // Let browser navigate normally
+            return;
+        }
+
+
+        // Normal site links
         showLoader();
-
-        // DO NOT preventDefault.
-        // Let Django navigation happen normally.
 
     });
 
 
-    // ==============================
+    // ==========================================
     // FORM SUBMIT
-    // ==============================
+    // ==========================================
 
-    document.addEventListener("submit", () => {
+    document.addEventListener("submit", function () {
         showLoader();
     });
 
 
-    // ==============================
-    // PAGE LOADED
-    // ==============================
+    // ==========================================
+    // PAGE RESTORED
+    // ==========================================
 
-    window.addEventListener("pageshow", () => {
+    window.addEventListener("pageshow", function () {
         hideLoader();
     });
 
