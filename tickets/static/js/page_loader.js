@@ -12,43 +12,53 @@ document.addEventListener("DOMContentLoaded", () => {
         path: "/static/animations/loading.json"
     });
 
-    document.addEventListener("click", (e) => {
-        // Ignore Django Unfold theme switch links
-        if (e.target.closest('a[x-on\\:click^="switchTheme"]')) {
-            return;
-        }
-        const link = e.target.closest("a");
+    let hideTimeout;
 
+    function showLoader() {
+        overlay.classList.add("show");
+        // Safety net: never let it hang forever if navigation stalls/gets cancelled
+        clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(() => overlay.classList.remove("show"), 8000);
+    }
+
+    document.addEventListener("click", (e) => {
+        const link = e.target.closest("a");
         if (!link) return;
 
-        const xClick = link.getAttribute("x-on:click") || "";
+        // Ignore any Alpine-driven interaction, not just named ones
+        // (sidebar toggle, dropdowns, tabs, theme switch, filters, etc.)
+        if (link.hasAttribute("x-on:click") || link.hasAttribute("@click")) {
+            return;
+        }
 
+        const hrefAttr = link.getAttribute("href");
+
+        // Use the raw attribute, not link.href, to catch real anchor/JS/empty links
         if (
-            xClick.includes("switchTheme") ||
-            xClick.includes("filterOpen")
+            !hrefAttr ||
+            hrefAttr.startsWith("#") ||
+            hrefAttr.startsWith("javascript:") ||
+            hrefAttr.startsWith("mailto:") ||
+            hrefAttr.startsWith("tel:")
         ) {
             return;
         }
-        // Ignore anchors, downloads, new tabs
+
         if (
             link.target === "_blank" ||
             link.hasAttribute("download") ||
-            link.href.startsWith("#") ||
-            e.ctrlKey || e.metaKey || e.shiftKey
+            e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0
         ) {
             return;
         }
 
-        overlay.classList.add("show");
+        showLoader();
     });
 
-    // Show loader when submitting forms (e.g. login)
-    document.addEventListener("submit", () => {
-        overlay.classList.add("show");
-    });
+    document.addEventListener("submit", showLoader);
 
-    // Hide loader if the page is restored from browser cache
     window.addEventListener("pageshow", () => {
+        clearTimeout(hideTimeout);
         overlay.classList.remove("show");
     });
 });
