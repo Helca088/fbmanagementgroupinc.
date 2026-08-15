@@ -480,14 +480,26 @@ button:hover{
 #page-loader {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, .35);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    display: none;
+
+    width: 100vw;
+    height: 100vh;
+
+    display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 999999;
+
+    background: rgba(15, 23, 42, 0.80);
+
+    z-index: 2147483647;
+
+    opacity: 0;
+    visibility: hidden;
+
+    pointer-events: none;
+
+    transition: opacity 0.15s ease;
 }
+
 
 html.dark #page-loader {
     background: rgba(17,24,39,.65);
@@ -721,14 +733,33 @@ html.dark #page-loader {
 }
 
 #page-loader.show {
-    display: flex;
-}  
-
-.loader-content {
-    text-align: center;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all;
 }
 
 #lottie-animation {
-    width: 220px;
-    height: 220px;
+    width: 120px;
+    height: 120px;
+}
+
+
+/* Backup loader if Lottie isn't available */
+
+.simple-loader {
+    width: 50px;
+    height: 50px;
+
+    border: 5px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+
+    border-radius: 50%;
+
+    animation: loader-spin 0.8s linear infinite;
+}
+
+@keyframes loader-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }

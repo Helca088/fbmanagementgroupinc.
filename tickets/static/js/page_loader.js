@@ -1,18 +1,66 @@
 document.addEventListener("DOMContentLoaded", () => {
+
+    // ==============================
+    // CREATE LOADER
+    // ==============================
+
     const overlay = document.createElement("div");
     overlay.id = "page-loader";
-    overlay.innerHTML = '<div id="lottie-animation"></div>';
+
+    overlay.innerHTML = `
+        <div id="lottie-animation"></div>
+    `;
+
     document.body.appendChild(overlay);
 
-    lottie.loadAnimation({
-        container: document.getElementById("lottie-animation"),
-        renderer: "svg",
-        loop: true,
-        autoplay: true,
-        path: "/static/animations/loading.json"
-    });
 
-    let navigating = false;
+    // ==============================
+    // LOAD LOTTIE IF AVAILABLE
+    // ==============================
+
+    if (typeof lottie !== "undefined") {
+
+        lottie.loadAnimation({
+            container: document.getElementById("lottie-animation"),
+            renderer: "svg",
+            loop: true,
+            autoplay: true,
+            path: "/static/animations/loading.json"
+        });
+
+    } else {
+
+        // Lottie is not loaded.
+        // Still allow the loader to work.
+        console.warn("Lottie is not loaded.");
+
+        document.getElementById("lottie-animation").innerHTML = `
+            <div class="simple-loader"></div>
+        `;
+    }
+
+
+    // ==============================
+    // SHOW LOADER
+    // ==============================
+
+    function showLoader() {
+        overlay.classList.add("show");
+    }
+
+
+    // ==============================
+    // HIDE LOADER
+    // ==============================
+
+    function hideLoader() {
+        overlay.classList.remove("show");
+    }
+
+
+    // ==============================
+    // LINK CLICK
+    // ==============================
 
     document.addEventListener("click", (e) => {
 
@@ -20,11 +68,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!link) return;
 
-        // Ignore Django Unfold theme switch
-        if (link.matches('a[x-on\\:click^="switchTheme"]')) {
-            return;
-        }
 
+        // Ignore theme switch
         const xClick = link.getAttribute("x-on:click") || "";
 
         if (
@@ -34,58 +79,69 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Ignore special clicks
+
+        // Ignore special links
         if (
             link.target === "_blank" ||
             link.hasAttribute("download") ||
             link.href.startsWith("#") ||
-            e.ctrlKey ||
-            e.metaKey ||
-            e.shiftKey
+            link.href.startsWith("javascript:")
         ) {
             return;
         }
+
+
+        // Ignore Ctrl / CMD / Shift clicks
+        if (
+            e.ctrlKey ||
+            e.metaKey ||
+            e.shiftKey ||
+            e.altKey
+        ) {
+            return;
+        }
+
 
         // Ignore external links
         if (link.origin !== window.location.origin) {
             return;
         }
 
-        // Ignore same page
-        if (link.href === window.location.href) {
+
+        // Ignore current page
+        if (
+            link.pathname === window.location.pathname &&
+            link.search === window.location.search
+        ) {
             return;
         }
 
-        // Prevent double clicking
-        if (navigating) {
-            e.preventDefault();
-            return;
-        }
 
-        navigating = true;
+        console.log("PAGE LOADER: clicked", link.href);
 
-        // Stop normal navigation temporarily
-        e.preventDefault();
+        showLoader();
 
-        // Show loader
-        overlay.classList.add("show");
+        // DO NOT preventDefault.
+        // Let Django navigation happen normally.
 
-        // Give browser time to actually render loader
-        setTimeout(() => {
-            window.location.href = link.href;
-        }, 120);
     });
 
 
-    // Show loader when submitting forms
+    // ==============================
+    // FORM SUBMIT
+    // ==============================
+
     document.addEventListener("submit", () => {
-        overlay.classList.add("show");
+        showLoader();
     });
 
 
-    // Hide loader when page is restored
+    // ==============================
+    // PAGE LOADED
+    // ==============================
+
     window.addEventListener("pageshow", () => {
-        overlay.classList.remove("show");
-        navigating = false;
+        hideLoader();
     });
+
 });
