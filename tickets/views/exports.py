@@ -40,6 +40,11 @@ def get_export_tickets(request):
     end = request.GET.get("end", "").strip()
     department = request.GET.get("department", "").strip()
     outlet = request.GET.get("outlet", "").strip()
+    status = request.GET.get("status", "").strip()
+
+    # ========================================================
+    # DATE FILTER
+    # ========================================================
 
     if start and end:
         tickets = tickets.filter(
@@ -56,14 +61,31 @@ def get_export_tickets(request):
             created_at__date__lte=end
         )
 
+    # ========================================================
+    # DEPARTMENT FILTER
+    # ========================================================
+
     if department:
         tickets = tickets.filter(
             department__name=department
         )
 
+    # ========================================================
+    # OUTLET FILTER
+    # ========================================================
+
     if outlet:
         tickets = tickets.filter(
             outlet_id=outlet
+        )
+
+    # ========================================================
+    # STATUS FILTER
+    # ========================================================
+
+    if status:
+        tickets = tickets.filter(
+            status=status
         )
 
     return tickets

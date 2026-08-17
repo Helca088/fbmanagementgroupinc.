@@ -34,8 +34,13 @@ def get_filtered_tickets(request):
     end = request.GET.get("end", "").strip()
     department = request.GET.get("department", "").strip()
     outlet = request.GET.get("outlet", "").strip()
+    concern = request.GET.get("concern", "").strip()
+    status = request.GET.get("status", "").strip()
 
+    # ========================================================
     # DATE
+    # ========================================================
+
     if start and end:
 
         tickets = tickets.filter(
@@ -54,18 +59,44 @@ def get_filtered_tickets(request):
             created_at__date__lte=end
         )
 
+    # ========================================================
     # DEPARTMENT
+    # ========================================================
+
     if department:
 
         tickets = tickets.filter(
             department__name=department
         )
 
+    # ========================================================
     # OUTLET
+    # ========================================================
+
     if outlet:
 
         tickets = tickets.filter(
             outlet_id=outlet
+        )
+
+    # ========================================================
+    # CONCERN TYPE
+    # ========================================================
+
+    if concern:
+
+        tickets = tickets.filter(
+            concern_type_id=concern
+        )
+
+    # ========================================================
+    # STATUS
+    # ========================================================
+
+    if status:
+
+        tickets = tickets.filter(
+            status=status
         )
 
     return tickets
@@ -88,20 +119,27 @@ def report_common_context(request):
         "context_concerns":
             ConcernType.objects.all().order_by("name"),
 
+        # ----------------------------------------------------
+        # SELECTED FILTERS
+        # ----------------------------------------------------
+
         "selected_start":
-            request.GET.get("start", ""),
+            request.GET.get("start", "").strip(),
 
         "selected_end":
-            request.GET.get("end", ""),
+            request.GET.get("end", "").strip(),
 
         "selected_department":
-            request.GET.get("department", ""),
+            request.GET.get("department", "").strip(),
 
         "selected_outlet":
-            request.GET.get("outlet", ""),
+            request.GET.get("outlet", "").strip(),
 
         "selected_concern":
-            request.GET.get("concern", ""),
+            request.GET.get("concern", "").strip(),
+
+        "selected_status":
+            request.GET.get("status", "").strip(),
     }
 
 
