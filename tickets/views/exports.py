@@ -274,6 +274,24 @@ def export_tickets_pdf(request):
     styles = getSampleStyleSheet()
 
     # ============================================================
+    # FILTER VALUES
+    # ============================================================
+
+    status = request.GET.get("status", "").strip()
+
+    status_titles = {
+        "pending": "Pending",
+        "progress": "In Progress",
+        "resolved": "Resolved",
+        "cancelled": "Cancelled",
+    }
+
+    selected_status = status_titles.get(
+        status,
+        ""
+    )
+
+    # ============================================================
     # STYLES
     # ============================================================
 
@@ -285,8 +303,6 @@ def export_tickets_pdf(request):
         spaceAfter=15,
     )
 
-    # Message style
-    # This allows long messages to wrap inside the table cell
     message_style = ParagraphStyle(
         "MessageStyle",
         parent=styles["Normal"],
@@ -295,15 +311,36 @@ def export_tickets_pdf(request):
         wordWrap="CJK",
     )
 
+    status_style = ParagraphStyle(
+        "StatusStyle",
+        parent=styles["Normal"],
+        fontSize=8,
+        leading=10,
+        alignment=TA_CENTER,
+    )
+
     elements = []
 
     # ============================================================
     # TITLE
     # ============================================================
 
+    if selected_status:
+
+        report_title = (
+            f"FB Management — "
+            f"{selected_status} Ticket Report"
+        )
+
+    else:
+
+        report_title = (
+            "FB Management — Ticket Report"
+        )
+
     elements.append(
         Paragraph(
-            "FB Management — Ticket Report",
+            report_title,
             title_style
         )
     )
@@ -321,12 +358,19 @@ def export_tickets_pdf(request):
         "Created",
         "Department",
         "Concern Type",
+        "Status",
         "Message",
     ]]
 
     for ticket in tickets.order_by("-created_at"):
 
+        ticket_status = status_titles.get(
+            ticket.status,
+            str(ticket.status).title()
+        )
+
         data.append([
+
             ticket.outlet.name
             if ticket.outlet else "",
 
@@ -341,9 +385,11 @@ def export_tickets_pdf(request):
             ticket.concern_type.name
             if ticket.concern_type else "",
 
-            # IMPORTANT:
-            # Use Paragraph here so long messages wrap
-            # instead of overflowing outside the table.
+            Paragraph(
+                ticket_status,
+                status_style
+            ),
+
             Paragraph(
                 str(ticket.message or ""),
                 message_style
@@ -358,11 +404,12 @@ def export_tickets_pdf(request):
         data,
         repeatRows=1,
         colWidths=[
-            100,  # Outlet
-            100,  # Created
-            100,  # Department
-            130,  # Concern Type
-            300,  # Message
+            90,   # Outlet
+            95,   # Created
+            95,   # Department
+            120,  # Concern Type
+            80,   # Status
+            250,  # Message
         ]
     )
 
@@ -373,7 +420,10 @@ def export_tickets_pdf(request):
     table.setStyle(
         TableStyle([
 
-            # Header background
+            # ----------------------------------------------------
+            # HEADER
+            # ----------------------------------------------------
+
             (
                 "BACKGROUND",
                 (0, 0),
@@ -381,7 +431,6 @@ def export_tickets_pdf(request):
                 colors.HexColor("#2563EB")
             ),
 
-            # Header text
             (
                 "TEXTCOLOR",
                 (0, 0),
@@ -389,7 +438,6 @@ def export_tickets_pdf(request):
                 colors.white
             ),
 
-            # Header font
             (
                 "FONTNAME",
                 (0, 0),
@@ -397,7 +445,10 @@ def export_tickets_pdf(request):
                 "Helvetica-Bold"
             ),
 
-            # Grid
+            # ----------------------------------------------------
+            # GRID
+            # ----------------------------------------------------
+
             (
                 "GRID",
                 (0, 0),
@@ -406,7 +457,10 @@ def export_tickets_pdf(request):
                 colors.HexColor("#E5E7EB")
             ),
 
-            # Vertical alignment
+            # ----------------------------------------------------
+            # ALIGNMENT
+            # ----------------------------------------------------
+
             (
                 "VALIGN",
                 (0, 0),
@@ -414,7 +468,17 @@ def export_tickets_pdf(request):
                 "TOP"
             ),
 
-            # Font size
+            (
+                "ALIGN",
+                (4, 1),
+                (4, -1),
+                "CENTER"
+            ),
+
+            # ----------------------------------------------------
+            # FONT
+            # ----------------------------------------------------
+
             (
                 "FONTSIZE",
                 (0, 0),
@@ -422,7 +486,10 @@ def export_tickets_pdf(request):
                 8
             ),
 
-            # Cell padding
+            # ----------------------------------------------------
+            # PADDING
+            # ----------------------------------------------------
+
             (
                 "LEFTPADDING",
                 (0, 0),
@@ -451,7 +518,10 @@ def export_tickets_pdf(request):
                 5
             ),
 
-            # Alternating row colors
+            # ----------------------------------------------------
+            # ALTERNATING ROWS
+            # ----------------------------------------------------
+
             (
                 "ROWBACKGROUNDS",
                 (0, 1),
@@ -483,8 +553,18 @@ def export_tickets_pdf(request):
         content_type="application/pdf"
     )
 
+    if selected_status:
+
+        filename = (
+            f"tickets_{status}.pdf"
+        )
+
+    else:
+
+        filename = "tickets_report.pdf"
+
     response["Content-Disposition"] = (
-        'attachment; filename="tickets_report.pdf"'
+        f'attachment; filename="{filename}"'
     )
 
     return response

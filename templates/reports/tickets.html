@@ -296,16 +296,24 @@
 
                     <!-- EXPORT PDF -->
 
-                    <a href="{% url 'export_tickets_pdf' %}?start={{ selected_start }}&end={{ selected_end }}&department={{ selected_department }}&outlet={{ selected_outlet }}&concern={{ selected_concern }}&status={{ selected_status }}">
+                    <!-- EXPORT PDF -->
+
+                    <a
+                        href="{% url 'export_tickets_pdf' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}&status={{ request.GET.status|urlencode }}"
+                        class="btn btn-danger"
+                    >
                         Export PDF
                     </a>
+
 
                     <!-- EXPORT EXCEL -->
 
-                    <a href="{% url 'export_tickets_excel' %}?start={{ selected_start }}&end={{ selected_end }}&department={{ selected_department }}&outlet={{ selected_outlet }}&concern={{ selected_concern }}&status={{ selected_status }}">
-                        Export PDF
+                    <a
+                        href="{% url 'export_tickets_excel' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}&status={{ request.GET.status|urlencode }}"
+                        class="btn btn-success"
+                    >
+                        Export Excel
                     </a>
-
                 </div>
 
 
