@@ -196,35 +196,6 @@
 
                 </div>
 
-                <!-- STATUS -->
-                <div class="filter-field">
-                <label for="status">STATUS</label>
-
-                <select name="status" id="status">
-                    <option value="">All Statuses</option>
-
-                    <option value="pending"
-                        {% if request.GET.status == "pending" %}selected{% endif %}>
-                        Pending
-                    </option>
-
-                    <option value="progress"
-                        {% if request.GET.status == "progress" %}selected{% endif %}>
-                        In Progress
-                    </option>
-
-                    <option value="resolved"
-                        {% if request.GET.status == "resolved" %}selected{% endif %}>
-                        Resolved
-                    </option>
-
-                    <option value="cancelled"
-                        {% if request.GET.status == "cancelled" %}selected{% endif %}>
-                        Cancelled
-                    </option>
-                </select>
-            </div>
-
 
                 <!-- =============================================
                      START DATE
@@ -266,6 +237,35 @@
 
                 </div>
 
+                <!-- STATUS -->
+                <div class="filter-field">
+                <label for="status">STATUS</label>
+
+                <select name="status" id="status">
+                    <option value="">All Statuses</option>
+
+                    <option value="pending"
+                        {% if request.GET.status == "pending" %}selected{% endif %}>
+                        Pending
+                    </option>
+
+                    <option value="progress"
+                        {% if request.GET.status == "progress" %}selected{% endif %}>
+                        In Progress
+                    </option>
+
+                    <option value="resolved"
+                        {% if request.GET.status == "resolved" %}selected{% endif %}>
+                        Resolved
+                    </option>
+
+                    <option value="cancelled"
+                        {% if request.GET.status == "cancelled" %}selected{% endif %}>
+                        Cancelled
+                    </option>
+                </select>
+            </div>
+
 
 
                 <!-- =============================================
@@ -296,21 +296,14 @@
 
                     <!-- EXPORT PDF -->
 
-                    <a
-                        href="{% url 'export_tickets_pdf' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}"
-                        class="btn btn-danger"
-                    >
+                    <a href="{% url 'export_pdf' %}?start={{ selected_start }}&end={{ selected_end }}&department={{ selected_department }}&outlet={{ selected_outlet }}&concern={{ selected_concern }}&status={{ selected_status }}">
                         Export PDF
                     </a>
 
-
                     <!-- EXPORT EXCEL -->
 
-                    <a
-                        href="{% url 'export_tickets_excel' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}"
-                        class="btn btn-success"
-                    >
-                        Export Excel
+                    <a href="{% url 'export_pdf' %}?start={{ selected_start }}&end={{ selected_end }}&department={{ selected_department }}&outlet={{ selected_outlet }}&concern={{ selected_concern }}&status={{ selected_status }}">
+                        Export EXCEL
                     </a>
 
                 </div>
