@@ -1,41 +1,86 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Send Ticket</title>
-    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="manifest" href="{% static 'employee-manifest.json' %}">
-    <meta name="theme-color" content="#008000">
 
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Ticket Logs</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/style.css' %}"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="manifest"
+        href="{% static 'employee-manifest.json' %}"
+    >
+
+    <meta
+        name="theme-color"
+        content="#008000"
+    >
 
 </head>
 
+
 <body>
-<!-- TOP HEADER -->
+
+
+<!-- =========================================================
+     HEADER
+     ========================================================= -->
+
 <header class="topbar">
 
     <div class="logo">
         🍜 <span>MSR FORMS</span>
     </div>
 
+
     <div class="nav-center">
-        <a href="{% url 'home' %}"
-           class="nav-btn {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+
+        <a
+            href="{% url 'home' %}"
+            class="nav-btn {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+        >
             📋 Current Tickets
         </a>
 
-        <a href="{% url 'store_logs' %}"
-           class="nav-btn {% if request.resolver_match.url_name == 'store_logs' %}active{% endif %}">
+
+        <a
+            href="{% url 'store_logs' %}"
+            class="nav-btn {% if request.resolver_match.url_name == 'store_logs' %}active{% endif %}"
+        >
             📜 Ticket Logs
         </a>
+
     </div>
+
 
     <div class="user-area">
 
@@ -43,294 +88,1486 @@
             Welcome, {{ request.user.username }}
         </span>
 
-        <form method="post" action="{% url 'logout' %}" class="logout-form">
+
+        <form
+            method="post"
+            action="{% url 'logout' %}"
+            class="logout-form"
+        >
+
             {% csrf_token %}
-            <button class="logout-btn">Logout</button>
+
+            <button
+                type="submit"
+                class="logout-btn"
+            >
+                Logout
+            </button>
+
         </form>
 
     </div>
 
 </header>
-<div class="container1">
 
-    <div class="ticket-wrapper">
-    <div class="search-container">
-    <form method="GET" class="search-form">
+
+
+<!-- =========================================================
+     PAGE
+     ========================================================= -->
+
+<div class="logs-container">
+
+
+    <!-- =====================================================
+         TOOLBAR
+         ===================================================== -->
+
+   <div class="logs-toolbar">
+
+    <!-- SEARCH -->
+    <form
+        method="GET"
+        action="{% url 'store_logs' %}"
+        class="logs-search"
+        id="searchForm"
+    >
+
+        <button
+            type="submit"
+            class="search-icon"
+            aria-label="Search"
+        >
+            🔍
+        </button>
+
         <input
             type="text"
             name="search"
-            placeholder="Search ..."
-            value="{{ search }}"
+            id="searchInput"
+            placeholder="Search tickets, outlet, concern..."
+            value="{{ search|default:'' }}"
+            autocomplete="off"
         >
-        <button type="submit">Search</button>
+
+        {% if search %}
+            <a
+                href="{% url 'store_logs' %}"
+                class="clear-search"
+                aria-label="Clear search"
+            >
+                ×
+            </a>
+        {% endif %}
+
     </form>
+
+
+    <!-- FILTER BUTTON -->
+    <button
+        type="button"
+        class="filter-button"
+        onclick="toggleFilters()"
+    >
+        <span>Filters</span>
+        <span class="filter-icon">☰</span>
+    </button>
+
 </div>
-        <h2 class="ticket-title">
-            Ticket Logs
-        </h2>
 
-        <div class="ticket-list">
 
-            {% for ticket in tickets %}
 
-            <div class="ticket-card department-{{ ticket.department.name|slugify }}" data-ticket-id="{{ ticket.id }}">
+    <!-- =====================================================
+         FILTER PANEL
+         ===================================================== -->
 
-            <div class="ticket-header">
+            <div
+            id="filterPanel"
+            class="filter-panel"
+        >
 
-            <span class="dept-badge department-badge-{{ ticket.department.name|slugify }}">
-                {{ ticket.department.name }}
-            </span>
+            <!-- CONCERN TYPE -->
 
-            <span class="ticket-number">
-                #{{ ticket.outlet_ticket_no }}
-            </span>
+            <div class="filter-item">
 
-            </div>
-                <h3>{{ ticket.outlet }}</h3>
+                <label for="concernFilter">
+                    Concern Type
+                </label>
 
-                <div class="message-wrapper">
+                <select id="concernFilter">
 
-                <span class="concern-badge">
-                    {{ ticket.concern_type }}
-                </span>
+                    <option value="">
+                        All
+                    </option>
 
-                <div class="message-box">
-                <div class="message-text">
-                    {{ ticket.message }}
-                </div>
-            </div>
-
-            </div>
-
-                <select class="ticket-select status" data-current-status="{{ ticket.status }}"
-                onchange="openReasonModal('{{ ticket.id }}', this)">
-    
-                <option value="pending" {% if ticket.status == "pending" %}selected{% endif %}>
-                Pending
-                </option>
-
-                <option value="progress" disabled
-                {% if ticket.status == "progress" %}selected{% endif %}>
-                In progress
-                </option>
-                
-
-                <option value="resolved" {% if ticket.status == "resolved" %}selected{% endif %}>
-                Resolved
-                </option>
-
-                <option value="cancelled"
-                {% if ticket.status == "cancelled" %}selected{% endif %}>
-                Cancelled
-                </option>
                 </select>
-                <br>
-   
 
-    
-                <select class="ticket-select priority"
-                        onchange="updatePriority('{{ ticket.id}}', this.value)">
+            </div>
 
-                    <option value="Low"
-                        {% if ticket.priority == "Low" %}selected{% endif %}>
+
+            <!-- PRIORITY -->
+
+            <div class="filter-item">
+
+                <label for="priorityFilter">
+                    Priority
+                </label>
+
+                <select id="priorityFilter">
+
+                    <option value="">
+                        All
+                    </option>
+
+                    <option value="Low">
                         Low
                     </option>
 
-                    <option value="Medium"
-                        {% if ticket.priority == "Medium" %}selected{% endif %}>
+                    <option value="Medium">
                         In need
                     </option>
 
-                    <option value="High"
-                        {% if ticket.priority == "High" %}selected{% endif %}>
+                    <option value="High">
                         Urgent
                     </option>
+
                 </select>
-                <br>
-                
-                <div class="schedule">
-                <strong>Scheduled Date:</strong>
-                <span class="scheduled-date">
-                {{ ticket.scheduled_date}}
-                </span>
-                <br>
-
-                <strong>Scheduled Time:</strong>
-                <span class="scheduled-time">
-                {{ ticket.scheduled_time}}
-                </span>
-                </div>
-
-                <div class="admin-note">
-                <strong >Admin Notes:</strong>
-                <span class="admin-note-text">
-                {{ ticket.admin_note}}
-                </span>
-                </div>
-
-                <div class="assigned">
-                <strong>Assigned To:</strong>
-                <span class="assigned-to">
-
-                    {% if ticket.assigned_to %}
-                        {{ ticket.assigned_to.full_name }}
-                    {% endif %}
-
-                    {% for tech in ticket.additional_technicians.all %}
-                        {% if ticket.assigned_to or not forloop.first %}, {% endif %}
-                        {{ tech.full_name }}
-                    {% empty %}
-                        {% if not ticket.assigned_to %}
-                            -
-                        {% endif %}
-                    {% endfor %}
-
-                    </span>
-                </div>
-            
-                <strong>Age of concern:</strong>
-                <span>{{ ticket.ticket_age }}</span>
-
-                <p class="overdue-status"></p>
-
-                <div class="ticket-date">
-                    {{ ticket.created_at }}
-                </div>
-
-                <p>
-                <strong>Created by:</strong>
-                {% if ticket.created_by %}
-                    {{ ticket.created_by.username }}
-                    <span class="badge">
-                        {% if ticket.created_by.is_staff %}
-                            Admin
-                        {% else %}
-                            Employee
-                        {% endif %}
-                    </span>
-                        {% else %}
-                            Unknown
-                        {% endif %}
-                </p>
-
-                {% if ticket.attachment %}
-
-                <a 
-                    href="{{ ticket.attachment.url }}"
-                    class="download-btn"
-                >
-                    Download Attachment
-                </a>
-
-                {% endif %}
 
             </div>
 
-            {% endfor %}
+
+            <!-- START DATE -->
+
+            <div class="filter-item">
+
+                <label for="startDateFilter">
+                    Start Date
+                </label>
+
+                <input
+                    type="date"
+                    id="startDateFilter"
+                    value="{{ start_date|default:'' }}"
+                >
+
+            </div>
+
+
+            <!-- END DATE -->
+
+            <div class="filter-item">
+
+                <label for="endDateFilter">
+                    End Date
+                </label>
+
+                <input
+                    type="date"
+                    id="endDateFilter"
+                    value="{{ end_date|default:'' }}"
+                >
+
+            </div>
+
+
+            <!-- APPLY -->
+
+            <button
+                type="button"
+                onclick="applyFilters()"
+            >
+                Apply
+            </button>
+
+
+            <!-- CLEAR -->
+
+            <button
+                type="button"
+                onclick="clearFilters()"
+            >
+                Clear
+            </button>
 
         </div>
-<div class="pagination">
 
-    {% if tickets.has_previous %}
-        <a href="?page=1{% if search %}&search={{ search }}{% endif %}">
-            First
-        </a>
 
-        <a href="?page={{ tickets.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">
-            Previous
-        </a>
-    {% endif %}
 
-    <span>
-        Page {{ tickets.number }} of {{ tickets.paginator.num_pages }}
-    </span>
+    <!-- =====================================================
+         TABLE
+         ===================================================== -->
 
-    {% if tickets.has_next %}
-        <a href="?page={{ tickets.next_page_number }}{% if search %}&search={{ search }}{% endif %}">
-            Next
-        </a>
+    <div class="logs-table-wrapper">
 
-        <a href="?page={{ tickets.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}">
-            Last
-        </a>
-    {% endif %}
+        <table class="logs-table">
 
-</div>
+            <thead>
+
+                <tr>
+
+                    <th>
+                        #
+                    </th>
+
+                    <th>
+                        Outlet
+                    </th>
+
+                    <th>
+                        Department
+                    </th>
+
+                    <th>
+                        Concern type
+                    </th>
+                    <th>
+                        Created Date
+                    </th>
+
+                    <th>
+                        Resolve Date
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                        Priority
+                    </th>
+
+                    <th>
+                        Assigned to
+                    </th>
+
+                    <th>
+                        Additional Technicians
+                    </th>
+
+                    
+
+                    <th>
+                        Overdue
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+
+            {% for ticket in tickets %}
+
+                <tr
+                    class="ticket-row"
+
+                    data-status="{{ ticket.status|lower }}"
+
+                    data-priority="{{ ticket.priority|escape }}"
+
+                    data-ticket="{{ ticket.outlet_ticket_no|escape }}"
+
+                    data-outlet="{{ ticket.outlet|escape }}"
+
+                    data-department="{{ ticket.department.name|escape }}"
+
+                    data-concern="{{ ticket.concern_type|escape }}"
+
+                    data-status-text="{{ ticket.status|escape }}"
+
+                    data-priority-text="{{ ticket.priority|escape }}"
+
+                    data-created="{{ ticket.created_at|date:'M. d, Y, g:i a' }}"
+
+                    data-created-date="{{ ticket.created_at|date:'Y-m-d' }}"    
+
+                    data-resolve_at="{% if ticket.resolve_at %}{{ ticket.resolve_at|date:'M. d, Y, g:i a' }}{% else %}-{% endif %}"
+
+                    data-scheduled-date="{% if ticket.scheduled_date %}{{ ticket.scheduled_date|escape }}{% else %}-{% endif %}"
+
+                    data-scheduled-time="{% if ticket.scheduled_time %}{{ ticket.scheduled_time|escape }}{% else %}-{% endif %}"
+
+                    data-assigned="{% if ticket.assigned_to %}{{ ticket.assigned_to.full_name|escape }}{% else %}-{% endif %}"
+
+                    data-technicians="{% for tech in ticket.additional_technicians.all %}{% if not forloop.first %}, {% endif %}{{ tech.full_name|escape }}{% empty %}-{% endfor %}"
+
+                    data-message="{{ ticket.message|escape }}"
+
+                    data-admin-note="{% if ticket.admin_note %}{{ ticket.admin_note|escape }}{% else %}-{% endif %}"
+
+                    data-created-by="{% if ticket.created_by %}{{ ticket.created_by.username|escape }}{% else %}Unknown{% endif %}"
+
+                    data-age="{{ ticket.ticket_age|escape }}"
+
+                    {% if ticket.attachment %}
+                        data-attachment="{{ ticket.attachment.url }}"
+                    {% endif %}
+
+                    onclick="openTicketModal(this)"
+                >
+
+
+                    <!-- TICKET NUMBER -->
+
+                    <td>
+
+                        <span class="ticket-id">
+                            #{{ ticket.outlet_ticket_no }}
+                        </span>
+
+                    </td>
+
+
+
+                    <!-- OUTLET -->
+
+                    <td>
+
+                        <strong class="outlet-name">
+                            {{ ticket.outlet }}
+                        </strong>
+
+                    </td>
+
+
+
+                    <!-- DEPARTMENT -->
+
+                    <td>
+
+                        <span class="department-badge">
+                            {{ ticket.department.name }}
+                        </span>
+
+                    </td>
+
+
+
+                    <!-- CONCERN -->
+
+                    <td>
+
+                        {{ ticket.concern_type }}
+
+                    </td>
+
+                    <td class="date-cell">
+
+                        {{ ticket.created_at|date:"M. d, Y, g:i a" }}
+
+                    </td>
+
+                    <td class="date-cell">
+
+                        {% if ticket.resolve_at %}
+
+                            {{ ticket.resolve_at|date:"M. d, Y, g:i a" }}
+
+                        {% else %}
+
+                            <span class="empty-value">
+                                -
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- STATUS -->
+
+                    <td>
+
+                        {% if ticket.status == "pending" %}
+
+                            <span class="status-badge status-pending">
+                                Pending
+                            </span>
+
+                        {% elif ticket.status == "progress" %}
+
+                            <span class="status-badge status-progress">
+                                In progress
+                            </span>
+
+                        {% elif ticket.status == "resolved" %}
+
+                            <span class="status-badge status-resolved">
+                                Resolved
+                            </span>
+
+                        {% elif ticket.status == "cancelled" %}
+
+                            <span class="status-badge status-cancelled">
+                                Cancelled
+                            </span>
+
+                        {% else %}
+
+                            <span class="status-badge">
+                                {{ ticket.status }}
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+
+                    <!-- PRIORITY -->
+
+                    <td>
+
+                        {% if ticket.priority == "High" %}
+
+                            <span class="priority-high">
+                                Urgent
+                            </span>
+
+                        {% elif ticket.priority == "Medium" %}
+
+                            <span class="priority-medium">
+                                Moderate
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+
+                    <!-- CREATED -->
+
+                    
+
+
+
+                    <!-- ASSIGNED -->
+
+                    <td>
+
+                        {% if ticket.assigned_to %}
+
+                            {{ ticket.assigned_to.full_name }}
+
+                        {% else %}
+
+                            <span class="empty-value">
+                                -
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+
+                    <!-- ADDITIONAL TECHNICIANS -->
+
+                    <td>
+
+                        {% for tech in ticket.additional_technicians.all %}
+
+                            {% if not forloop.first %}
+                                ,
+                            {% endif %}
+
+                            {{ tech.full_name }}
+
+                        {% empty %}
+
+                            <span class="empty-value">
+                                -
+                            </span>
+
+                        {% endfor %}
+
+                    </td>
+
+                    <!-- OVERDUE -->
+
+                    <td>
+
+                        {% if ticket.is_overdue %}
+
+                            <span class="overdue-badge overdue">
+                                ⚠ Overdue
+                            </span>
+
+                        {% else %}
+
+                            <span class="overdue-badge on-time">
+                                ✓ On time
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                </tr>
+
+
+            {% empty %}
+
+                <tr>
+
+                    <td
+                        colspan="11"
+                        class="empty-table"
+                    >
+                        No ticket logs found.
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+            </div>
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         PAGINATION
+         ===================================================== -->
+
+    <div class="logs-pagination">
+
+    <div class="pagination-info">
+
+        Page
+
+        <strong>
+            {{ tickets.number }}
+        </strong>
+
+        of
+
+        <strong>
+            {{ tickets.paginator.num_pages }}
+        </strong>
+
+        ·
+
+        {{ tickets.paginator.count }} tickets
+
+    </div>
+
+
+    <div class="pagination-buttons">
+
+        {% if tickets.has_previous %}
+
+            <a
+                href="?page=1{% if search %}&search={{ search|urlencode }}{% endif %}{% if start_date %}&start_date={{ start_date|urlencode }}{% endif %}{% if end_date %}&end_date={{ end_date|urlencode }}{% endif %}"
+            >
+                First
+            </a>
+
+
+            <a
+                href="?page={{ tickets.previous_page_number }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if start_date %}&start_date={{ start_date|urlencode }}{% endif %}{% if end_date %}&end_date={{ end_date|urlencode }}{% endif %}"
+            >
+                Previous
+            </a>
+
+        {% endif %}
+
+
+        {% if tickets.has_next %}
+
+            <a
+                href="?page={{ tickets.next_page_number }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if start_date %}&start_date={{ start_date|urlencode }}{% endif %}{% if end_date %}&end_date={{ end_date|urlencode }}{% endif %}"
+            >
+                Next
+            </a>
+
+
+            <a
+                href="?page={{ tickets.paginator.num_pages }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if start_date %}&start_date={{ start_date|urlencode }}{% endif %}{% if end_date %}&end_date={{ end_date|urlencode }}{% endif %}"
+            >
+                Last
+            </a>
+
+        {% endif %}
+
     </div>
 
 </div>
+
+
+
+<!-- =========================================================
+     TICKET DETAILS MODAL
+     ========================================================= -->
+
+<div
+    id="ticketModal"
+    class="ticket-modal"
+>
+
+
+    <!-- BACKDROP -->
+
+    <div
+        class="ticket-modal-overlay"
+        onclick="closeTicketModal()"
+    ></div>
+
+
+
+    <!-- MODAL -->
+
+    <div class="ticket-modal-content">
+
+
+        <!-- HEADER -->
+
+        <div class="ticket-modal-header">
+
+            <div>
+
+                <div
+                    id="modalTicketNumber"
+                    class="modal-ticket-number"
+                >
+                    Ticket
+                </div>
+
+                <div class="modal-ticket-title">
+                    Ticket Details
+                </div>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="closeTicketModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+
+        <!-- BODY -->
+
+        <div class="ticket-modal-body">
+
+
+            <!-- STATUS / PRIORITY -->
+
+            <div class="modal-status-row">
+
+                <span
+                    id="modalStatus"
+                    class="status-badge"
+                ></span>
+
+
+                <span
+                    id="modalPriority"
+                    class="modal-priority"
+                ></span>
+
+            </div>
+
+
+
+            <!-- BASIC INFORMATION -->
+
+            <div class="modal-section">
+
+                <h4>
+                    Ticket Information
+                </h4>
+
+
+                <div class="modal-grid">
+
+
+                    <div class="modal-field">
+
+                        <span class="modal-label">
+                            Outlet
+                        </span>
+
+                        <span
+                            id="modalOutlet"
+                            class="modal-value"
+                        ></span>
+
+                    </div>
+
+
+
+                    <div class="modal-field">
+
+                        <span class="modal-label">
+                            Department
+                        </span>
+
+                        <span
+                            id="modalDepartment"
+                            class="modal-value"
+                        ></span>
+
+                    </div>
+
+
+
+                    <div class="modal-field">
+
+                        <span class="modal-label">
+                            Concern Type
+                        </span>
+
+                        <span
+                            id="modalConcern"
+                            class="modal-value"
+                        ></span>
+
+                    </div>
+
+
+
+                    <div class="modal-field">
+
+                        <span class="modal-label">
+                            Created Date
+                        </span>
+
+                        <span
+                            id="modalCreated"
+                            class="modal-value"
+                        ></span>
+
+                    </div>
+
+
+
+                    <div class="modal-field">
+
+                        <span class="modal-label">
+                            Assigned To
+                        </span>
+
+                        <span
+                            id="modalAssigned"
+                            class="modal-value"
+                        ></span>
+
+                    </div>
+
+
+
+                    <div class="modal-field">
+
+                        <span class="modal-label">
+                            Resolve Date
+                        </span>
+
+                        <span
+                            id="modalResolve_at"
+                            class="modal-value"
+                        ></span>
+
+                    </div>
+
+
+
+                    <div class="modal-field">
+
+                        <span class="modal-label">
+                            Scheduled Date
+                        </span>
+
+                        <span
+                            id="modalScheduledDate"
+                            class="modal-value"
+                        ></span>
+
+                    </div>
+
+
+
+                    <div class="modal-field">
+
+                        <span class="modal-label">
+                            Scheduled Time
+                        </span>
+
+                        <span
+                            id="modalScheduledTime"
+                            class="modal-value"
+                        ></span>
+
+                    </div>
+
+
+
+                    <div class="modal-field">
+
+                        <span class="modal-label">
+                            Created By
+                        </span>
+
+                        <span
+                            id="modalCreatedBy"
+                            class="modal-value"
+                        ></span>
+
+                    </div>
+
+
+
+                    <div class="modal-field">
+
+                        <span class="modal-label">
+                            Age of Concern
+                        </span>
+
+                        <span
+                            id="modalAge"
+                            class="modal-value"
+                        ></span>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ADDITIONAL TECHNICIANS -->
+
+            <div class="modal-section">
+
+                <h4>
+                    Additional Technicians
+                </h4>
+
+                <div
+                    id="modalTechnicians"
+                    class="modal-text-box"
+                ></div>
+
+            </div>
+
+
+
+            <!-- MESSAGE -->
+
+            <div class="modal-section">
+
+                <h4>
+                    Concern / Message
+                </h4>
+
+                <div
+                    id="modalMessage"
+                    class="modal-text-box"
+                ></div>
+
+            </div>
+
+
+
+            <!-- ADMIN NOTE -->
+
+            <div class="modal-section">
+
+                <h4>
+                    Admin Notes
+                </h4>
+
+                <div
+                    id="modalAdminNote"
+                    class="modal-text-box"
+                ></div>
+
+            </div>
+
+
+
+            <!-- ATTACHMENT -->
+
+            <div
+                id="modalAttachmentSection"
+                class="modal-section"
+                style="display:none;"
+            >
+
+                <h4>
+                    Attachment
+                </h4>
+
+
+                <a
+                    id="modalAttachment"
+                    class="modal-attachment"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    📎 View Attachment
+                </a>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
 </div>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+
 <script>
 
 
-function openReasonModal(ticketId, dropdown){
+/* =========================================================
+   FILTER PANEL TOGGLE
+   ========================================================= */
 
-    selectedTicketId = ticketId;
-    selectedDropdown = dropdown;
+function toggleFilters() {
 
-    selectedStatus = dropdown.value;
+    const panel = document.getElementById("filterPanel");
 
-    previousStatus =
-        dropdown.getAttribute("data-current-status");
-
-    document.getElementById("statusReason").value = "";
-
-    document.getElementById("reasonModal").style.display = "block";
-}
-
-function closeReasonModal() {
-    document.getElementById("reasonModal").style.display = "none";
-
-    if (selectedDropdown) {
-        selectedDropdown.value = previousStatus;
-    }
-}
-
-function submitStatusReason(){
-
-    const reason =
-        document.getElementById("statusReason").value.trim();
-
-    if (!reason) {
-        alert("Please enter a reason");
+    if (!panel) {
+        console.error("filterPanel not found");
         return;
     }
 
-    updateStatus(
-        selectedTicketId,
-        selectedStatus,
-        reason
+    panel.classList.toggle("show");
+}
+
+
+/* =========================================================
+   LOAD CONCERN TYPES
+   ========================================================= */
+
+function loadConcernTypes() {
+
+    const select = document.getElementById("concernFilter");
+
+    if (!select) {
+        return;
+    }
+
+    const rows = document.querySelectorAll(".ticket-row");
+
+    const concernTypes = new Set();
+
+    rows.forEach(function(row) {
+
+        const concern = row.dataset.concern || "";
+
+        if (concern.trim() !== "") {
+            concernTypes.add(concern.trim());
+        }
+
+    });
+
+    Array.from(concernTypes)
+        .sort()
+        .forEach(function(concern) {
+
+            const option = document.createElement("option");
+
+            option.value = concern;
+            option.textContent = concern;
+
+            select.appendChild(option);
+
+        });
+}
+
+
+/* =========================================================
+   APPLY FILTERS
+   ========================================================= */
+
+function applyFilters() {
+
+    const concern =
+        document.getElementById("concernFilter").value;
+
+    const priority =
+        document.getElementById("priorityFilter").value;
+
+    const startDate =
+        document.getElementById("startDateFilter").value;
+
+    const endDate =
+        document.getElementById("endDateFilter").value;
+
+
+    /* Validate date range */
+
+    if (startDate && endDate && startDate > endDate) {
+
+        alert("Start Date cannot be later than End Date.");
+
+        return;
+    }
+
+
+    /* Build URL */
+
+    const params = new URLSearchParams();
+
+
+    const searchInput =
+        document.getElementById("searchInput");
+
+    if (searchInput && searchInput.value.trim()) {
+
+        params.set(
+            "search",
+            searchInput.value.trim()
+        );
+
+    }
+
+
+    if (concern) {
+
+        params.set(
+            "concern",
+            concern
+        );
+
+    }
+
+
+    if (priority) {
+
+        params.set(
+            "priority",
+            priority
+        );
+
+    }
+
+
+    if (startDate) {
+
+        params.set(
+            "start_date",
+            startDate
+        );
+
+    }
+
+
+    if (endDate) {
+
+        params.set(
+            "end_date",
+            endDate
+        );
+
+    }
+
+
+    /* Reset pagination */
+
+    params.delete("page");
+
+
+    /* Reload page */
+
+    window.location.href =
+        "{% url 'store_logs' %}?" +
+        params.toString();
+
+}
+
+
+/* =========================================================
+   CLEAR FILTERS
+   ========================================================= */
+
+function clearFilters() {
+
+    const searchInput =
+        document.getElementById("searchInput");
+
+    if (searchInput) {
+        searchInput.value = "";
+    }
+
+
+    document.getElementById(
+        "concernFilter"
+    ).value = "";
+
+
+    document.getElementById(
+        "priorityFilter"
+    ).value = "";
+
+
+    document.getElementById(
+        "startDateFilter"
+    ).value = "";
+
+
+    document.getElementById(
+        "endDateFilter"
+    ).value = "";
+
+
+    window.location.href =
+        "{% url 'store_logs' %}";
+
+}
+
+
+/* =========================================================
+   INITIALIZE
+   ========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        loadConcernTypes();
+
+    }
+);
+
+
+
+/* =========================================================
+   TICKET DETAILS MODAL
+   ========================================================= */
+
+function openTicketModal(row) {
+
+
+    document.getElementById(
+        "modalTicketNumber"
+    ).textContent =
+        "#" + row.dataset.ticket;
+
+
+    document.getElementById(
+        "modalOutlet"
+    ).textContent =
+        row.dataset.outlet;
+
+
+    document.getElementById(
+        "modalDepartment"
+    ).textContent =
+        row.dataset.department;
+
+
+    document.getElementById(
+        "modalConcern"
+    ).textContent =
+        row.dataset.concern;
+
+
+    document.getElementById(
+        "modalCreated"
+    ).textContent =
+        row.dataset.created;
+
+
+    document.getElementById(
+        "modalAssigned"
+    ).textContent =
+        row.dataset.assigned;
+
+
+    document.getElementById(
+        "modalTechnicians"
+    ).textContent =
+        row.dataset.technicians;
+
+
+    document.getElementById(
+        "modalResolve_at"
+    ).textContent =
+        row.dataset.resolve_at;
+
+
+    document.getElementById(
+        "modalScheduledDate"
+    ).textContent =
+        row.dataset.scheduledDate;
+
+
+    document.getElementById(
+        "modalScheduledTime"
+    ).textContent =
+        row.dataset.scheduledTime;
+
+
+    document.getElementById(
+        "modalCreatedBy"
+    ).textContent =
+        row.dataset.createdBy;
+
+
+    document.getElementById(
+        "modalAge"
+    ).textContent =
+        row.dataset.age;
+
+
+    document.getElementById(
+        "modalMessage"
+    ).textContent =
+        row.dataset.message;
+
+
+    document.getElementById(
+        "modalAdminNote"
+    ).textContent =
+        row.dataset.adminNote;
+
+
+
+    /* =====================================================
+       STATUS
+       ===================================================== */
+
+    const status =
+        document.getElementById(
+            "modalStatus"
+        );
+
+
+    status.textContent =
+        formatStatus(
+            row.dataset.statusText
+        );
+
+
+    status.className =
+        "status-badge status-" +
+        row.dataset.status;
+
+
+
+    /* =====================================================
+       PRIORITY
+       ===================================================== */
+
+    const priority =
+        document.getElementById(
+            "modalPriority"
+        );
+
+
+    priority.textContent =
+        row.dataset.priorityText;
+
+
+    priority.className =
+        "modal-priority priority-" +
+        row.dataset.priority.toLowerCase();
+
+
+
+    /* =====================================================
+       ATTACHMENT
+       ===================================================== */
+
+    const attachmentSection =
+        document.getElementById(
+            "modalAttachmentSection"
+        );
+
+
+    const attachment =
+        document.getElementById(
+            "modalAttachment"
+        );
+
+
+    if (row.dataset.attachment) {
+
+        attachment.href =
+            row.dataset.attachment;
+
+        attachmentSection.style.display =
+            "block";
+
+    } else {
+
+        attachment.href = "#";
+
+        attachmentSection.style.display =
+            "none";
+
+    }
+
+
+
+    /* =====================================================
+       SHOW MODAL
+       ===================================================== */
+
+    document
+        .getElementById("ticketModal")
+        .classList.add("show");
+
+
+    document.body.classList.add(
+        "modal-open"
     );
 
-    document.getElementById("reasonModal").style.display = "none";
 }
+
+
+
+/* =========================================================
+   CLOSE MODAL
+   ========================================================= */
+
+function closeTicketModal() {
+
+    document
+        .getElementById("ticketModal")
+        .classList.remove("show");
+
+
+    document.body.classList.remove(
+        "modal-open"
+    );
+
+}
+
+
+
+/* =========================================================
+   FORMAT STATUS
+   ========================================================= */
+
+function formatStatus(status) {
+
+    if (!status) {
+        return "";
+    }
+
+
+    if (status === "progress") {
+        return "In progress";
+    }
+
+
+    return status.charAt(0).toUpperCase()
+        + status.slice(1);
+
+}
+
+
+
+/* =========================================================
+   ESC KEY
+   ========================================================= */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key === "Escape") {
+
+            closeTicketModal();
+
+        }
+
+    }
+);
+
 </script>
 
-<div id="reasonModal" class="modal">
 
-    <div class="modal-content">
 
-        <h3>Status Update</h3>
+<!-- =========================================================
+     SEARCH ICON STYLE
+     ========================================================= -->
 
-        <textarea
-            id="statusReason"
-            placeholder="Enter reason..."
-            rows="4">
-        </textarea>
+<style>
 
-        <div class="modal-buttons">
-            <button onclick="submitStatusReason()">
-                Submit
-            </button>
+.logs-search .search-icon {
 
-            <button onclick="closeReasonModal()">
-                Cancel
-            </button>
-        </div>
-    </div>
-</div>
+    border: none;
+
+    background: transparent;
+
+    padding: 0;
+
+    margin: 0;
+
+    cursor: pointer;
+
+    font-size: 18px;
+
+    line-height: 1;
+
+    appearance: none;
+
+    -webkit-appearance: none;
+
+    box-shadow: none;
+
+}
+
+
+.logs-search .search-icon:hover {
+
+    background: transparent;
+
+    box-shadow: none;
+
+}
+
+
+.logs-search .search-icon:focus {
+
+    outline: none;
+
+}
+
+
+</style>
+
+
+
+<!-- =========================================================
+     SERVICE WORKER / FIREBASE
+     ========================================================= -->
+
 <script src="{% static 'js/sw_update.js' %}"></script>
-<script type="module" src="{% static 'js/firebase.js' %}"></script>
-<script src="{% static 'js/store_logs.js' %}?v=3"></script>
+
+<script
+    type="module"
+    src="{% static 'js/firebase.js' %}"
+></script>
+
+
 </body>
+
 </html>
