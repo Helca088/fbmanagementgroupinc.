@@ -54,6 +54,7 @@ def get_technicians(request):
 
 @login_required
 def store_logs(request):
+
     cutoff = timezone.now() - timedelta(minutes=1)
 
     tickets = Ticket.objects.filter(
@@ -62,22 +63,108 @@ def store_logs(request):
         resolve_at__lt=cutoff
     ).order_by("-resolve_at")
 
-    search = request.GET.get("search")
+
+    # =========================================================
+    # GET FILTERS
+    # =========================================================
+
+    search = request.GET.get("search", "").strip()
+
+    concern = request.GET.get("concern", "").strip()
+
+    priority = request.GET.get("priority", "").strip()
+
+    start_date = request.GET.get("start_date", "").strip()
+
+    end_date = request.GET.get("end_date", "").strip()
+
+
+    # =========================================================
+    # SEARCH
+    # =========================================================
 
     if search:
+
         tickets = tickets.filter(
-            Q(message__icontains=search)|
-            Q(outlet_ticket_no__iexact=search)
+            Q(message__icontains=search) |
+            Q(outlet_ticket_no__icontains=search) |
+            Q(outlet__name__icontains=search) |
+            Q(department__name__icontains=search) |
+            Q(concern_type__name__icontains=search) |
+            Q(status__icontains=search) |
+            Q(priority__icontains=search)
         )
 
-    paginator = Paginator(tickets, 10)
+
+    # =========================================================
+    # CONCERN TYPE
+    # =========================================================
+
+    if concern:
+
+        tickets = tickets.filter(
+            concern_type__name=concern
+        )
+
+
+    # =========================================================
+    # PRIORITY
+    # =========================================================
+
+    if priority:
+
+        tickets = tickets.filter(
+            priority=priority
+        )
+
+
+    # =========================================================
+    # START DATE
+    # =========================================================
+
+    if start_date:
+
+        tickets = tickets.filter(
+            created_at__date__gte=start_date
+        )
+
+
+    # =========================================================
+    # END DATE
+    # =========================================================
+
+    if end_date:
+
+        tickets = tickets.filter(
+            created_at__date__lte=end_date
+        )
+
+
+    # =========================================================
+    # PAGINATION
+    # =========================================================
+
+    paginator = Paginator(tickets, 15)
 
     page = request.GET.get("page")
+
     tickets = paginator.get_page(page)
 
-    return render(request, "store_logs.html", {
-        "tickets": tickets,
-    })
+
+    return render(
+        request,
+        "store_logs.html",
+        {
+            "tickets": tickets,
+            "search": search,
+            "concern": concern,
+            "priority": priority,
+            "start_date": start_date,
+            "end_date": end_date,
+        }
+    )
+
+
 
 @login_required
 def test_push_view(request):
