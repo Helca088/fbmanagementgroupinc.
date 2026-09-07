@@ -201,8 +201,7 @@ function buildTicketCard(data) {
             <br>
 
             <select class="ticket-select priority" onchange="updatePriority('${data.id}', this.value)">
-                <option value="Low" ${data.priority === "Low" ? "selected" : ""}>Low</option>
-                <option value="Medium" ${data.priority === "Medium" ? "selected" : ""}>In need</option>
+                <option value="Medium" ${data.priority === "Medium" ? "selected" : ""}>Moderate</option>
                 <option value="High" ${data.priority === "High" ? "selected" : ""}>Urgent</option>
             </select>
 
