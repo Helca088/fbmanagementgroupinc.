@@ -194,14 +194,9 @@
                 <select class="ticket-select priority"
                         onchange="updatePriority('{{ ticket.id}}', this.value)">
 
-                    <option value="Low"
-                        {% if ticket.priority == "Low" %}selected{% endif %}>
-                        Low
-                    </option>
-
                     <option value="Medium"
                         {% if ticket.priority == "Medium" %}selected{% endif %}>
-                        In need
+                        Moderate
                     </option>
 
                     <option value="High"
