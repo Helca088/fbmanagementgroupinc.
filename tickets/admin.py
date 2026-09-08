@@ -218,7 +218,7 @@ class TicketAdmin(ModelAdmin):
                     'department', 
                     'concern_type', 
                     'colored_status', 
-                    'priority',
+                    'priority_badge',
                     'created_at',
                     'assigned_to',
                     'additional_techs',
@@ -240,6 +240,43 @@ class TicketAdmin(ModelAdmin):
             obj.outlet.name,
         )
         return obj.outlet
+    @admin.display(description="Priority")
+    def priority_badge(self, obj):
+
+        if obj.priority == "High":
+            return mark_safe(
+                '<span style="'
+                'background:#dc2626;'
+                'color:#ffffff;'
+                'padding:4px 12px;'
+                'border-radius:999px;'
+                'font-weight:700;'
+                'display:inline-block;'
+                '">Urgent</span>'
+            )
+
+        elif obj.priority == "Medium":
+            return mark_safe(
+                '<span style="'
+                'background:#f59e0b;'
+                'color:#ffffff;'
+                'padding:4px 12px;'
+                'border-radius:999px;'
+                'font-weight:700;'
+                'display:inline-block;'
+                '">Moderate</span>'
+            )
+
+        return mark_safe(
+            '<span style="'
+            'background:#16a34a;'
+            'color:#ffffff;'
+            'padding:4px 12px;'
+            'border-radius:999px;'
+            'font-weight:700;'
+            'display:inline-block;'
+            '">Low</span>'
+        )
 
     readonly_fields = ( 'attachment_preview', 'download_button', 'message', 'user')
     list_filter = ('department', 'status', 'priority', 'assigned_to', 'outlet')
