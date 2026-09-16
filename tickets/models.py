@@ -27,14 +27,33 @@ class UserProfile(models.Model):
         ("admin", "Admin"),
         ("outlet", "Outlet"),
     ]
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name="users", null=True, blank=True)
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    department = models.ForeignKey(
+    Department,
+    on_delete=models.CASCADE,
+    related_name="users",
+    null=True,
+    blank=True,
+    )
+
+    departments = models.ManyToManyField(
+        Department,
+        blank=True,
+        related_name="user_profiles",
+    )
+
     outlet = models.ForeignKey(
         Outlet,
         on_delete=models.SET_NULL,
         null=True,
-        blank=True
+        blank=True,
     )
+
     account_type = models.CharField(
         max_length=20,
         choices=ACCOUNT_TYPES,
@@ -46,12 +65,14 @@ class UserProfile(models.Model):
 
         if self.account_type == "admin":
             self.user.is_staff = True
-            self.user.is_active = True
-        else:  # Outlet
+        else:
             self.user.is_staff = False
-            self.user.is_active = True
 
+        self.user.is_active = True
         self.user.save(update_fields=["is_staff", "is_active"])
+
+    def __str__(self):
+        return self.user.username
 
    
 
