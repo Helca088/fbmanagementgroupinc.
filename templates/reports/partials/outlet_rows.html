@@ -1,0 +1,28 @@
+{% for outlet in outlet_summary %}
+<tr>
+    <td>
+        {{ outlet.outlet__name|default:"—" }}
+    </td>
+    <td>
+        <strong>{{ outlet.total }}</strong>
+    </td>
+    <td>
+        {{ outlet.pending }}
+    </td>
+    <td>
+        {{ outlet.progress }}
+    </td>
+    <td>
+        {{ outlet.resolved }}
+    </td>
+    <td>
+        {{ outlet.cancelled }}
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="6">
+        No outlet data available.
+    </td>
+</tr>
+{% endfor %}

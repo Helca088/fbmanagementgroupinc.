@@ -1,0 +1,28 @@
+{% for department in department_summary %}
+<tr>
+    <td>
+        {{ department.department__name|default:"—" }}
+    </td>
+    <td>
+        <strong>{{ department.total }}</strong>
+    </td>
+    <td>
+        {{ department.pending }}
+    </td>
+    <td>
+        {{ department.progress }}
+    </td>
+    <td>
+        {{ department.resolved }}
+    </td>
+    <td>
+        {{ department.cancelled }}
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="6">
+        No department data available.
+    </td>
+</tr>
+{% endfor %}

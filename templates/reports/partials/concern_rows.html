@@ -1,0 +1,31 @@
+{% for concern in concern_summary %}
+<tr>
+    <td>
+        {{ concern.concern_type__name|default:"—" }}
+    </td>
+    <td>
+        {{ concern.department__name|default:"—" }}
+    </td>
+    <td>
+        <strong>{{ concern.total }}</strong>
+    </td>
+    <td>
+        {{ concern.pending }}
+    </td>
+    <td>
+        {{ concern.progress }}
+    </td>
+    <td>
+        {{ concern.resolved }}
+    </td>
+    <td>
+        {{ concern.cancelled }}
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="7">
+        No concern data available.
+    </td>
+</tr>
+{% endfor %}

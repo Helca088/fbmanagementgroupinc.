@@ -1,0 +1,36 @@
+{% for technician in technician_summary %}
+<tr>
+    <td>
+        <strong>{{ technician.name }}</strong>
+    </td>
+
+    <td>
+        {{ technician.current_assigned }}
+    </td>
+
+    <td>
+        {{ technician.total_assigned }}
+    </td>
+
+    <td>
+        {{ technician.resolved }}
+    </td>
+
+    <td>
+        {{ technician.resolved_on_time }}
+    </td>
+
+    <td>
+        {{ technician.reopened }}
+    </td>
+</tr>
+
+{% empty %}
+
+<tr>
+    <td colspan="6">
+        No technician data available.
+    </td>
+</tr>
+
+{% endfor %}

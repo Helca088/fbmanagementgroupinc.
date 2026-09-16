@@ -23,7 +23,7 @@
         rel="stylesheet"
         href="{% static 'css/sidebar.css' %}"
     >
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+
 </head>
 
 
@@ -292,36 +292,184 @@
 
 
                     <thead>
+    <tr>
 
-                        <tr>
+        <!-- CONCERN -->
+        <th class="sortable-th">
 
-                            <th>
-                                Concern
-                            </th>
+            <form method="get" class="column-sort-form">
 
-                            <th>
-                                Department
-                            </th>
+                <input type="hidden" name="start" value="{{ selected_start }}">
+                <input type="hidden" name="end" value="{{ selected_end }}">
+                <input type="hidden" name="department" value="{{ selected_department }}">
+                <input type="hidden" name="outlet" value="{{ selected_outlet }}">
+                <input type="hidden" name="concern" value="{{ selected_concern }}">
+                <input type="hidden" name="performance_sort" value="{{ performance_sort }}">
 
-                            <th>
-                                Total
-                            </th>
+                <select
+                    name="sort"
+                    class="column-sort-select"
+                    onchange="this.form.submit()"
+                >
 
-                            <th>
-                                Open
-                            </th>
+                    <option value="name"
+                        {% if sort == "name" %}selected{% endif %}>
+                        Concern A–Z
+                    </option>
 
-                            <th>
-                                In Progress
-                            </th>
+                    <option value="-name"
+                        {% if sort == "-name" %}selected{% endif %}>
+                        Concern Z–A
+                    </option>
 
-                            <th>
-                                Resolved
-                            </th>
+                </select>
 
-                        </tr>
+            </form>
 
-                    </thead>
+        </th>
+
+
+        <!-- DEPARTMENT -->
+        <th class="sortable-th">
+
+            <form method="get" class="column-sort-form">
+
+                <input type="hidden" name="start" value="{{ selected_start }}">
+                <input type="hidden" name="end" value="{{ selected_end }}">
+                <input type="hidden" name="department" value="{{ selected_department }}">
+                <input type="hidden" name="outlet" value="{{ selected_outlet }}">
+                <input type="hidden" name="concern" value="{{ selected_concern }}">
+                <input type="hidden" name="performance_sort" value="{{ performance_sort }}">
+
+                <select
+                    name="sort"
+                    class="column-sort-select"
+                    onchange="this.form.submit()"
+                >
+
+                    <option value="department"
+                        {% if sort == "department" %}selected{% endif %}>
+                        Department A–Z
+                    </option>
+
+                    <option value="-department"
+                        {% if sort == "-department" %}selected{% endif %}>
+                        Department Z–A
+                    </option>
+
+                </select>
+
+            </form>
+
+        </th>
+
+
+        <!-- TOTAL -->
+        <th class="sortable-th">
+
+            <form method="get" class="column-sort-form">
+
+                <input type="hidden" name="start" value="{{ selected_start }}">
+                <input type="hidden" name="end" value="{{ selected_end }}">
+                <input type="hidden" name="department" value="{{ selected_department }}">
+                <input type="hidden" name="outlet" value="{{ selected_outlet }}">
+                <input type="hidden" name="concern" value="{{ selected_concern }}">
+                <input type="hidden" name="performance_sort" value="{{ performance_sort }}">
+
+                <select
+                    name="sort"
+                    class="column-sort-select"
+                    onchange="this.form.submit()"
+                >
+
+                    <option value="-total"
+                        {% if sort == "-total" %}selected{% endif %}>
+                        Highest Total
+                    </option>
+
+                    <option value="total"
+                        {% if sort == "total" %}selected{% endif %}>
+                        Lowest Total
+                    </option>
+
+                </select>
+
+            </form>
+
+        </th>
+
+
+        <!-- OPEN -->
+        <th class="sortable-th">
+
+            <form method="get" class="column-sort-form">
+
+                <input type="hidden" name="start" value="{{ selected_start }}">
+                <input type="hidden" name="end" value="{{ selected_end }}">
+                <input type="hidden" name="department" value="{{ selected_department }}">
+                <input type="hidden" name="outlet" value="{{ selected_outlet }}">
+                <input type="hidden" name="concern" value="{{ selected_concern }}">
+                <input type="hidden" name="performance_sort" value="{{ performance_sort }}">
+
+                <select
+                    name="sort"
+                    class="column-sort-select"
+                    onchange="this.form.submit()"
+                >
+
+                    <option value="-open"
+                        {% if sort == "-open" %}selected{% endif %}>
+                        Highest Open
+                    </option>
+
+                    <option value="open"
+                        {% if sort == "open" %}selected{% endif %}>
+                        Lowest Open
+                    </option>
+
+                </select>
+
+            </form>
+
+        </th>
+
+
+        <!-- RESOLVED -->
+        <th class="sortable-th">
+
+            <form method="get" class="column-sort-form">
+
+                <input type="hidden" name="start" value="{{ selected_start }}">
+                <input type="hidden" name="end" value="{{ selected_end }}">
+                <input type="hidden" name="department" value="{{ selected_department }}">
+                <input type="hidden" name="outlet" value="{{ selected_outlet }}">
+                <input type="hidden" name="concern" value="{{ selected_concern }}">
+                <input type="hidden" name="performance_sort" value="{{ performance_sort }}">
+
+                <select
+                    name="sort"
+                    class="column-sort-select"
+                    onchange="this.form.submit()"
+                >
+
+                    <option value="-resolved"
+                        {% if sort == "-resolved" %}selected{% endif %}>
+                        Highest Resolved
+                    </option>
+
+                    <option value="resolved"
+                        {% if sort == "resolved" %}selected{% endif %}>
+                        Lowest Resolved
+                    </option>
+
+                </select>
+
+            </form>
+
+        </th>
+
+    </tr>
+</thead>
 
 
                     <tbody>
@@ -375,18 +523,6 @@
 
                             </td>
 
-
-                            <!-- IN PROGRESS -->
-
-                            <td>
-
-                                <span class="table-number table-progress">
-
-                                    {{ concern.progress }}
-
-                                </span>
-
-                            </td>
 
 
                             <!-- RESOLVED -->
@@ -633,7 +769,7 @@
 
 </div>
 
-<script src="{% static 'js/page_loader.js' %}" defer></script>
+
 </body>
 
 </html>

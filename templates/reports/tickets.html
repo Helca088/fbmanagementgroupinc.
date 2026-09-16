@@ -23,7 +23,7 @@
         rel="stylesheet"
         href="{% static 'css/sidebar.css' %}"
     >
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+
 </head>
 
 
@@ -197,6 +197,7 @@
                 </div>
 
 
+
                 <!-- =============================================
                      START DATE
                 ============================================== -->
@@ -237,35 +238,6 @@
 
                 </div>
 
-                <!-- STATUS -->
-                <div class="filter-field">
-                <label for="status">STATUS</label>
-
-                <select name="status" id="status">
-                    <option value="">All Statuses</option>
-
-                    <option value="pending"
-                        {% if request.GET.status == "pending" %}selected{% endif %}>
-                        Pending
-                    </option>
-
-                    <option value="progress"
-                        {% if request.GET.status == "progress" %}selected{% endif %}>
-                        In Progress
-                    </option>
-
-                    <option value="resolved"
-                        {% if request.GET.status == "resolved" %}selected{% endif %}>
-                        Resolved
-                    </option>
-
-                    <option value="cancelled"
-                        {% if request.GET.status == "cancelled" %}selected{% endif %}>
-                        Cancelled
-                    </option>
-                </select>
-            </div>
-
 
 
                 <!-- =============================================
@@ -296,10 +268,8 @@
 
                     <!-- EXPORT PDF -->
 
-                    <!-- EXPORT PDF -->
-
                     <a
-                        href="{% url 'export_tickets_pdf' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}&status={{ request.GET.status|urlencode }}"
+                        href="{% url 'export_tickets_pdf' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}"
                         class="btn btn-danger"
                     >
                         Export PDF
@@ -309,11 +279,12 @@
                     <!-- EXPORT EXCEL -->
 
                     <a
-                        href="{% url 'export_tickets_excel' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}&status={{ request.GET.status|urlencode }}"
+                        href="{% url 'export_tickets_excel' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}"
                         class="btn btn-success"
                     >
                         Export Excel
                     </a>
+
                 </div>
 
 
@@ -374,32 +345,169 @@
                     ================================================== -->
 
                     <thead>
+                <tr>
 
-                        <tr>
+                    <!-- =====================================================
+                        OUTLET
+                        ===================================================== -->
+                    <th class="sortable-th">
+                        <form method="get" class="column-sort-form">
 
-                            <th>
-                                Outlet
-                            </th>
+                            <input type="hidden" name="start" value="{{ selected_start }}">
+                            <input type="hidden" name="end" value="{{ selected_end }}">
+                            <input type="hidden" name="department" value="{{ selected_department }}">
+                            <input type="hidden" name="outlet" value="{{ selected_outlet }}">
+                            <input type="hidden" name="status" value="{{ selected_status }}">
 
-                            <th>
-                                Created
-                            </th>
+                            <select
+                                name="sort"
+                                class="column-sort-select"
+                                onchange="this.form.submit()"
+                            >
+                                <option value="outlet"
+                                    {% if selected_sort == "outlet" %}selected{% endif %}>
+                                    Outlet A–Z
+                                </option>
 
-                            <th>
-                                Department
-                            </th>
+                                <option value="-outlet"
+                                    {% if selected_sort == "-outlet" %}selected{% endif %}>
+                                    Outlet Z–A
+                                </option>
+                            </select>
 
-                            <th>
-                                Concern Type
-                            </th>
+                        </form>
+                    </th>
 
-                            <th>
-                                Message
-                            </th>
 
-                        </tr>
+                    <!-- =====================================================
+                        CREATED
+                        ===================================================== -->
+                    <th class="sortable-th">
+                        <form method="get" class="column-sort-form">
 
-                    </thead>
+                            <input type="hidden" name="start" value="{{ selected_start }}">
+                            <input type="hidden" name="end" value="{{ selected_end }}">
+                            <input type="hidden" name="department" value="{{ selected_department }}">
+                            <input type="hidden" name="outlet" value="{{ selected_outlet }}">
+                            <input type="hidden" name="status" value="{{ selected_status }}">
+
+                            <select
+                                name="sort"
+                                class="column-sort-select"
+                                onchange="this.form.submit()"
+                            >
+                                <option value="-created"
+                                    {% if selected_sort == "-created" %}selected{% endif %}>
+                                    Newest First
+                                </option>
+
+                                <option value="created"
+                                    {% if selected_sort == "created" %}selected{% endif %}>
+                                    Oldest First
+                                </option>
+                            </select>
+
+                        </form>
+                    </th>
+
+
+                    <!-- =====================================================
+                        DEPARTMENT
+                        ===================================================== -->
+                    <th class="sortable-th">
+                        <form method="get" class="column-sort-form">
+
+                            <input type="hidden" name="start" value="{{ selected_start }}">
+                            <input type="hidden" name="end" value="{{ selected_end }}">
+                            <input type="hidden" name="department" value="{{ selected_department }}">
+                            <input type="hidden" name="outlet" value="{{ selected_outlet }}">
+                            <input type="hidden" name="status" value="{{ selected_status }}">
+
+                            <select
+                                name="sort"
+                                class="column-sort-select"
+                                onchange="this.form.submit()"
+                            >
+                                <option value="department"
+                                    {% if selected_sort == "department" %}selected{% endif %}>
+                                    Department A–Z
+                                </option>
+
+                                <option value="-department"
+                                    {% if selected_sort == "-department" %}selected{% endif %}>
+                                    Department Z–A
+                                </option>
+                            </select>
+
+                        </form>
+                    </th>
+
+
+                    <!-- =====================================================
+                        CONCERN TYPE
+                        ===================================================== -->
+                    <th class="sortable-th">
+                        <form method="get" class="column-sort-form">
+
+                            <input type="hidden" name="start" value="{{ selected_start }}">
+                            <input type="hidden" name="end" value="{{ selected_end }}">
+                            <input type="hidden" name="department" value="{{ selected_department }}">
+                            <input type="hidden" name="outlet" value="{{ selected_outlet }}">
+                            <input type="hidden" name="status" value="{{ selected_status }}">
+
+                            <select
+                                name="sort"
+                                class="column-sort-select"
+                                onchange="this.form.submit()"
+                            >
+                                <option value="concern"
+                                    {% if selected_sort == "concern" %}selected{% endif %}>
+                                    Concern A–Z
+                                </option>
+
+                                <option value="-concern"
+                                    {% if selected_sort == "-concern" %}selected{% endif %}>
+                                    Concern Z–A
+                                </option>
+                            </select>
+
+                        </form>
+                    </th>
+
+
+                    <!-- =====================================================
+                        MESSAGE
+                        ===================================================== -->
+                    <th class="sortable-th">
+                        <form method="get" class="column-sort-form">
+
+                            <input type="hidden" name="start" value="{{ selected_start }}">
+                            <input type="hidden" name="end" value="{{ selected_end }}">
+                            <input type="hidden" name="department" value="{{ selected_department }}">
+                            <input type="hidden" name="outlet" value="{{ selected_outlet }}">
+                            <input type="hidden" name="status" value="{{ selected_status }}">
+
+                            <select
+                                name="sort"
+                                class="column-sort-select"
+                                onchange="this.form.submit()"
+                            >
+                                <option value="message"
+                                    {% if selected_sort == "message" %}selected{% endif %}>
+                                    Message A–Z
+                                </option>
+
+                                <option value="-message"
+                                    {% if selected_sort == "-message" %}selected{% endif %}>
+                                    Message Z–A
+                                </option>
+                            </select>
+
+                        </form>
+                    </th>
+
+                </tr>
+            </thead>
 
 
 
@@ -550,7 +658,7 @@
 </div>
 
 
-<script src="{% static 'js/page_loader.js' %}" defer></script>
+
 </body>
 
 </html>

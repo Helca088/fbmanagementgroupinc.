@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.template.loader import render_to_string
+from django.http import HttpResponse, JsonResponse
 from django.db.models import (
     Count,
     Q,
@@ -34,13 +35,9 @@ def get_filtered_tickets(request):
     end = request.GET.get("end", "").strip()
     department = request.GET.get("department", "").strip()
     outlet = request.GET.get("outlet", "").strip()
-    concern = request.GET.get("concern", "").strip()
-    status = request.GET.get("status", "").strip()
+    status = request.GET.get("status", "").strip()   # NEW
 
-    # ========================================================
     # DATE
-    # ========================================================
-
     if start and end:
 
         tickets = tickets.filter(
@@ -59,42 +56,22 @@ def get_filtered_tickets(request):
             created_at__date__lte=end
         )
 
-    # ========================================================
     # DEPARTMENT
-    # ========================================================
-
     if department:
 
         tickets = tickets.filter(
             department__name=department
         )
 
-    # ========================================================
     # OUTLET
-    # ========================================================
-
     if outlet:
 
         tickets = tickets.filter(
             outlet_id=outlet
         )
 
-    # ========================================================
-    # CONCERN TYPE
-    # ========================================================
-
-    if concern:
-
-        tickets = tickets.filter(
-            concern_type_id=concern
-        )
-
-    # ========================================================
     # STATUS
-    # ========================================================
-
     if status:
-
         tickets = tickets.filter(
             status=status
         )
@@ -119,29 +96,29 @@ def report_common_context(request):
         "context_concerns":
             ConcernType.objects.all().order_by("name"),
 
-        # ----------------------------------------------------
-        # SELECTED FILTERS
-        # ----------------------------------------------------
-
         "selected_start":
-            request.GET.get("start", "").strip(),
+            request.GET.get("start", ""),
 
         "selected_end":
-            request.GET.get("end", "").strip(),
+            request.GET.get("end", ""),
 
         "selected_department":
-            request.GET.get("department", "").strip(),
+            request.GET.get("department", ""),
 
         "selected_outlet":
-            request.GET.get("outlet", "").strip(),
+            request.GET.get("outlet", ""),
 
         "selected_concern":
-            request.GET.get("concern", "").strip(),
+            request.GET.get("concern", ""),
 
         "selected_status":
-            request.GET.get("status", "").strip(),
+            request.GET.get("status", ""),   # NEW
     }
 
+
+# ============================================================
+# DASHBOARD
+# ============================================================
 
 # ============================================================
 # DASHBOARD
@@ -151,27 +128,25 @@ def reports(request):
 
     tickets = get_filtered_tickets(request)
 
+    sort = request.GET.get("sort", "name").strip()
+    concern_sort = request.GET.get("concern_sort", "name").strip()
+    outlet_sort = request.GET.get("outlet_sort", "name").strip()
+    technician_sort = request.GET.get("technician_sort", "name").strip()
+    concerns_outlet_sort = request.GET.get(
+        "concerns_outlet_sort",
+        "outlet"
+    ).strip()
+    chart_sort = request.GET.get("chart_sort", "-total")
+
     # ============================================================
     # BASIC COUNTS
     # ============================================================
 
     total = tickets.count()
-
-    pending = tickets.filter(
-        status="pending"
-    ).count()
-
-    progress = tickets.filter(
-        status="progress"
-    ).count()
-
-    resolved = tickets.filter(
-        status="resolved"
-    ).count()
-
-    cancelled = tickets.filter(
-        status="cancelled"
-    ).count()
+    pending = tickets.filter(status="pending").count()
+    progress = tickets.filter(status="progress").count()
+    resolved = tickets.filter(status="resolved").count()
+    cancelled = tickets.filter(status="cancelled").count()
 
     # ============================================================
     # OVERDUE
@@ -180,10 +155,7 @@ def reports(request):
     overdue = tickets.filter(
         deadline__lt=timezone.now()
     ).exclude(
-        status__in=[
-            "resolved",
-            "cancelled"
-        ]
+        status__in=["resolved", "cancelled"]
     ).count()
 
     # ============================================================
@@ -203,10 +175,7 @@ def reports(request):
 
     reopened_total = (
         TicketStatusLog.objects
-        .filter(
-            old_status="resolved",
-            ticket__in=tickets
-        )
+        .filter(old_status="resolved", ticket__in=tickets)
         .values("ticket")
         .distinct()
         .count()
@@ -217,7 +186,6 @@ def reports(request):
     # ============================================================
 
     technician_stats = []
-
     technician_performance = []
 
     technicians = (
@@ -227,22 +195,14 @@ def reports(request):
         .order_by("full_name")
     )
 
-    selected_department = request.GET.get(
-        "department",
-        ""
-    ).strip()
+    selected_department = request.GET.get("department", "").strip()
 
     if selected_department:
-
         technicians = technicians.filter(
             department__name=selected_department
         )
 
     for tech in technicians:
-
-        # ========================================================
-        # ASSIGNED TICKETS
-        # ========================================================
 
         assigned_tickets = tickets.filter(
             Q(assigned_to=tech) |
@@ -251,21 +211,208 @@ def reports(request):
 
         assigned_total = assigned_tickets.count()
 
-        # ========================================================
-        # CURRENT WORKLOAD
-        # ========================================================
-
         current_assigned = assigned_tickets.exclude(
-            status__in=[
-                "resolved",
-                "cancelled"
-            ]
+            status__in=["resolved", "cancelled"]
         ).count()
 
-        # ========================================================
-        # PRIMARY ASSIGNMENTS
-        # ========================================================
+        primary_total = (
+            TicketAssignmentLog.objects
+            .filter(new_technician=tech, ticket__in=tickets)
+            .count()
+        )
 
+        additional_total = (
+            TicketAdditionalAssignmentLog.objects
+            .filter(technician=tech, action="added", ticket__in=tickets)
+            .count()
+        )
+
+        total_assigned = primary_total + additional_total
+
+        open_count = assigned_tickets.filter(status="pending").count()
+        progress_count = assigned_tickets.filter(status="progress").count()
+        resolved_count = assigned_tickets.filter(status="resolved").count()
+
+        resolved_on_time_tech = assigned_tickets.filter(
+            status="resolved",
+            resolve_at__isnull=False,
+            deadline__isnull=False,
+            resolve_at__lte=F("deadline")
+        ).count()
+
+        reopened = (
+            TicketStatusLog.objects
+            .filter(technician=tech, old_status="resolved", ticket__in=tickets)
+            .values("ticket")
+            .distinct()
+            .count()
+        )
+
+        tech_overdue = assigned_tickets.filter(
+            deadline__lt=timezone.now()
+        ).exclude(
+            status__in=["resolved", "cancelled"]
+        ).count()
+
+        resolved_tickets = assigned_tickets.filter(
+            status="resolved",
+            resolve_at__isnull=False,
+            created_at__isnull=False
+        )
+
+        resolution_seconds = [
+            (ticket.resolve_at - ticket.created_at).total_seconds()
+            for ticket in resolved_tickets
+        ]
+
+        average_days = (
+            sum(resolution_seconds) / len(resolution_seconds) / 86400
+            if resolution_seconds else 0
+        )
+
+        resolution_rate = (
+            (resolved_count / assigned_total) * 100
+            if assigned_total else 0
+        )
+
+        department_name = (
+            tech.department.name if tech.department else "—"
+        )
+
+        technician_stats.append({
+            "id": tech.id,
+            "name": tech.full_name,
+            "department": department_name,
+            "total": assigned_total,
+            "current_assigned": current_assigned,
+            "total_assigned": total_assigned,
+            "open": open_count,
+            "progress": progress_count,
+            "resolved": resolved_count,
+            "resolved_on_time": resolved_on_time_tech,
+            "reopened": reopened,
+        })
+
+        technician_performance.append({
+            "id": tech.id,
+            "name": tech.full_name,
+            "department": department_name,
+            "average_days": round(average_days, 1),
+            "overdue": tech_overdue,
+            "resolution_rate": round(resolution_rate, 1),
+            "resolved": resolved_count,
+            "resolved_on_time": resolved_on_time_tech,
+            "reopened": reopened,
+        })
+
+  
+    # ============================================================
+    # SORT TECHNICIAN CHART
+    # ============================================================
+    if chart_sort == "name":
+        technician_stats.sort(
+            key=lambda x: (x["name"] or "").lower()
+        )
+
+    elif chart_sort == "-name":
+        technician_stats.sort(
+            key=lambda x: (x["name"] or "").lower(),
+            reverse=True
+        )
+
+    elif chart_sort == "total":
+        technician_stats.sort(
+            key=lambda x: x["total_assigned"]
+        )
+
+    elif chart_sort == "-total":
+        technician_stats.sort(
+            key=lambda x: x["total_assigned"],
+            reverse=True
+        )
+
+    elif chart_sort == "open":
+        technician_stats.sort(
+            key=lambda x: x["open"]
+        )
+
+    elif chart_sort == "-open":
+        technician_stats.sort(
+            key=lambda x: x["open"],
+            reverse=True
+        )
+
+    elif chart_sort == "progress":
+        technician_stats.sort(
+            key=lambda x: x["progress"]
+        )
+
+    elif chart_sort == "-progress":
+        technician_stats.sort(
+            key=lambda x: x["progress"],
+            reverse=True
+        )
+
+    elif chart_sort == "resolved":
+        technician_stats.sort(
+            key=lambda x: x["resolved"]
+        )
+
+    elif chart_sort == "-resolved":
+        technician_stats.sort(
+            key=lambda x: x["resolved"],
+            reverse=True
+        )
+
+    elif chart_sort == "reopened":
+        technician_stats.sort(
+            key=lambda x: x["reopened"]
+        )
+
+    elif chart_sort == "-reopened":
+        technician_stats.sort(
+            key=lambda x: x["reopened"],
+            reverse=True
+        )
+
+        
+
+    # ============================================================
+    # TECHNICIAN SUMMARY SORT
+    # ============================================================
+
+    # ============================================================
+    # TECHNICIAN SUMMARY
+    # ============================================================
+
+    technician_summary = []
+
+    technicians = (
+        Technician.objects
+        .select_related("department")
+        .all()
+        .order_by("full_name")
+    )
+
+    if selected_department:
+        technicians = technicians.filter(
+            department__name=selected_department
+        )
+
+    for tech in technicians:
+
+        # Tickets currently/previously assigned to this technician
+        assigned_tickets = tickets.filter(
+            Q(assigned_to=tech) |
+            Q(additional_technicians=tech)
+        ).distinct()
+
+        # Current assigned = not resolved/cancelled
+        current_assigned = assigned_tickets.exclude(
+            status__in=["resolved", "cancelled"]
+        ).count()
+
+        # Total assigned from assignment logs
         primary_total = (
             TicketAssignmentLog.objects
             .filter(
@@ -274,10 +421,6 @@ def reports(request):
             )
             .count()
         )
-
-        # ========================================================
-        # ADDITIONAL ASSIGNMENTS
-        # ========================================================
 
         additional_total = (
             TicketAdditionalAssignmentLog.objects
@@ -289,42 +432,22 @@ def reports(request):
             .count()
         )
 
-        total_assigned = (
-            primary_total +
-            additional_total
-        )
+        total_assigned = primary_total + additional_total
 
-        # ========================================================
-        # STATUS
-        # ========================================================
-
-        open_count = assigned_tickets.filter(
-            status="pending"
-        ).count()
-
-        progress_count = assigned_tickets.filter(
-            status="progress"
-        ).count()
-
-        resolved_count = assigned_tickets.filter(
+        # Resolved
+        resolved = assigned_tickets.filter(
             status="resolved"
         ).count()
 
-        # ========================================================
-        # RESOLVED ON TIME
-        # ========================================================
-
-        resolved_on_time_tech = assigned_tickets.filter(
+        # Resolved on time
+        resolved_on_time = assigned_tickets.filter(
             status="resolved",
             resolve_at__isnull=False,
             deadline__isnull=False,
             resolve_at__lte=F("deadline")
         ).count()
 
-        # ========================================================
-        # REOPENED
-        # ========================================================
-
+        # Reopened
         reopened = (
             TicketStatusLog.objects
             .filter(
@@ -337,149 +460,114 @@ def reports(request):
             .count()
         )
 
-        # ========================================================
-        # OVERDUE
-        # ========================================================
-
-        tech_overdue = assigned_tickets.filter(
-            deadline__lt=timezone.now()
-        ).exclude(
-            status__in=[
-                "resolved",
-                "cancelled"
-            ]
-        ).count()
-
-        # ========================================================
-        # AVERAGE RESOLUTION TIME
-        # ========================================================
-
-        resolved_tickets = assigned_tickets.filter(
-            status="resolved",
-            resolve_at__isnull=False,
-            created_at__isnull=False
-        )
-
-        resolution_seconds = []
-
-        for ticket in resolved_tickets:
-
-            duration = (
-                ticket.resolve_at -
-                ticket.created_at
-            ).total_seconds()
-
-            resolution_seconds.append(
-                duration
-            )
-
-        if resolution_seconds:
-
-            average_days = (
-                sum(resolution_seconds)
-                / len(resolution_seconds)
-                / 86400
-            )
-
-        else:
-
-            average_days = 0
-
-        # ========================================================
-        # RESOLUTION RATE
-        # ========================================================
-
-        if assigned_total:
-
-            resolution_rate = (
-                resolved_count /
-                assigned_total
-            ) * 100
-
-        else:
-
-            resolution_rate = 0
-
-        department_name = (
-            tech.department.name
-            if tech.department
-            else "—"
-        )
-
-        # ========================================================
-        # TABLE 1
-        # ========================================================
-
-        technician_stats.append({
-
+        technician_summary.append({
             "id": tech.id,
-
             "name": tech.full_name,
-
-            "department": department_name,
-
-            "total": assigned_total,
-
+            "department": (
+                tech.department.name
+                if tech.department
+                else "—"
+            ),
             "current_assigned": current_assigned,
-
             "total_assigned": total_assigned,
-
-            "open": open_count,
-
-            "progress": progress_count,
-
-            "resolved": resolved_count,
-
-            "resolved_on_time": resolved_on_time_tech,
-
+            "resolved": resolved,
+            "resolved_on_time": resolved_on_time,
             "reopened": reopened,
         })
 
-        # ========================================================
-        # TABLE 2
-        # ========================================================
+    # ============================================================
+    # SORT TECHNICIAN SUMMARY TABLE
+    # ============================================================
 
-        technician_performance.append({
+    if technician_sort == "name":
 
-            "id":
-                tech.id,
+        technician_summary.sort(
+            key=lambda x: (x["name"] or "").lower()
+        )
 
-            "name":
-                tech.full_name,
+    elif technician_sort == "-name":
 
-            "department":
-                department_name,
+        technician_summary.sort(
+            key=lambda x: (x["name"] or "").lower(),
+            reverse=True
+        )
 
-            "average_days":
-                round(
-                    average_days,
-                    1
-                ),
+    elif technician_sort == "current_assigned":
 
-            "overdue":
-                tech_overdue,
+        technician_summary.sort(
+            key=lambda x: x["current_assigned"]
+        )
 
-            "resolution_rate":
-                round(
-                    resolution_rate,
-                    1
-                ),
+    elif technician_sort == "-current_assigned":
 
-            "resolved":
-                resolved_count,
+        technician_summary.sort(
+            key=lambda x: x["current_assigned"],
+            reverse=True
+        )
 
-            "resolved_on_time":
-                resolved_on_time_tech,
+    elif technician_sort == "total_assigned":
 
-            "reopened":
-                reopened,
-        })
+        technician_summary.sort(
+            key=lambda x: x["total_assigned"]
+        )
+
+    elif technician_sort == "-total_assigned":
+
+        technician_summary.sort(
+            key=lambda x: x["total_assigned"],
+            reverse=True
+        )
+
+    elif technician_sort == "resolved":
+
+        technician_summary.sort(
+            key=lambda x: x["resolved"]
+        )
+
+    elif technician_sort == "-resolved":
+
+        technician_summary.sort(
+            key=lambda x: x["resolved"],
+            reverse=True
+        )
+
+    elif technician_sort == "resolved_on_time":
+
+        technician_summary.sort(
+            key=lambda x: x["resolved_on_time"]
+        )
+
+    elif technician_sort == "-resolved_on_time":
+
+        technician_summary.sort(
+            key=lambda x: x["resolved_on_time"],
+            reverse=True
+        )
+
+    elif technician_sort == "reopened":
+
+        technician_summary.sort(
+            key=lambda x: x["reopened"]
+        )
+
+    elif technician_sort == "-reopened":
+
+        technician_summary.sort(
+            key=lambda x: x["reopened"],
+            reverse=True
+        )
+
+    else:
+
+        technician_summary.sort(
+            key=lambda x: (x["name"] or "").lower()
+        )
 
     # ============================================================
     # DEPARTMENTS
     # ============================================================
 
-    departments = (
+    departments = list(
         tickets
         .values(
             "department",
@@ -487,31 +575,38 @@ def reports(request):
         )
         .annotate(
             total=Count("id"),
-
-            open=Count(
-                "id",
-                filter=Q(status="pending")
-            ),
-
-            progress=Count(
-                "id",
-                filter=Q(status="progress")
-            ),
-
-            resolved=Count(
-                "id",
-                filter=Q(status="resolved")
-            ),
-
-            cancelled=Count(
-                "id",
-                filter=Q(status="cancelled")
-            ),
-        )
-        .order_by(
-            "department__name"
+            open=Count("id", filter=Q(status="pending")),
+            progress=Count("id", filter=Q(status="progress")),
+            resolved=Count("id", filter=Q(status="resolved")),
+            cancelled=Count("id", filter=Q(status="cancelled")),
         )
     )
+
+    if chart_sort == "name":
+        departments.sort(
+            key=lambda x: (x["department__name"] or "").lower()
+        )
+
+    elif chart_sort == "-name":
+        departments.sort(
+            key=lambda x: (x["department__name"] or "").lower(),
+            reverse=True
+        )
+
+    elif chart_sort == "total":
+        departments.sort(key=lambda x: x["total"])
+
+    elif chart_sort == "-total":
+        departments.sort(key=lambda x: x["total"], reverse=True)
+
+    elif chart_sort == "open":
+        departments.sort(key=lambda x: x["open"], reverse=True)
+
+    elif chart_sort == "progress":
+        departments.sort(key=lambda x: x["progress"], reverse=True)
+
+    elif chart_sort == "resolved":
+        departments.sort(key=lambda x: x["resolved"], reverse=True)
 
     # ============================================================
     # DEPARTMENT PERFORMANCE
@@ -531,114 +626,95 @@ def reports(request):
             created_at__isnull=False
         )
 
-        resolution_seconds = []
+        resolution_seconds = [
+            (ticket.resolve_at - ticket.created_at).total_seconds()
+            for ticket in resolved_tickets
+        ]
 
-        for ticket in resolved_tickets:
-
-            duration = (
-                ticket.resolve_at -
-                ticket.created_at
-            ).total_seconds()
-
-            resolution_seconds.append(
-                duration
-            )
-
-        if resolution_seconds:
-
-            average_days = (
-                sum(resolution_seconds)
-                / len(resolution_seconds)
-                / 86400
-            )
-
-        else:
-
-            average_days = 0
+        average_days = (
+            sum(resolution_seconds) / len(resolution_seconds) / 86400
+            if resolution_seconds else 0
+        )
 
         department_overdue = department_tickets.filter(
             deadline__lt=timezone.now()
         ).exclude(
-            status__in=[
-                "resolved",
-                "cancelled"
-            ]
+            status__in=["resolved", "cancelled"]
         ).count()
 
         total_count = department_tickets.count()
-
-        resolved_count = department_tickets.filter(
-            status="resolved"
-        ).count()
+        resolved_count = department_tickets.filter(status="resolved").count()
 
         resolution_rate = (
-            resolved_count /
-            total_count *
-            100
-            if total_count
-            else 0
+            resolved_count / total_count * 100 if total_count else 0
         )
 
         department_performance.append({
-
-            "name":
-                department["department__name"],
-
-            "average_days":
-                round(
-                    average_days,
-                    1
-                ),
-
-            "overdue":
-                department_overdue,
-
-            "resolution_rate":
-                round(
-                    resolution_rate,
-                    1
-                ),
+            "name": department["department__name"],
+            "average_days": round(average_days, 1),
+            "overdue": department_overdue,
+            "resolution_rate": round(resolution_rate, 1),
         })
 
     # ============================================================
     # CONCERNS
     # ============================================================
 
-    concerns = (
-        tickets
-        .values(
-            "concern_type_id",
-            "concern_type__name",
-            "department__name"
-        )
-        .annotate(
-
-            total=Count("id"),
-
-            open=Count(
-                "id",
-                filter=Q(status="pending")
-            ),
-
-            progress=Count(
-                "id",
-                filter=Q(status="progress")
-            ),
-
-            resolved=Count(
-                "id",
-                filter=Q(status="resolved")
-            ),
-
-            cancelled=Count(
-                "id",
-                filter=Q(status="cancelled")
-            ),
-        )
-        .order_by(
-            "concern_type__name"
-        )
+    concerns = list(
+    tickets
+    .values(
+        "concern_type_id",
+        "concern_type__name",
+        "department__name"
     )
+    .annotate(
+        total=Count("id"),
+        open=Count("id", filter=Q(status="pending")),
+        progress=Count("id", filter=Q(status="progress")),
+        resolved=Count("id", filter=Q(status="resolved")),
+        cancelled=Count("id", filter=Q(status="cancelled")),
+    )
+)
+
+    if chart_sort == "name":
+        concerns.sort(
+            key=lambda x: (x["concern_type__name"] or "").lower()
+        )
+
+    elif chart_sort == "-name":
+        concerns.sort(
+            key=lambda x: (x["concern_type__name"] or "").lower(),
+            reverse=True
+        )
+
+    elif chart_sort == "total":
+        concerns.sort(
+            key=lambda x: x["total"]
+        )
+
+    elif chart_sort == "-total":
+        concerns.sort(
+            key=lambda x: x["total"],
+            reverse=True
+        )
+
+    elif chart_sort == "pending":
+        concerns.sort(
+            key=lambda x: x["open"],
+            reverse=True
+        )
+
+    elif chart_sort == "progress":
+        concerns.sort(
+            key=lambda x: x["progress"],
+            reverse=True
+        )
+
+    elif chart_sort == "resolved":
+        concerns.sort(
+            key=lambda x: x["resolved"],
+            reverse=True
+        )
 
     # ============================================================
     # CONCERN PERFORMANCE
@@ -647,12 +723,7 @@ def reports(request):
     concern_performance = []
 
     concern_ids = (
-        tickets
-        .values_list(
-            "concern_type_id",
-            flat=True
-        )
-        .distinct()
+        tickets.values_list("concern_type_id", flat=True).distinct()
     )
 
     for concern_id in concern_ids:
@@ -670,9 +741,7 @@ def reports(request):
         if not concern:
             continue
 
-        concern_tickets = tickets.filter(
-            concern_type_id=concern_id
-        )
+        concern_tickets = tickets.filter(concern_type_id=concern_id)
 
         resolved_tickets = concern_tickets.filter(
             status="resolved",
@@ -680,106 +749,83 @@ def reports(request):
             created_at__isnull=False
         )
 
-        resolution_seconds = []
+        resolution_seconds = [
+            (ticket.resolve_at - ticket.created_at).total_seconds()
+            for ticket in resolved_tickets
+        ]
 
-        for ticket in resolved_tickets:
+        average_days = (
+            sum(resolution_seconds) / len(resolution_seconds) / 86400
+            if resolution_seconds else 0
+        )
 
-            duration = (
-                ticket.resolve_at -
-                ticket.created_at
-            ).total_seconds()
-
-            resolution_seconds.append(
-                duration
-            )
-
-        if resolution_seconds:
-
-            average_days = (
-                sum(resolution_seconds)
-                / len(resolution_seconds)
-                / 86400
-            )
-
-        else:
-
-            average_days = 0
-
-        # Active overdue tickets
         concern_overdue = concern_tickets.filter(
             deadline__lt=timezone.now()
         ).exclude(
-            status__in=[
-                "resolved",
-                "cancelled"
-            ]
+            status__in=["resolved", "cancelled"]
         ).count()
 
         total_count = concern_tickets.count()
-
-        resolved_count = concern_tickets.filter(
-            status="resolved"
-        ).count()
+        resolved_count = concern_tickets.filter(status="resolved").count()
 
         resolution_rate = (
-            resolved_count /
-            total_count *
-            100
-            if total_count
-            else 0
+            resolved_count / total_count * 100 if total_count else 0
         )
 
         concern_performance.append({
-
-            "id":
-                concern.id,
-
-            "name":
-                concern.name,
-
-            "department_name":
-                (
-                    concern.department.name
-                    if concern.department
-                    else "—"
-                ),
-
-            "average_days":
-                round(
-                    average_days,
-                    1
-                ),
-
-            "overdue":
-                concern_overdue,
-
-            "resolution_rate":
-                round(
-                    resolution_rate,
-                    1
-                ),
-
+            "id": concern.id,
+            "name": concern.name,
+            "department_name": (
+                concern.department.name if concern.department else "—"
+            ),
+            "average_days": round(average_days, 1),
+            "overdue": concern_overdue,
+            "resolution_rate": round(resolution_rate, 1),
         })
 
-    concern_performance.sort(
-        key=lambda x: x["name"].lower()
-    )
+    concern_performance.sort(key=lambda x: x["name"].lower())
 
     # ============================================================
     # OUTLETS
     # ============================================================
 
-    outlets = (
-        tickets
-        .values(
-            "outlet",
-            "outlet__name"
-        )
-        .annotate(
-            total=Count("id")
-        )
-        .order_by("-total")
+
+    outlets = list(
+    tickets
+    .values(
+        "outlet",
+        "outlet__name"
     )
+    .annotate(
+        total=Count("id")
+    )
+)
+
+    if chart_sort == "name":
+        outlets.sort(
+            key=lambda x: (x["outlet__name"] or "").lower()
+        )
+
+    elif chart_sort == "-name":
+        outlets.sort(
+            key=lambda x: (x["outlet__name"] or "").lower(),
+            reverse=True
+        )
+
+    elif chart_sort == "total":
+        outlets.sort(
+            key=lambda x: x["total"]
+        )
+
+    elif chart_sort == "-total":
+        outlets.sort(
+            key=lambda x: x["total"],
+            reverse=True
+        )
+
+    # ============================================================
+    # OUTLET SUMMARY
+    # ============================================================
 
     # ============================================================
     # OUTLET SUMMARY
@@ -787,37 +833,60 @@ def reports(request):
 
     outlet_summary = (
         tickets
-        .values(
-            "outlet__name"
-        )
+        .values("outlet__name")
         .annotate(
-
             total=Count("id"),
-
-            pending=Count(
-                "id",
-                filter=Q(status="pending")
-            ),
-
-            progress=Count(
-                "id",
-                filter=Q(status="progress")
-            ),
-
-            resolved=Count(
-                "id",
-                filter=Q(status="resolved")
-            ),
-
-            cancelled=Count(
-                "id",
-                filter=Q(status="cancelled")
-            ),
-        )
-        .order_by(
-            "outlet__name"
+            pending=Count("id", filter=Q(status="pending")),
+            progress=Count("id", filter=Q(status="progress")),
+            resolved=Count("id", filter=Q(status="resolved")),
+            cancelled=Count("id", filter=Q(status="cancelled")),
         )
     )
+
+    if outlet_sort == "name":
+        outlet_summary = outlet_summary.order_by(
+            "outlet__name"
+        )
+
+    elif outlet_sort == "-name":
+        outlet_summary = outlet_summary.order_by(
+            "-outlet__name"
+        )
+
+    elif outlet_sort == "total":
+        outlet_summary = outlet_summary.order_by("total")
+
+    elif outlet_sort == "-total":
+        outlet_summary = outlet_summary.order_by("-total")
+
+    elif outlet_sort == "pending":
+        outlet_summary = outlet_summary.order_by("pending")
+
+    elif outlet_sort == "-pending":
+        outlet_summary = outlet_summary.order_by("-pending")
+
+    elif outlet_sort == "progress":
+        outlet_summary = outlet_summary.order_by("progress")
+
+    elif outlet_sort == "-progress":
+        outlet_summary = outlet_summary.order_by("-progress")
+
+    elif outlet_sort == "resolved":
+        outlet_summary = outlet_summary.order_by("resolved")
+
+    elif outlet_sort == "-resolved":
+        outlet_summary = outlet_summary.order_by("-resolved")
+
+    elif outlet_sort == "cancelled":
+        outlet_summary = outlet_summary.order_by("cancelled")
+
+    elif outlet_sort == "-cancelled":
+        outlet_summary = outlet_summary.order_by("-cancelled")
+
+    else:
+        outlet_summary = outlet_summary.order_by(
+            "outlet__name"
+        )
 
     # ============================================================
     # CONCERNS PER OUTLET
@@ -832,53 +901,108 @@ def reports(request):
         .annotate(
             total=Count("id")
         )
-        .order_by(
-            "outlet__name",
+    )
+
+    if concerns_outlet_sort == "outlet":
+        concerns_per_outlet = concerns_per_outlet.order_by(
+            "outlet__name"
+        )
+
+    elif concerns_outlet_sort == "-outlet":
+        concerns_per_outlet = concerns_per_outlet.order_by(
+            "-outlet__name"
+        )
+
+    elif concerns_outlet_sort == "concern":
+        concerns_per_outlet = concerns_per_outlet.order_by(
+            "concern_type__name"
+        )
+
+    elif concerns_outlet_sort == "-concern":
+        concerns_per_outlet = concerns_per_outlet.order_by(
+            "-concern_type__name"
+        )
+
+    elif concerns_outlet_sort == "total":
+        concerns_per_outlet = concerns_per_outlet.order_by(
+            "total"
+        )
+
+    elif concerns_outlet_sort == "-total":
+        concerns_per_outlet = concerns_per_outlet.order_by(
             "-total"
+        )
+
+    else:
+        concerns_per_outlet = concerns_per_outlet.order_by(
+            "outlet__name"
+        )
+
+
+    # ============================================================
+    # DEPARTMENT SUMMARY  (clickable column sorting)
+    # ============================================================
+
+    department_summary = (
+        tickets
+        .values("department__name")
+        .annotate(
+            total=Count("id"),
+            pending=Count("id", filter=Q(status="pending")),
+            progress=Count("id", filter=Q(status="progress")),
+            resolved=Count("id", filter=Q(status="resolved")),
+            cancelled=Count("id", filter=Q(status="cancelled")),
         )
     )
 
+    if sort == "department":
+        department_summary = department_summary.order_by("department__name")
+
+    elif sort == "-department":
+        department_summary = department_summary.order_by("-department__name")
+
+    elif sort == "total":
+        department_summary = department_summary.order_by("total")
+
+    elif sort == "-total":
+        department_summary = department_summary.order_by("-total")
+
+    elif sort == "pending":
+        department_summary = department_summary.order_by("pending")
+
+    elif sort == "-pending":
+        department_summary = department_summary.order_by("-pending")
+
+    elif sort == "progress":
+        department_summary = department_summary.order_by("progress")
+
+    elif sort == "-progress":
+        department_summary = department_summary.order_by("-progress")
+
+    elif sort == "resolved":
+        department_summary = department_summary.order_by("resolved")
+
+    elif sort == "-resolved":
+        department_summary = department_summary.order_by("-resolved")
+
+    elif sort == "cancelled":
+        department_summary = department_summary.order_by("cancelled")
+
+    elif sort == "-cancelled":
+        department_summary = department_summary.order_by("-cancelled")
+
+    else:
+        department_summary = department_summary.order_by("department__name")
+
     # ============================================================
-    # CONTEXT
+    # CONCERN SUMMARY  (built here so it can be sorted)
     # ============================================================
 
-    context = {
+    # ============================================================
+    # CONCERN SUMMARY
+    # ============================================================
 
-        # --------------------------------------------------------
-        # FILTERS
-        # --------------------------------------------------------
-        "department_summary":
-        tickets
-        .values(
-            "department__name"
-        )
-        .annotate(
-            total=Count("id"),
-
-            pending=Count(
-                "id",
-                filter=Q(status="pending")
-            ),
-
-            progress=Count(
-                "id",
-                filter=Q(status="progress")
-            ),
-
-            resolved=Count(
-                "id",
-                filter=Q(status="resolved")
-            ),
-
-            cancelled=Count(
-                "id",
-                filter=Q(status="cancelled")
-            ),
-        )
-        .order_by("department__name"),
-
-
-    "concern_summary":
+    concern_summary = (
         tickets
         .values(
             "concern_type__name",
@@ -886,341 +1010,218 @@ def reports(request):
         )
         .annotate(
             total=Count("id"),
-
-            pending=Count(
-                "id",
-                filter=Q(status="pending")
-            ),
-
-            progress=Count(
-                "id",
-                filter=Q(status="progress")
-            ),
-
-            resolved=Count(
-                "id",
-                filter=Q(status="resolved")
-            ),
-
-            cancelled=Count(
-                "id",
-                filter=Q(status="cancelled")
-            ),
+            pending=Count("id", filter=Q(status="pending")),
+            progress=Count("id", filter=Q(status="progress")),
+            resolved=Count("id", filter=Q(status="resolved")),
+            cancelled=Count("id", filter=Q(status="cancelled")),
         )
-        .order_by(
-            "concern_type__name"
-        ),
-
-        **report_common_context(request),
-
-        "context_departments":
-            Department.objects.all().order_by("name"),
-
-        "context_concerns":
-            ConcernType.objects.all().order_by("name"),
-
-        "selected_concern":
-            request.GET.get(
-                "concern",
-                ""
-            ),
-
-        # --------------------------------------------------------
-        # MAIN COUNTERS
-        # --------------------------------------------------------
-
-        "tickets":
-            tickets.order_by("-created_at"),
-
-        "total":
-            total,
-
-        "pending":
-            pending,
-
-        "progress":
-            progress,
-
-        "resolved":
-            resolved,
-
-        "cancelled":
-            cancelled,
-
-        "overdue":
-            overdue,
-
-        "resolved_on_time":
-            resolved_on_time,
-
-        "reopened_total":
-            reopened_total,
-
-        # --------------------------------------------------------
-        # TECHNICIANS
-        # --------------------------------------------------------
-
-        "technician_stats":
-            technician_stats,
-
-        "technician_performance":
-            technician_performance,
-
-        "technician_count":
-            len(technician_stats),
-
-        # --------------------------------------------------------
-        # DEPARTMENTS
-        # --------------------------------------------------------
-
-        "departments":
-            departments,
-
-        "department_performance":
-            department_performance,
-
-        # --------------------------------------------------------
-        # CONCERNS
-        # --------------------------------------------------------
-
-        "concerns":
-            concerns,
-
-        "concern_performance":
-            concern_performance,
-
-        # --------------------------------------------------------
-        # OUTLETS
-        # --------------------------------------------------------
-
-        "outlets":
-            outlets,
-
-        "outlet_summary":
-            outlet_summary,
-
-        "concerns_per_outlet":
-            concerns_per_outlet,
-    }
-
-    return render(
-        request,
-        "reports/reports.html",
-        context
     )
 
-    # ==========================================
-    # TECHNICIANS
-    # ==========================================
-
-    technician_stats = []
-
-    technicians = Technician.objects.all()
-
-    department = request.GET.get(
-        "department",
-        ""
-    ).strip()
-
-    if department:
-
-        technicians = technicians.filter(
-            department__name=department
+    if concern_sort == "name":
+        concern_summary = concern_summary.order_by(
+        "concern_type__name"
         )
 
-    for tech in technicians:
-
-        current_assigned = tickets.filter(
-            Q(assigned_to=tech) |
-            Q(additional_technicians=tech)
-        ).distinct().count()
-
-        primary_total = TicketAssignmentLog.objects.filter(
-            new_technician=tech,
-            ticket__in=tickets
-        ).count()
-
-        additional_total = TicketAdditionalAssignmentLog.objects.filter(
-            technician=tech,
-            action="added",
-            ticket__in=tickets
-        ).count()
-
-        total_assigned = (
-            primary_total +
-            additional_total
+    elif concern_sort == "-name":
+        concern_summary = concern_summary.order_by(
+            "-concern_type__name"
         )
 
-        resolved = tickets.filter(
-            Q(assigned_to=tech) |
-            Q(additional_technicians=tech),
-            status="resolved"
-        ).distinct().count()
-
-        tech_on_time = tickets.filter(
-            Q(assigned_to=tech) |
-            Q(additional_technicians=tech),
-            status="resolved",
-            resolve_at__lte=F("deadline")
-        ).distinct().count()
-
-        reopened = TicketStatusLog.objects.filter(
-            technician=tech,
-            old_status="resolved",
-            ticket__in=tickets
-        ).count()
-
-        technician_stats.append({
-
-            "name": tech.full_name,
-
-            "current_assigned":
-                current_assigned,
-
-            "total_assigned":
-                total_assigned,
-
-            "resolved":
-                resolved,
-
-            "resolved_on_time":
-                tech_on_time,
-
-            "reopened":
-                reopened,
-        })
-
-    # ==========================================
-    # OUTLET SUMMARY
-    # ==========================================
-
-    outlet_summary = (
-        tickets
-        .values("outlet__name")
-        .annotate(
-
-            total=Count("id"),
-
-            pending=Count(
-                "id",
-                filter=Q(status="pending")
-            ),
-
-            progress=Count(
-                "id",
-                filter=Q(status="progress")
-            ),
-
-            resolved=Count(
-                "id",
-                filter=Q(status="resolved")
-            ),
-
-            cancelled=Count(
-                "id",
-                filter=Q(status="cancelled")
-            ),
+    elif concern_sort == "department":
+        concern_summary = concern_summary.order_by(
+            "department__name"
         )
-        .order_by("outlet__name")
-    )
 
-    # ==========================================
-    # CONCERNS PER OUTLET
-    # ==========================================
+    elif concern_sort == "-department":
+        concern_summary = concern_summary.order_by(
+            "-department__name"
+        )
 
-    concerns_per_outlet = (
-        tickets
-        .values(
-            "outlet__name",
+    elif concern_sort == "total":
+        concern_summary = concern_summary.order_by("total")
+
+    elif concern_sort == "-total":
+        concern_summary = concern_summary.order_by("-total")
+
+    elif concern_sort == "pending":
+        concern_summary = concern_summary.order_by("pending")
+
+    elif concern_sort == "-pending":
+        concern_summary = concern_summary.order_by("-pending")
+
+    elif concern_sort == "progress":
+        concern_summary = concern_summary.order_by("progress")
+
+    elif concern_sort == "-progress":
+        concern_summary = concern_summary.order_by("-progress")
+
+    elif concern_sort == "resolved":
+        concern_summary = concern_summary.order_by("resolved")
+
+    elif concern_sort == "-resolved":
+        concern_summary = concern_summary.order_by("-resolved")
+
+    elif concern_sort == "cancelled":
+        concern_summary = concern_summary.order_by("cancelled")
+
+    elif concern_sort == "-cancelled":
+        concern_summary = concern_summary.order_by("-cancelled")
+
+    else:
+        concern_summary = concern_summary.order_by(
             "concern_type__name"
         )
-        .annotate(
-            total=Count("id")
-        )
-        .order_by(
-            "outlet__name",
-            "-total"
-        )
-    )
 
-    # ==========================================
+    # ============================================================
     # CONTEXT
-    # ==========================================
+    # ============================================================
 
     context = {
 
+        "sort": sort,
+        "chart_sort": chart_sort,
+        "department_summary": department_summary,
+        "concern_summary": concern_summary,
+        "outlet_sort": outlet_sort,
+        "technician_sort": technician_sort,
+        "concerns_outlet_sort": concerns_outlet_sort,
+
         **report_common_context(request),
 
-        "tickets": tickets,
+        "context_departments": Department.objects.all().order_by("name"),
+        "context_concerns": ConcernType.objects.all().order_by("name"),
+        "selected_concern": request.GET.get("concern", ""),
 
-        "total":
-            tickets.count(),
+        "tickets": tickets.order_by("-created_at"),
+        "total": total,
+        "pending": pending,
+        "progress": progress,
+        "resolved": resolved,
+        "cancelled": cancelled,
+        "overdue": overdue,
+        "resolved_on_time": resolved_on_time,
+        "reopened_total": reopened_total,
 
-        "pending":
-            tickets.filter(
-                status="pending"
-            ).count(),
+        "technician_stats": technician_stats,
+        "technician_performance": technician_performance,
+        "technician_summary": technician_summary,
+        "technician_count": len(technician_stats),
 
-        "progress":
-            tickets.filter(
-                status="progress"
-            ).count(),
+        "departments": departments,
+        "department_performance": department_performance,
 
-        "resolved":
-            tickets.filter(
-                status="resolved"
-            ).count(),
+        "concerns": concerns,
+        "concern_performance": concern_performance,
 
-        "cancelled":
-            tickets.filter(
-                status="cancelled"
-            ).count(),
-
-        "overdue":
-            overdue,
-
-        "resolved_on_time":
-            resolved_on_time,
-
-        "reopened_total":
-            reopened_total,
-
-        "technician_stats":
-            technician_stats,
-
-        "departments":
-            tickets
-            .values("department__name")
-            .annotate(
-                total=Count("id")
-            )
-            .order_by("-total"),
-
-        "concerns":
-            tickets
-            .values("concern_type__name")
-            .annotate(
-                total=Count("id")
-            )
-            .order_by("-total"),
-
-        "outlets":
-            tickets
-            .values(
-                "outlet",
-                "outlet__name"
-            )
-            .annotate(
-                total=Count("id")
-            )
-            .order_by("-total"),
-
-        "outlet_summary":
-            outlet_summary,
-
-        "concerns_per_outlet":
-            concerns_per_outlet,
+        "outlets": outlets,
+        "outlet_summary": outlet_summary,
+        "concerns_per_outlet": concerns_per_outlet,
     }
+
+   # ============================================================
+    # AJAX SORT RESPONSE
+    # ============================================================
+
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+
+        # -------------------------
+        # CONCERN SUMMARY
+        # -------------------------
+
+        if "concern_sort" in request.GET:
+
+            html = render_to_string(
+                "reports/partials/concern_rows.html",
+                {
+                    "concern_summary": concern_summary,
+                },
+                request=request,
+            )
+
+            return JsonResponse({
+                "table": "concern",
+                "html": html,
+            })
+
+        # -------------------------
+        # DEPARTMENT SUMMARY
+        # -------------------------
+
+        if "sort" in request.GET:
+
+            html = render_to_string(
+                "reports/partials/department_rows.html",
+                {
+                    "department_summary": department_summary,
+                },
+                request=request,
+            )
+
+            return JsonResponse({
+                "table": "department",
+                "html": html,
+            })
+
+        # -------------------------
+        # OUTLET SUMMARY
+        # -------------------------
+
+        if "outlet_sort" in request.GET:
+
+            html = render_to_string(
+                "reports/partials/outlet_rows.html",
+                {
+                    "outlet_summary": outlet_summary,
+                },
+                request=request,
+            )
+
+            return JsonResponse({
+                "table": "outlet",
+                "html": html,
+            })
+        # -------------------------
+        # TECHNICIAN SUMMARY
+        # -------------------------
+
+        if "technician_sort" in request.GET:
+
+            html = render_to_string(
+                "reports/partials/technician_rows.html",
+                {
+                    "technician_summary": technician_summary,
+                },
+                request=request,
+            )
+
+            return JsonResponse({
+                "table": "technician",
+                "html": html,
+            })
+
+        # -------------------------
+        # CONCERNS BY OUTLET
+        # -------------------------
+
+        if "concerns_outlet_sort" in request.GET:
+
+            html = render_to_string(
+                "reports/partials/concerns_outlet_rows.html",
+                {
+                    "concerns_per_outlet": concerns_per_outlet,
+                },
+                request=request,
+            )
+
+            return JsonResponse({
+                "table": "concerns_outlet",
+                "html": html,
+            })
+
+
+    # ============================================================
+    # NORMAL PAGE RESPONSE
+    # ============================================================
 
     return render(
         request,
@@ -1234,28 +1235,49 @@ def reports(request):
 # ============================================================
 
 def report_tickets(request):
-
     tickets = get_filtered_tickets(request)
 
-    context = {
+    # ============================================================
+    # TICKET SORTING
+    # ============================================================
 
-        **report_common_context(request),
+    sort = request.GET.get("sort", "-created_at").strip()
 
-        "tickets":
-            tickets.order_by("-created_at"),
+    allowed_sorts = {
+        "outlet": "outlet__name",
+        "-outlet": "-outlet__name",
 
-        "total":
-            tickets.count(),
+        "created": "created_at",
+        "-created": "-created_at",
 
-        "report_departments":
-            Department.objects.all().order_by("name"),
+        "department": "department__name",
+        "-department": "-department__name",
+
+        "concern": "concern_type__name",
+        "-concern": "-concern_type__name",
+
+        "message": "message",
+        "-message": "-message",
     }
 
-    return render(
-        request,
-        "reports/tickets.html",
-        context
-    )
+    # Prevent invalid sort values
+    order_by = allowed_sorts.get(sort, "-created_at")
+
+    tickets = tickets.order_by(order_by)
+
+    context = {
+        **report_common_context(request),
+
+        "tickets": tickets,
+        "total": tickets.count(),
+
+        "report_departments": Department.objects.all().order_by("name"),
+
+        # Keep selected sort for the template
+        "selected_sort": sort,
+    }
+
+    return render(request, "reports/tickets.html", context)
 
 
 # ============================================================
@@ -1269,43 +1291,76 @@ def report_tickets(request):
 def report_outlets(request):
 
     tickets = get_filtered_tickets(request)
+    sort = request.GET.get("sort", "-total").strip()
 
     # ========================================================
     # OUTLET SUMMARY
     # ========================================================
 
     outlet_summary = (
-        tickets
-        .values("outlet__name")
-        .annotate(
-            total=Count("id"),
-
-            pending=Count(
-                "id",
-                filter=Q(status="pending")
-            ),
-
-            progress=Count(
-                "id",
-                filter=Q(status="progress")
-            ),
-
-            resolved=Count(
-                "id",
-                filter=Q(status="resolved")
-            ),
-
-            cancelled=Count(
-                "id",
-                filter=Q(status="cancelled")
-            ),
-        )
-        .order_by("outlet__name")
+    tickets
+    .values("outlet__name")
+    .annotate(
+        total=Count("id"),
+        pending=Count("id", filter=Q(status="pending")),
+        progress=Count("id", filter=Q(status="progress")),
+        resolved=Count("id", filter=Q(status="resolved")),
+        cancelled=Count("id", filter=Q(status="cancelled")),
     )
+    )
+
+    if sort == "name":
+        outlet_summary = outlet_summary.order_by("outlet__name")
+
+    elif sort == "-name":
+        outlet_summary = outlet_summary.order_by("-outlet__name")
+
+    elif sort == "total":
+        outlet_summary = outlet_summary.order_by("total")
+
+    elif sort == "-total":
+        outlet_summary = outlet_summary.order_by("-total")
+
+    elif sort == "pending":
+        outlet_summary = outlet_summary.order_by("-pending")
+
+    elif sort == "progress":
+        outlet_summary = outlet_summary.order_by("-progress")
+
+    elif sort == "resolved":
+        outlet_summary = outlet_summary.order_by("-resolved")
+
+    elif sort == "cancelled":
+        outlet_summary = outlet_summary.order_by("-cancelled")
 
     # ========================================================
     # CONCERNS PER OUTLET
     # ========================================================
+
+   # ============================================================
+    # CONCERNS PER OUTLET
+    # ============================================================
+
+    concern_outlet_sort = request.GET.get(
+        "concern_outlet_sort",
+        "outlet"
+    ).strip()
+
+    concern_outlet_sort_options = {
+        "outlet": "outlet__name",
+        "-outlet": "-outlet__name",
+
+        "concern": "concern_type__name",
+        "-concern": "-concern_type__name",
+
+        "total": "total",
+        "-total": "-total",
+    }
+
+    concern_outlet_order = concern_outlet_sort_options.get(
+        concern_outlet_sort,
+        "outlet__name"
+    )
 
     concerns_per_outlet = (
         tickets
@@ -1317,8 +1372,7 @@ def report_outlets(request):
             total=Count("id")
         )
         .order_by(
-            "outlet__name",
-            "-total"
+            concern_outlet_order
         )
     )
 
@@ -1330,11 +1384,16 @@ def report_outlets(request):
 
         **report_common_context(request),
 
+        "sort": sort,
+
         "outlet_summary":
             outlet_summary,
 
         "concerns_per_outlet":
             concerns_per_outlet,
+
+        "context_concerns_per_outlet": concerns_per_outlet,
+        "concern_outlet_sort": concern_outlet_sort,
 
         "total":
             tickets.count(),
@@ -1354,6 +1413,7 @@ def report_outlets(request):
 def report_departments(request):
 
     tickets = get_filtered_tickets(request)
+    sort = request.GET.get("sort", "-total").strip() 
 
     departments = (
         tickets
@@ -1362,30 +1422,45 @@ def report_departments(request):
             "department__name"
         )
         .annotate(
-
-            # TOTAL
             total=Count("id"),
-
-            # OPEN / PENDING
-            open=Count(
-                "id",
-                filter=Q(status="pending")
-            ),
-
-            # IN PROGRESS
-            progress=Count(
-                "id",
-                filter=Q(status="progress")
-            ),
-
-            # RESOLVED
-            resolved=Count(
-                "id",
-                filter=Q(status="resolved")
-            ),
+            open=Count("id", filter=Q(status="pending")),
+            progress=Count("id", filter=Q(status="progress")),
+            resolved=Count("id", filter=Q(status="resolved")),
         )
-        .order_by("department__name")
     )
+
+    if sort == "name":
+        departments = departments.order_by("department__name")
+
+    elif sort == "-name":
+        departments = departments.order_by("-department__name")
+
+    elif sort == "total":
+        departments = departments.order_by("total")
+
+    elif sort == "-total":
+        departments = departments.order_by("-total")
+
+    elif sort == "open":
+        departments = departments.order_by("open")
+
+    elif sort == "-open":
+        departments = departments.order_by("-open")
+
+    elif sort == "progress":
+        departments = departments.order_by("progress")
+
+    elif sort == "-progress":
+        departments = departments.order_by("-progress")
+
+    elif sort == "resolved":
+        departments = departments.order_by("resolved")
+
+    elif sort == "-resolved":
+        departments = departments.order_by("-resolved")
+
+    else:
+        departments = departments.order_by("department__name")
 
     # ========================================================
     # DEPARTMENT PERFORMANCE
@@ -1503,6 +1578,8 @@ def report_departments(request):
 
         **report_common_context(request),
 
+        "sort": sort,
+
         "departments":
             departments,
 
@@ -1532,6 +1609,13 @@ def report_technicians(request):
     department = request.GET.get(
         "department",
         ""
+    ).strip()
+
+    sort = request.GET.get("sort", "-total").strip()
+
+    performance_sort = request.GET.get(
+        "performance_sort",
+        "name"
     ).strip()
 
     # IMPORTANT:
@@ -1756,12 +1840,16 @@ def report_technicians(request):
                 if tech.department
                 else "—",
 
+            # This is the Total shown in the table.
             "total":
                 assigned_total,
 
             "current_assigned":
                 current_assigned,
 
+            # Assignment-log total.
+            # Kept separately because this is
+            # a different metric.
             "total_assigned":
                 total_assigned,
 
@@ -1821,12 +1909,138 @@ def report_technicians(request):
         })
 
     # ========================================================
+    # SORT — TECHNICIAN WORKLOAD
+    # ========================================================
+
+    technician_stats_sort_map = {
+
+        "name":
+            lambda x: x["name"].lower(),
+
+        "-name":
+            lambda x: x["name"].lower(),
+
+        "department":
+            lambda x: x["department"].lower(),
+
+        "-department":
+            lambda x: x["department"].lower(),
+
+        "total":
+            lambda x: x["total"],
+
+        "-total":
+            lambda x: x["total"],
+
+        "current":
+            lambda x: x["current_assigned"],
+
+        "-current":
+            lambda x: x["current_assigned"],
+
+        "open":
+            lambda x: x["open"],
+
+        "-open":
+            lambda x: x["open"],
+
+        "progress":
+            lambda x: x["progress"],
+
+        "-progress":
+            lambda x: x["progress"],
+
+        "resolved":
+            lambda x: x["resolved"],
+
+        "-resolved":
+            lambda x: x["resolved"],
+    }
+
+    if sort in technician_stats_sort_map:
+
+        technician_stats.sort(
+            key=technician_stats_sort_map[sort],
+            reverse=sort.startswith("-")
+        )
+
+    # ========================================================
+    # SORT — TECHNICIAN PERFORMANCE
+    # ========================================================
+
+    technician_performance_sort_map = {
+
+        "name":
+            lambda x: x["name"].lower(),
+
+        "-name":
+            lambda x: x["name"].lower(),
+
+        "department":
+            lambda x: x["department"].lower(),
+
+        "-department":
+            lambda x: x["department"].lower(),
+
+        "days":
+            lambda x: x["average_days"],
+
+        "-days":
+            lambda x: x["average_days"],
+
+        "overdue":
+            lambda x: x["overdue"],
+
+        "-overdue":
+            lambda x: x["overdue"],
+
+        "rate":
+            lambda x: x["resolution_rate"],
+
+        "-rate":
+            lambda x: x["resolution_rate"],
+
+        "resolved":
+            lambda x: x["resolved"],
+
+        "-resolved":
+            lambda x: x["resolved"],
+
+        "ontime":
+            lambda x: x["resolved_on_time"],
+
+        "-ontime":
+            lambda x: x["resolved_on_time"],
+
+        "reopened":
+            lambda x: x["reopened"],
+
+        "-reopened":
+            lambda x: x["reopened"],
+    }
+
+    if performance_sort in technician_performance_sort_map:
+
+        technician_performance.sort(
+            key=technician_performance_sort_map[
+                performance_sort
+            ],
+            reverse=performance_sort.startswith("-")
+        )
+
+    # ========================================================
     # CONTEXT
     # ========================================================
 
     context = {
 
         **report_common_context(request),
+
+        "sort":
+            sort,
+
+        "performance_sort":
+            performance_sort,
 
         # TABLE 1
         "technician_stats":
@@ -1849,8 +2063,6 @@ def report_technicians(request):
         "reports/technicians.html",
         context
     )
-
-
 # ============================================================
 # CONCERNS
 # ============================================================
@@ -2149,12 +2361,81 @@ def report_concerns(request):
 
 
     # =====================================================
-    # SORT PERFORMANCE
+    # SORT VALUES
     # =====================================================
 
-    concern_performance.sort(
-        key=lambda x: x["name"].lower()
-    )
+    sort = request.GET.get(
+    "sort",
+    "-total"
+    ).strip()
+
+    performance_sort = request.GET.get(
+    "performance_sort",
+    "days"
+    ).strip()
+
+
+    # =====================================================
+    # SORT TABLE 1 — CONCERN SUMMARY
+    # =====================================================
+
+    concern_sort_map = {
+        "name": lambda x: x["name"].lower(),
+        "-name": lambda x: x["name"].lower(),
+
+        "department": lambda x: x["department_name"].lower(),
+        "-department": lambda x: x["department_name"].lower(),
+
+        "total": lambda x: x["total"],
+        "-total": lambda x: x["total"],
+
+        "open": lambda x: x["open"],
+        "-open": lambda x: x["open"],
+
+        "progress": lambda x: x["progress"],
+        "-progress": lambda x: x["progress"],
+
+        "resolved": lambda x: x["resolved"],
+        "-resolved": lambda x: x["resolved"],
+    }
+
+
+    if sort in concern_sort_map:
+
+        concern_rows.sort(
+            key=concern_sort_map[sort],
+            reverse=sort.startswith("-")
+        )
+
+
+    # =====================================================
+    # SORT TABLE 2 — CONCERN PERFORMANCE
+    # =====================================================
+
+    performance_sort_map = {
+        "name": lambda x: x["name"].lower(),
+        "-name": lambda x: x["name"].lower(),
+
+        "department": lambda x: x["department_name"].lower(),
+        "-department": lambda x: x["department_name"].lower(),
+
+        "days": lambda x: x["average_days"],
+        "-days": lambda x: x["average_days"],
+
+        "overdue": lambda x: x["overdue"],
+        "-overdue": lambda x: x["overdue"],
+
+        "rate": lambda x: x["resolution_rate"],
+        "-rate": lambda x: x["resolution_rate"],
+    }
+
+
+    if performance_sort in performance_sort_map:
+
+        concern_performance.sort(
+            key=performance_sort_map[performance_sort],
+            reverse=performance_sort.startswith("-")
+        )
 
 
     # =====================================================
@@ -2191,6 +2472,11 @@ def report_concerns(request):
 
         "selected_concern":
             selected_concern,
+
+        "sort": sort,
+
+        "performance_sort":
+            performance_sort,
     }
 
 

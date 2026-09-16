@@ -13,7 +13,6 @@
     <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 
 </head>
 
@@ -169,6 +168,7 @@
 
                 </div>
 
+                
 
                 <!-- ACTIONS -->
 
@@ -214,7 +214,7 @@
                     </a>
 
                 </div>
-
+            
             </form>
 
         </div>
@@ -338,7 +338,51 @@
         <!-- =====================================================
              CHARTS
         ====================================================== -->
+        <div class="table-sort">
+            <form method="GET">
 
+                <input type="hidden" name="start" value="{{ selected_start }}">
+                <input type="hidden" name="end" value="{{ selected_end }}">
+                <input type="hidden" name="department" value="{{ selected_department }}">
+                <input type="hidden" name="outlet" value="{{ selected_outlet }}">
+
+                <label>Chart Sort</label>
+
+                <select
+                    name="chart_sort"
+                    onchange="this.form.submit()"
+                >
+                    <option value="name" {% if chart_sort == "name" %}selected{% endif %}>
+                        A-Z
+                    </option>
+
+                    <option value="-name" {% if chart_sort == "-name" %}selected{% endif %}>
+                        Z-A
+                    </option>
+
+                    <option value="-total" {% if chart_sort == "-total" %}selected{% endif %}>
+                        Highest Total
+                    </option>
+
+                    <option value="total" {% if chart_sort == "total" %}selected{% endif %}>
+                        Lowest Total
+                    </option>
+
+                    <option value="open" {% if chart_sort == "open" %}selected{% endif %}>
+                        Most Pending
+                    </option>
+
+                    <option value="progress" {% if chart_sort == "progress" %}selected{% endif %}>
+                        Most Progress
+                    </option>
+
+                    <option value="resolved" {% if chart_sort == "resolved" %}selected{% endif %}>
+                        Most Resolved
+                    </option>
+                </select>
+
+            </form>
+        </div>
         <div class="charts-grid">
 
 
@@ -447,17 +491,15 @@
 
             <div class="report-table-header">
 
-                <div>
+    <div>
+        <h3>
+            Department Summary
+        </h3>
 
-                    <h3>
-                        Department Summary
-                    </h3>
-
-                    <p>
-                        Ticket status breakdown by department.
-                    </p>
-
-                </div>
+        <p>
+            Ticket status breakdown by department.
+        </p>
+    </div>
 
             </div>
 
@@ -467,84 +509,48 @@
                 <table class="report-table">
 
                     <thead>
+                <tr>
+                    <th>
+                        <button type="button" class="ajax-sort department-sort" data-sort="department">
+                            Department <span class="sort-arrow">↕</span>
+                        </button>
+                    </th>
 
-                        <tr>
+                    <th>
+                        <button type="button" class="ajax-sort department-sort" data-sort="total">
+                            Total <span class="sort-arrow">↕</span>
+                        </button>
+                    </th>
 
-                            <th>
-                                Department
-                            </th>
+                    <th>
+                        <button type="button" class="ajax-sort department-sort" data-sort="pending">
+                            Pending <span class="sort-arrow">↕</span>
+                        </button>
+                    </th>
 
-                            <th>
-                                Total
-                            </th>
+                    <th>
+                        <button type="button" class="ajax-sort department-sort" data-sort="progress">
+                            In Progress <span class="sort-arrow">↕</span>
+                        </button>
+                    </th>
 
-                            <th>
-                                Pending
-                            </th>
+                    <th>
+                        <button type="button" class="ajax-sort department-sort" data-sort="resolved">
+                            Resolved <span class="sort-arrow">↕</span>
+                        </button>
+                    </th>
 
-                            <th>
-                                In Progress
-                            </th>
-
-                            <th>
-                                Resolved
-                            </th>
-
-                            <th>
-                                Cancelled
-                            </th>
-
-                        </tr>
-
-                    </thead>
+                    <th>
+                        <button type="button" class="ajax-sort department-sort" data-sort="cancelled">
+                            Cancelled <span class="sort-arrow">↕</span>
+                        </button>
+                    </th>
+                </tr>
+            </thead>
 
 
-                    <tbody>
-
-                        {% for department in department_summary %}
-
-                        <tr>
-
-                            <td>
-                                {{ department.department__name|default:"—" }}
-                            </td>
-
-                            <td>
-                                <strong>
-                                    {{ department.total }}
-                                </strong>
-                            </td>
-
-                            <td>
-                                {{ department.pending }}
-                            </td>
-
-                            <td>
-                                {{ department.progress }}
-                            </td>
-
-                            <td>
-                                {{ department.resolved }}
-                            </td>
-
-                            <td>
-                                {{ department.cancelled }}
-                            </td>
-
-                        </tr>
-
-                        {% empty %}
-
-                        <tr>
-
-                            <td colspan="6">
-                                No department data available.
-                            </td>
-
-                        </tr>
-
-                        {% endfor %}
-
+                    <tbody id="department-summary-body">
+                        {% include "reports/partials/department_rows.html" %}
                     </tbody>
 
                 </table>
@@ -581,96 +587,92 @@
             <div class="table-wrapper">
 
                 <table class="report-table">
+<thead>
+    <tr>
 
-                    <thead>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort concern-sort"
+                data-sort="name"
+            >
+                Concern
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                        <tr>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort concern-sort"
+                data-sort="department"
+            >
+                Department
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                            <th>
-                                Concern
-                            </th>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort concern-sort"
+                data-sort="total"
+            >
+                Total
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                            <th>
-                                Department
-                            </th>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort concern-sort"
+                data-sort="pending"
+            >
+                Pending
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                            <th>
-                                Total
-                            </th>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort concern-sort"
+                data-sort="progress"
+            >
+                In Progress
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                            <th>
-                                Pending
-                            </th>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort concern-sort"
+                data-sort="resolved"
+            >
+                Resolved
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                            <th>
-                                In Progress
-                            </th>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort concern-sort"
+                data-sort="cancelled"
+            >
+                Cancelled
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                            <th>
-                                Resolved
-                            </th>
-
-                            <th>
-                                Cancelled
-                            </th>
-
-                        </tr>
-
-                    </thead>
+    </tr>
+</thead>
 
 
-                    <tbody>
-
-                        {% for concern in concern_summary %}
-
-                        <tr>
-
-                            <td>
-                                {{ concern.concern_type__name|default:"—" }}
-                            </td>
-
-                            <td>
-                                {{ concern.department__name|default:"—" }}
-                            </td>
-
-                            <td>
-
-                                <strong>
-                                    {{ concern.total }}
-                                </strong>
-
-                            </td>
-
-                            <td>
-                                {{ concern.pending }}
-                            </td>
-
-                            <td>
-                                {{ concern.progress }}
-                            </td>
-
-                            <td>
-                                {{ concern.resolved }}
-                            </td>
-
-                            <td>
-                                {{ concern.cancelled }}
-                            </td>
-
-                        </tr>
-
-                        {% empty %}
-
-                        <tr>
-
-                            <td colspan="7">
-                                No concern data available.
-                            </td>
-
-                        </tr>
-
-                        {% endfor %}
-
+                    <tbody id="concern-summary-body">
+                        {% include "reports/partials/concern_rows.html" %}
                     </tbody>
 
                 </table>
@@ -709,88 +711,81 @@
                 <table class="report-table">
 
                     <thead>
+    <tr>
 
-                        <tr>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort outlet-sort"
+                data-sort="name"
+            >
+                Outlet
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                            <th>
-                                Outlet
-                            </th>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort outlet-sort"
+                data-sort="total"
+            >
+                Total
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                            <th>
-                                Total
-                            </th>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort outlet-sort"
+                data-sort="pending"
+            >
+                Pending
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                            <th>
-                                Pending
-                            </th>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort outlet-sort"
+                data-sort="progress"
+            >
+                In Progress
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                            <th>
-                                In Progress
-                            </th>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort outlet-sort"
+                data-sort="resolved"
+            >
+                Resolved
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                            <th>
-                                Resolved
-                            </th>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort outlet-sort"
+                data-sort="cancelled"
+            >
+                Cancelled
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                            <th>
-                                Cancelled
-                            </th>
-
-                        </tr>
-
-                    </thead>
+    </tr>
+</thead>
 
 
-                    <tbody>
-
-                        {% for outlet in outlet_summary %}
-
-                        <tr>
-
-                            <td>
-                                {{ outlet.outlet__name|default:"—" }}
-                            </td>
-
-                            <td>
-
-                                <strong>
-                                    {{ outlet.total }}
-                                </strong>
-
-                            </td>
-
-                            <td>
-                                {{ outlet.pending }}
-                            </td>
-
-                            <td>
-                                {{ outlet.progress }}
-                            </td>
-
-                            <td>
-                                {{ outlet.resolved }}
-                            </td>
-
-                            <td>
-                                {{ outlet.cancelled }}
-                            </td>
-
-                        </tr>
-
-                        {% empty %}
-
-                        <tr>
-
-                            <td colspan="6">
-                                No outlet data available.
-                            </td>
-
-                        </tr>
-
-                        {% endfor %}
-
+                    <tbody id="outlet-summary-body">
+                        {% include "reports/partials/outlet_rows.html" %}
                     </tbody>
-
                 </table>
 
             </div>
@@ -800,118 +795,109 @@
 
 
         <!-- =====================================================
-             TECHNICIAN SUMMARY
-        ====================================================== -->
+     TECHNICIAN SUMMARY
+====================================================== -->
 
-        <div class="report-table-card">
+<div class="report-table-card">
 
-            <div class="report-table-header">
+    <div class="report-table-header">
 
-                <div>
+        <div>
+            <h3>
+                Technician Summary
+            </h3>
 
-                    <h3>
-                        Technician Summary
-                    </h3>
-
-                    <p>
-                        Technician workload and ticket performance.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="table-wrapper">
-
-                <table class="report-table">
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Technician
-                            </th>
-
-                            <th>
-                                Current Assigned
-                            </th>
-
-                            <th>
-                                Total Assigned
-                            </th>
-
-                            <th>
-                                Resolved
-                            </th>
-
-                            <th>
-                                Resolved On Time
-                            </th>
-
-                            <th>
-                                Reopened
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                        {% for technician in technician_stats %}
-
-                        <tr>
-
-                            <td>
-                                <strong>
-                                    {{ technician.name }}
-                                </strong>
-                            </td>
-
-                            <td>
-                                {{ technician.current_assigned }}
-                            </td>
-
-                            <td>
-                                {{ technician.total_assigned }}
-                            </td>
-
-                            <td>
-                                {{ technician.resolved }}
-                            </td>
-
-                            <td>
-                                {{ technician.resolved_on_time }}
-                            </td>
-
-                            <td>
-                                {{ technician.reopened }}
-                            </td>
-
-                        </tr>
-
-                        {% empty %}
-
-                        <tr>
-
-                            <td colspan="6">
-                                No technician data available.
-                            </td>
-
-                        </tr>
-
-                        {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
+            <p>
+                Technician workload and ticket performance.
+            </p>
         </div>
+
+    </div>
+
+    <div class="table-wrapper">
+
+        <table class="report-table">
+
+            <thead>
+    <tr>
+
+        <th>
+            <button
+                type="button"
+                class="ajax-sort technician-sort"
+                data-sort="name"
+            >
+                Technician
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
+
+        <th>
+            <button
+                type="button"
+                class="ajax-sort technician-sort"
+                data-sort="current_assigned"
+            >
+                Current Assigned
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
+
+        <th>
+            <button
+                type="button"
+                class="ajax-sort technician-sort"
+                data-sort="total_assigned"
+            >
+                Total Assigned
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
+
+        <th>
+            <button
+                type="button"
+                class="ajax-sort technician-sort"
+                data-sort="resolved"
+            >
+                Resolved
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
+
+        <th>
+            <button
+                type="button"
+                class="ajax-sort technician-sort"
+                data-sort="resolved_on_time"
+            >
+                Resolved On Time
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
+
+        <th>
+            <button
+                type="button"
+                class="ajax-sort technician-sort"
+                data-sort="reopened"
+            >
+                Reopened
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
+
+    </tr>
+</thead>
+
+            <tbody id="technician-summary-body">
+                {% include "reports/partials/technician_rows.html" %}
+            </tbody>
+        </table>
+
+    </div>
+
+</div>
 
 
 
@@ -943,63 +929,49 @@
                 <table class="report-table">
 
                     <thead>
+    <tr>
 
-                        <tr>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort concerns-outlet-sort"
+                data-sort="outlet"
+            >
+                Outlet
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                            <th>
-                                Outlet
-                            </th>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort concerns-outlet-sort"
+                data-sort="concern"
+            >
+                Concern
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                            <th>
-                                Concern
-                            </th>
+        <th>
+            <button
+                type="button"
+                class="ajax-sort concerns-outlet-sort"
+                data-sort="total"
+            >
+                Tickets
+                <span class="sort-arrow">↕</span>
+            </button>
+        </th>
 
-                            <th>
-                                Tickets
-                            </th>
-
-                        </tr>
-
-                    </thead>
+    </tr>
+</thead>
 
 
-                    <tbody>
-
-                        {% for item in concerns_per_outlet %}
-
-                        <tr>
-
-                            <td>
-                                {{ item.outlet__name|default:"—" }}
-                            </td>
-
-                            <td>
-                                {{ item.concern_type__name|default:"—" }}
-                            </td>
-
-                            <td>
-
-                                <strong>
-                                    {{ item.total }}
-                                </strong>
-
-                            </td>
-
-                        </tr>
-
-                        {% empty %}
-
-                        <tr>
-
-                            <td colspan="3">
-                                No concern data available.
-                            </td>
-
-                        </tr>
-
-                        {% endfor %}
-
+                    <tbody id="concerns-outlet-body">
+                        {% include "reports/partials/concerns_outlet_rows.html" %}
                     </tbody>
+
 
                 </table>
 
@@ -1170,10 +1142,354 @@ const techReopened = [
 </script>
 
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
 
+    let departmentSort = "department";
+    let concernSort = "name";
+    let outletSort = "name";
+    let technicianSort = "name";
+    let concernsOutletSort = "outlet";
+
+
+    /* =========================================
+       DEPARTMENT SORT
+       ========================================= */
+
+    document.querySelectorAll(".department-sort").forEach(button => {
+
+        button.addEventListener("click", function () {
+
+            const field = this.dataset.sort;
+
+            if (departmentSort === field) {
+                departmentSort = "-" + field;
+            } else {
+                departmentSort = field;
+            }
+
+            ajaxSort(departmentSort, "department");
+        });
+
+    });
+
+
+    /* =========================================
+       CONCERN SORT
+       ========================================= */
+
+    document.querySelectorAll(".concern-sort").forEach(button => {
+
+        button.addEventListener("click", function () {
+
+            const field = this.dataset.sort;
+
+            if (concernSort === field) {
+                concernSort = "-" + field;
+            } else {
+                concernSort = field;
+            }
+
+            ajaxSort(concernSort, "concern");
+        });
+
+    });
+
+    /* =========================================
+    OUTLET SORT
+    ========================================= */
+
+    document.querySelectorAll(".outlet-sort").forEach(button => {
+
+        button.addEventListener("click", function () {
+
+            const field = this.dataset.sort;
+
+            if (outletSort === field) {
+                outletSort = "-" + field;
+            } else {
+                outletSort = field;
+            }
+
+            ajaxSort(outletSort, "outlet");
+        });
+
+    });
+
+    /* =========================================
+    TECHNICIAN SORT
+    ========================================= */
+
+    document.querySelectorAll(".technician-sort").forEach(button => {
+
+        button.addEventListener("click", function () {
+
+            const field = this.dataset.sort;
+
+            if (technicianSort === field) {
+                technicianSort = "-" + field;
+            } else {
+                technicianSort = field;
+            }
+
+            ajaxSort(
+                technicianSort,
+                "technician"
+            );
+        });
+
+    });
+
+    /* =========================================
+    CONCERNS BY OUTLET SORT
+    ========================================= */
+
+    document.querySelectorAll(".concerns-outlet-sort").forEach(button => {
+
+        button.addEventListener("click", function () {
+
+            const field = this.dataset.sort;
+
+            if (concernsOutletSort === field) {
+                concernsOutletSort = "-" + field;
+            } else {
+                concernsOutletSort = field;
+            }
+
+            ajaxSort(
+                concernsOutletSort,
+                "concerns_outlet"
+            );
+        });
+
+    });
+
+
+    /* =========================================
+       AJAX SORT FUNCTION
+       ========================================= */
+
+    function ajaxSort(sortValue, tableType) {
+
+        const params = new URLSearchParams(
+            window.location.search
+        );
+
+        /*
+         * IMPORTANT:
+         * Department uses "sort"
+         * Concern uses "concern_sort"
+         */
+
+        if (tableType === "department") {
+
+            params.set("sort", sortValue);
+
+        } else if (tableType === "concern") {
+
+            params.set("concern_sort", sortValue);
+
+        }  else if (tableType === "outlet") {
+
+            params.set("outlet_sort", sortValue);
+
+        } else if (tableType === "technician") {
+
+            params.set(
+                "technician_sort",
+                sortValue
+            );
+
+        } else if (tableType === "concerns_outlet") {
+
+            params.set(
+                "concerns_outlet_sort",
+                sortValue
+            );
+
+        }
+
+        fetch(
+            window.location.pathname + "?" + params.toString(),
+            {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            }
+        )
+        .then(response => {
+
+            if (!response.ok) {
+                throw new Error(
+                    "Sorting failed: " + response.status
+                );
+            }
+
+            return response.json();
+        })
+        .then(data => {
+
+            /* -------------------------
+               DEPARTMENT
+               ------------------------- */
+
+            if (data.table === "department") {
+
+                const body = document.getElementById(
+                    "department-summary-body"
+                );
+
+                if (body) {
+                    body.innerHTML = data.html;
+                }
+
+                updateArrows(
+                    ".department-sort",
+                    sortValue
+                );
+            }
+
+
+            /* -------------------------
+               CONCERN
+               ------------------------- */
+
+            if (data.table === "concern") {
+
+                const body = document.getElementById(
+                    "concern-summary-body"
+                );
+
+                if (body) {
+                    body.innerHTML = data.html;
+                }
+
+                updateArrows(
+                    ".concern-sort",
+                    sortValue
+                );
+            }
+
+            /* -------------------------
+               OUTLET
+               ------------------------- */
+
+            if (data.table === "outlet") {
+
+                const body = document.getElementById(
+                    "outlet-summary-body"
+                );
+
+                if (body) {
+                    body.innerHTML = data.html;
+                }
+
+                updateArrows(
+                    ".outlet-sort",
+                    sortValue
+                );
+            }
+
+            /* -------------------------
+               TECHNICIAN
+               ------------------------- */
+
+            if (data.table === "technician") {
+
+                const body = document.getElementById(
+                    "technician-summary-body"
+                );
+
+                if (body) {
+                    body.innerHTML = data.html;
+                }
+
+                updateArrows(
+                    ".technician-sort",
+                    sortValue
+                );
+            }
+            
+            /* -------------------------
+               Concern per outlet
+               ------------------------- */
+
+            if (data.table === "concerns_outlet") {
+
+                const body = document.getElementById(
+                    "concerns-outlet-body"
+                );
+
+                if (body) {
+                    body.innerHTML = data.html;
+                }
+
+                updateArrows(
+                    ".concerns-outlet-sort",
+                    sortValue
+                );
+            }
+
+        })
+        .catch(error => {
+            console.error(
+                "AJAX sorting error:",
+                error
+            );
+        });
+
+    }
+
+
+    /* =========================================
+       UPDATE SORT ARROWS
+       ========================================= */
+
+    function updateArrows(selector, sortValue) {
+
+        document.querySelectorAll(selector).forEach(button => {
+
+            button.classList.remove("active");
+
+            const arrow =
+                button.querySelector(".sort-arrow");
+
+            if (arrow) {
+                arrow.textContent = "↕";
+            }
+
+            const field = button.dataset.sort;
+
+            if (
+                sortValue === field ||
+                sortValue === "-" + field
+            ) {
+
+                button.classList.add("active");
+
+                if (arrow) {
+
+                    if (
+                        sortValue === "-" + field
+                    ) {
+                        arrow.textContent = "↓";
+                    } else {
+                        arrow.textContent = "↑";
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+});
+</script>
 <script src="{% static 'js/report.js' %}"></script>
 
-<script src="{% static 'js/page_loader.js' %}" defer></script>
+
 </body>
 
 </html>

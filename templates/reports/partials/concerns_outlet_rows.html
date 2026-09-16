@@ -1,0 +1,24 @@
+{% for item in concerns_per_outlet %}
+<tr>
+    <td>
+        {{ item.outlet__name|default:"—" }}
+    </td>
+
+    <td>
+        {{ item.concern_type__name|default:"—" }}
+    </td>
+
+    <td>
+        <strong>{{ item.total }}</strong>
+    </td>
+</tr>
+
+{% empty %}
+
+<tr>
+    <td colspan="3">
+        No concern data available.
+    </td>
+</tr>
+
+{% endfor %}
