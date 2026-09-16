@@ -295,11 +295,13 @@ class TicketAdmin(ModelAdmin):
 
         profile = getattr(request.user, "userprofile", None)
 
-        if profile:
-            departments = profile.departments.all()
+        if not profile:
+            return qs.none()
 
-            if departments.exists():
-                return qs.filter(department__in=departments)
+        departments = profile.departments.all()
+
+        if departments.exists():
+            return qs.filter(department__in=departments)
 
         return qs.none()
 
