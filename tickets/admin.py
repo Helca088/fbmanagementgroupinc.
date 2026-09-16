@@ -37,41 +37,27 @@ class OutletAdmin(ModelAdmin):
 
 @admin.register(UserProfile)
 class UserProfileAdmin(ModelAdmin):
-    list_display = (
-        "user",
-        "outlet",
-        "display_departments",
-        "account_type",
-    )
-
-    list_filter = (
-        "outlet",
-        "departments",
-        "account_type",
-    )
-
-    search_fields = (
-        "user__username",
-        "user__first_name",
-        "user__last_name",
-    )
-
-    @admin.display(description="Departments")
-    def display_departments(self, obj):
-        return ", ".join(
-            obj.departments.values_list(
-                "name",
-                flat=True
-            )
-        ) or "None"
+    list_display = ("user", "outlet")
+    list_filter = ("outlet",)
+    search_fields = ("user__username",)
 
 # unregister default admin
 admin.site.unregister(User)
+
+
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    extra = 0
+    fields = ("outlet", "departments", "account_type")
+    filter_horizontal = ("departments",)
+
 
 # re-register with custom settings
 @admin.register(User)
 class CustomUserAdmin(DjangoUserAdmin, ModelAdmin):
     add_form = CustomUserCreationForm
+    inlines = [UserProfileInline]
 
     list_display = (
         "username",
@@ -106,17 +92,17 @@ class CustomUserAdmin(DjangoUserAdmin, ModelAdmin):
             },
         ),
         (
-        "Profile",
-        {
-            "fields": (
-                "first_name",
-                "last_name",
-                "outlet",
-                "departments",
-                "account_type",
-            ),
-        },
-    ),
+            "Profile",
+            {
+                "fields": (
+                    "first_name",
+                    "last_name",
+                    "outlet",
+                    "departments",
+                    "account_type",
+                ),
+            },
+        ),
         (
             "Permissions",
             {
@@ -133,8 +119,12 @@ class CustomUserAdmin(DjangoUserAdmin, ModelAdmin):
     actions_on_bottom = True
     actions_selection_counter = True
     show_full_result_count = True
-    
-    
+
+    def get_inline_instances(self, request, obj=None):
+        # Hide the inline on the add page — add_form already collects this.
+        if obj is None:
+            return []
+        return super().get_inline_instances(request, obj)
 
 @admin.register(TicketAssignmentLog)
 class TicketAssignmentLogAdmin(ModelAdmin):

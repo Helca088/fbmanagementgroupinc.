@@ -19,16 +19,11 @@ class CustomUserCreationForm(UserCreationForm):
     )
 
     account_type = forms.ChoiceField(
-        choices=[
-            ("admin", "Admin"),
-            ("outlet", "Outlet"),
-        ],
+        choices=UserProfile.ACCOUNT_TYPES,
         initial="outlet",
     )
 
-    is_superuser = forms.BooleanField(
-        required=False
-    )
+    is_superuser = forms.BooleanField(required=False)
 
     class Meta(UserCreationForm.Meta):
         model = User
@@ -38,30 +33,29 @@ class CustomUserCreationForm(UserCreationForm):
             "last_name",
             "password1",
             "password2",
-            "outlet",
-            "departments",
-            "account_type",
         )
+
+    def _save_profile(self, user):
+        profile, _ = UserProfile.objects.update_or_create(
+            user=user,
+            defaults={
+                "outlet": self.cleaned_data.get("outlet"),
+                "account_type": self.cleaned_data.get("account_type", "outlet"),
+            },
+        )
+        profile.departments.set(self.cleaned_data.get("departments") or [])
+
+    def _save_m2m(self):
+        # Runs after the user row exists, in both admin and normal usage.
+        super()._save_m2m()
+        self._save_profile(self.instance)
 
     def save(self, commit=True):
         user = super().save(commit=False)
-
-        user.is_superuser = self.cleaned_data["is_superuser"]
+        user.is_superuser = self.cleaned_data.get("is_superuser", False)
 
         if commit:
             user.save()
-
-            profile, created = UserProfile.objects.update_or_create(
-                user=user,
-                defaults={
-                    "outlet": self.cleaned_data["outlet"],
-                    "account_type": self.cleaned_data["account_type"],
-                },
-            )
-
-            # Save multiple departments
-            profile.departments.set(
-                self.cleaned_data["departments"]
-            )
+            self.save_m2m()
 
         return user
