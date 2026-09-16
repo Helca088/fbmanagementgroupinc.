@@ -2,10 +2,15 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import UserProfile, Outlet
+from .models import UserProfile, Outlet, Department
 
 
 class CustomUserCreationForm(UserCreationForm):
+
+    department = forms.ModelChoiceField(
+    queryset=Department.objects.all(),
+    required=False,
+)
     outlet = forms.ModelChoiceField(
         queryset=Outlet.objects.all(),
         required=False,
@@ -32,6 +37,7 @@ class CustomUserCreationForm(UserCreationForm):
             "password1",
             "password2",
             "outlet",
+            "department",   
             "account_type",
         )
 
@@ -52,6 +58,7 @@ class CustomUserCreationForm(UserCreationForm):
                 user=user,
                 defaults={
                     "outlet": self.cleaned_data["outlet"],
+                    "department": self.cleaned_data["department"],
                 },
             )
 

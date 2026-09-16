@@ -118,6 +118,7 @@ class CustomUserAdmin(DjangoUserAdmin, ModelAdmin):
             user=obj,
             defaults={
                 "outlet_id": outlet if outlet else None,
+                "department_id": request.POST.get("department") or None,
                 "account_type": account_type,
             },
         )
@@ -286,7 +287,16 @@ class TicketAdmin(ModelAdmin):
               'assigned_to', 'additional_technicians', 'priority', 'concern_type')
 
     def get_queryset(self, request):
-        return super().get_queryset(request)
+        qs = super().get_queryset(request)
+
+        if request.user.is_superuser:
+            return qs
+
+        profile = getattr(request.user, "userprofile", None)
+        if profile and profile.department:
+            return qs.filter(department=profile.department)
+
+        return qs.none()
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         ticket = self.get_object(request, object_id)
