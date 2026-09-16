@@ -286,16 +286,7 @@ class TicketAdmin(ModelAdmin):
               'assigned_to', 'additional_technicians', 'priority', 'concern_type')
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
-
-        if request.user.is_superuser:
-            return qs
-
-        profile = getattr(request.user, "userprofile", None)
-        if profile and profile.department:
-            return qs.filter(department=profile.department)
-
-        return qs.none()
+        return super().get_queryset(request)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         ticket = self.get_object(request, object_id)
