@@ -82,16 +82,17 @@ class CustomUserAdmin(DjangoUserAdmin, ModelAdmin):
             },
         ),
         (
-            "Profile",
-            {
-                "fields": (
-                    "first_name",
-                    "last_name",
-                    "outlet",
-                    "account_type"
-                ),
-            },
-        ),
+        "Profile",
+        {
+            "fields": (
+                "first_name",
+                "last_name",
+                "outlet",
+                "departments",
+                "account_type",
+            ),
+        },
+    ),
         (
             "Permissions",
             {
