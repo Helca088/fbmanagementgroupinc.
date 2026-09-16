@@ -37,9 +37,33 @@ class OutletAdmin(ModelAdmin):
 
 @admin.register(UserProfile)
 class UserProfileAdmin(ModelAdmin):
-    list_display = ("user", "outlet")
-    list_filter = ("outlet",)
-    search_fields = ("user__username",)
+    list_display = (
+        "user",
+        "outlet",
+        "display_departments",
+        "account_type",
+    )
+
+    list_filter = (
+        "outlet",
+        "departments",
+        "account_type",
+    )
+
+    search_fields = (
+        "user__username",
+        "user__first_name",
+        "user__last_name",
+    )
+
+    @admin.display(description="Departments")
+    def display_departments(self, obj):
+        return ", ".join(
+            obj.departments.values_list(
+                "name",
+                flat=True
+            )
+        ) or "None"
 
 # unregister default admin
 admin.site.unregister(User)
@@ -110,21 +134,7 @@ class CustomUserAdmin(DjangoUserAdmin, ModelAdmin):
     actions_selection_counter = True
     show_full_result_count = True
     
-    # <-- ADD IT HERE
-    def response_add(self, request, obj, post_url_continue=None):
-        outlet = request.POST.get("outlet")
-        account_type = request.POST.get("account_type")
-
-        UserProfile.objects.update_or_create(
-            user=obj,
-            defaults={
-                "outlet_id": outlet if outlet else None,
-                "department_id": request.POST.get("department") or None,
-                "account_type": account_type,
-            },
-        )
-
-        return super().response_add(request, obj, post_url_continue)
+    
 
 @admin.register(TicketAssignmentLog)
 class TicketAssignmentLogAdmin(ModelAdmin):

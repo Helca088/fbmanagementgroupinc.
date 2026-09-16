@@ -26,7 +26,9 @@ class CustomUserCreationForm(UserCreationForm):
         initial="outlet",
     )
 
-    is_superuser = forms.BooleanField(required=False)
+    is_superuser = forms.BooleanField(
+        required=False
+    )
 
     class Meta(UserCreationForm.Meta):
         model = User
@@ -57,6 +59,7 @@ class CustomUserCreationForm(UserCreationForm):
                 },
             )
 
+            # Save multiple departments
             profile.departments.set(
                 self.cleaned_data["departments"]
             )

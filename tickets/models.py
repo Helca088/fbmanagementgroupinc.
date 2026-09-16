@@ -33,14 +33,16 @@ class UserProfile(models.Model):
         on_delete=models.CASCADE
     )
 
+    # Keep this temporarily if other existing code still uses it
     department = models.ForeignKey(
-    Department,
-    on_delete=models.CASCADE,
-    related_name="users",
-    null=True,
-    blank=True,
+        Department,
+        on_delete=models.CASCADE,
+        related_name="users",
+        null=True,
+        blank=True,
     )
 
+    # NEW: user can belong to multiple departments
     departments = models.ManyToManyField(
         Department,
         blank=True,
@@ -63,17 +65,15 @@ class UserProfile(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-        if self.account_type == "admin":
-            self.user.is_staff = True
-        else:
-            self.user.is_staff = False
-
+        self.user.is_staff = self.account_type == "admin"
         self.user.is_active = True
-        self.user.save(update_fields=["is_staff", "is_active"])
+
+        self.user.save(
+            update_fields=["is_staff", "is_active"]
+        )
 
     def __str__(self):
         return self.user.username
-
    
 
 class Technician(models.Model):
