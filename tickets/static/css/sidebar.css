@@ -265,3 +265,30 @@
         z-index: 99;
     }
 }
+
+#page-loader {
+    position: fixed;
+    inset: 0;
+    backdrop-filter: blur(3px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+}
+
+html.dark #page-loader {
+    background: rgba(17,24,39,.65);
+}
+
+#page-loader.show {
+    display: flex;
+}  
+
+.loader-content {
+    text-align: center;
+}
+
+#lottie-animation {
+    width: 220px;
+    height: 220px;
+}
