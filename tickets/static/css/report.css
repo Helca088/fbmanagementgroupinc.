@@ -248,7 +248,7 @@ select {
 
     .filter-form {
         display: grid;
-    grid-template-columns: repeat(4, minmax(140px, 1fr)) auto;
+    grid-template-columns: repeat(5, minmax(140px, 1fr)) auto;
     gap: 14px;
     align-items: end;
 }
@@ -723,7 +723,7 @@ table tbody tr:last-child td {
 }
 
 .tickets-table {
-    min-width: 850px;
+    min-width: 950px;
 }
 
 .tickets-table thead th {
@@ -1590,7 +1590,7 @@ select[name="concern_outlet_sort"] option {
     table tbody td, .report-table tbody td,
     .department-table tbody td { padding: 12px 13px; font-size: 12px; }
 
-    .tickets-table { min-width: 780px; }
+    .tickets-table { min-width: 900px; }
     .ticket-message { max-width: 340px; }
 
     .department-tables { grid-template-columns: 1fr; }
