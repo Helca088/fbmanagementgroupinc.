@@ -38,7 +38,9 @@ from tickets.models import (
     TicketAssignmentLog,
     TicketStatusLog,
 )
-from tickets.views import get_filtered_tickets
+from tickets.views import get_filtered_tickets, STATUS_CHOICES
+
+STATUS_LABELS = dict(STATUS_CHOICES)
 
 
 # =============================================================================
@@ -85,6 +87,7 @@ def get_export_tickets(request):
     end = request.GET.get("end", "").strip()
     department = request.GET.get("department", "").strip()
     outlet = request.GET.get("outlet", "").strip()
+    status = request.GET.get("status", "").strip()
 
     if start and end:
         tickets = tickets.filter(created_at__date__range=[start, end])
@@ -97,17 +100,19 @@ def get_export_tickets(request):
         tickets = tickets.filter(department__name=department)
     if outlet:
         tickets = tickets.filter(outlet_id=outlet)
+    if status:
+        tickets = tickets.filter(status=status)
 
     return tickets
 
 
 def get_request_filters(request):
-    """Pull the common report filters out of the query string."""
     return {
         "start": request.GET.get("start", "").strip(),
         "end": request.GET.get("end", "").strip(),
         "department": request.GET.get("department", "").strip(),
         "outlet": request.GET.get("outlet", "").strip(),
+        "status": request.GET.get("status", "").strip(),
     }
 
 
@@ -146,6 +151,7 @@ def build_filter_summary(request, include_outlet_label=True):
         parts.append("Outlet: All Outlets")
 
     parts.append(f"Department: {filters['department'] or 'All Departments'}")
+    parts.append(f"Status: {filters['status'] or 'All Status'}")
     parts.append(f"Date: {filters['start'] or 'All'} to {filters['end'] or 'All'}")
 
     return " | ".join(parts)
@@ -317,7 +323,7 @@ def add_pdf_header(elements, styles, title, subtitle=None, filter_summary=None):
 # RAW TICKET EXPORT
 # =============================================================================
 
-TICKET_EXPORT_HEADERS = ["Outlet", "Created", "Department", "Concern Type", "Message"]
+TICKET_EXPORT_HEADERS = ["Outlet", "Created", "Department", "Concern Type", "Status", "Message"]
 
 
 def _ticket_export_row(ticket):
@@ -326,6 +332,7 @@ def _ticket_export_row(ticket):
         ticket.created_at.strftime("%Y-%m-%d %H:%M") if ticket.created_at else "",
         ticket.department.name if ticket.department else "",
         ticket.concern_type.name if ticket.concern_type else "",
+        STATUS_LABELS.get(ticket.status, ticket.status or ""),
         ticket.message or "",
     ]
 
@@ -377,7 +384,7 @@ def export_tickets_pdf(request):
     data = [TICKET_EXPORT_HEADERS] + [_ticket_export_row(t) for t in tickets]
     table = build_pdf_table(
         data,
-        col_widths=[100, 100, 100, 130, 300],
+        col_widths=[100, 100, 100, 120, 90, 260],
         header_color=COLOR_PRIMARY,
         font_size=8,
     )

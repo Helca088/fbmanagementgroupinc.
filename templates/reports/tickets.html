@@ -199,7 +199,17 @@
 
                 </div>
 
-
+                <div class="filter-field">
+                <label for="status">Status</label>
+                <select name="status" id="status">
+                    <option value="">All Status</option>
+                    {% for value, label in context_statuses %}
+                        <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
 
                 <!-- =============================================
                      START DATE
@@ -477,6 +487,38 @@
                         </form>
                     </th>
 
+                    <!-- =====================================================
+                        STATUS  
+                        ===================================================== -->
+                    <th class="sortable-th">
+                        <form method="get" class="column-sort-form">
+
+                            <input type="hidden" name="start" value="{{ selected_start }}">
+                            <input type="hidden" name="end" value="{{ selected_end }}">
+                            <input type="hidden" name="department" value="{{ selected_department }}">
+                            <input type="hidden" name="outlet" value="{{ selected_outlet }}">
+                            <input type="hidden" name="status" value="{{ selected_status }}">
+
+                            <select
+                                name="sort"
+                                class="column-sort-select"
+                                onchange="this.form.submit()"
+                            >
+                                <option value="concern"
+                                    {% if selected_sort == "status" %}selected{% endif %}>
+                                    Status A–Z
+                                </option>
+
+                                <option value="-concern"
+                                    {% if selected_sort == "-status" %}selected{% endif %}>
+                                    Status Z–A
+                                </option>
+                            </select>
+
+                        </form>
+                    </th>
+
+
 
                     <!-- =====================================================
                         MESSAGE
@@ -591,7 +633,15 @@
 
                             </td>
 
+                            <!-- =========================================
+                                 STATUS
+                            ========================================== -->
 
+                            <td>
+                                <span class="status-badge status-{{ ticket.status }}">
+                                    {{ ticket.get_status_display|default:"—" }}
+                                </span>
+                            </td>
 
                             <!-- =========================================
                                  MESSAGE

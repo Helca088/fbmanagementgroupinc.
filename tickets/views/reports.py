@@ -22,6 +22,12 @@ from tickets.models import (
     ConcernType
 )
 
+STATUS_CHOICES = [
+    ("pending", "Pending"),
+    ("progress", "In Progress"),
+    ("resolved", "Resolved"),
+    ("cancelled", "Cancelled"),
+]
 
 # ============================================================
 # COMMON FILTER
@@ -95,6 +101,9 @@ def report_common_context(request):
 
         "context_concerns":
             ConcernType.objects.all().order_by("name"),
+
+        "context_statuses":            
+            STATUS_CHOICES,
 
         "selected_start":
             request.GET.get("start", ""),
@@ -1246,6 +1255,9 @@ def report_tickets(request):
     allowed_sorts = {
         "outlet": "outlet__name",
         "-outlet": "-outlet__name",
+
+        "status": "status",            
+        "-status": "-status",
 
         "created": "created_at",
         "-created": "-created_at",
