@@ -724,6 +724,7 @@ table tbody tr:last-child td {
 
 .tickets-table {
     min-width: 950px;
+    table-layout: fixed;
 }
 
 .tickets-table thead th {
@@ -818,12 +819,16 @@ tr:hover .technician-name {
 
 .message-cell {
     max-width: 500px;
+    overflow: hidden;             
 }
 
-.ticket-message {
+.ticket-message {   
     max-width: 520px;
     color: var(--text-soft);
     line-height: 1.55;
+
+    word-wrap: break-word;        
+    overflow-wrap: break-word;     
 
     display: -webkit-box;
     -webkit-line-clamp: 2;

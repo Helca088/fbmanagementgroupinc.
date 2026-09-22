@@ -245,6 +245,16 @@ def get_pdf_styles():
         alias="report_subtitle",
     )
 
+    styles.add(                                   
+        ParagraphStyle(                             
+            "TableCellWrap",                         
+            parent=styles["Normal"],                 
+            fontSize=8,                               
+            leading=10,                               
+        ),                                            
+        alias="table_cell_wrap",                    
+    )                                                
+
     return styles
 
 
@@ -381,10 +391,14 @@ def export_tickets_pdf(request):
         Spacer(1, 10),
     ]
 
-    data = [TICKET_EXPORT_HEADERS] + [_ticket_export_row(t) for t in tickets]
-    table = build_pdf_table(
+    data = [TICKET_EXPORT_HEADERS]
+    for t in tickets:
+        row = _ticket_export_row(t)
+        row[-1] = Paragraph(row[-1].replace("\n", "<br/>"), styles["table_cell_wrap"])  # wrap Message
+        data.append(row)
+        table = build_pdf_table(
         data,
-        col_widths=[100, 100, 100, 120, 90, 260],
+        col_widths=[95, 90, 95, 110, 80, 260],   # tightened, sums to 730
         header_color=COLOR_PRIMARY,
         font_size=8,
     )
