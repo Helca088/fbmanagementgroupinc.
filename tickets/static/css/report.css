@@ -723,7 +723,7 @@ table tbody tr:last-child td {
 }
 
 .tickets-table {
-    min-width: 950px;
+    min-width: 1000px;
     table-layout: fixed;
 }
 
@@ -736,11 +736,12 @@ table tbody tr:last-child td {
     font-size: 13px;
 }
 
-.tickets-table th:nth-child(1) { width: 17%; min-width: 170px; }
-.tickets-table th:nth-child(2) { width: 16%; min-width: 160px; }
-.tickets-table th:nth-child(3) { width: 17%; min-width: 170px; }
-.tickets-table th:nth-child(4) { width: 22%; min-width: 190px; }
-.tickets-table th:nth-child(5) { width: 28%; min-width: 240px; }
+.tickets-table th:nth-child(1) { width: 14%; min-width: 140px; } /* Outlet */
+.tickets-table th:nth-child(2) { width: 13%; min-width: 130px; } /* Created */
+.tickets-table th:nth-child(3) { width: 14%; min-width: 140px; } /* Department */
+.tickets-table th:nth-child(4) { width: 17%; min-width: 160px; } /* Concern Type */
+.tickets-table th:nth-child(5) { width: 10%; min-width: 120px; } /* Status */
+.tickets-table th:nth-child(6) { width: 29%; min-width: 240px; } /* Message */
 
 
 /* =========================================================
@@ -1408,7 +1409,7 @@ select[name="concern_outlet_sort"] option {
 
 .tickets-table .column-sort-form {
     display: block;
-    width: 50%;
+    width: 100%;
     margin: 0;
     padding: 0;
 
@@ -1595,7 +1596,7 @@ select[name="concern_outlet_sort"] option {
     table tbody td, .report-table tbody td,
     .department-table tbody td { padding: 12px 13px; font-size: 12px; }
 
-    .tickets-table { min-width: 900px; }
+    .tickets-table { min-width: 1000px; }
     .ticket-message { max-width: 340px; }
 
     .department-tables { grid-template-columns: 1fr; }

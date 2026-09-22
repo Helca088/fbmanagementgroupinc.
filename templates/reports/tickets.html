@@ -253,42 +253,41 @@
 
 
 
-                <!-- =============================================
-                     FILTER / EXPORT BUTTONS
-                ============================================== -->
+<!-- =============================================
+FILTER / EXPORT BUTTONS
+============================================== -->
 
-                <div class="filter-actions">
+<div class="filter-actions">
 
-                    <!-- FILTER -->
+<!-- FILTER -->
 
-                    <button
-                        type="submit"
-                        class="btn btn-primary"
-                    >
-                        Filter
-                    </button>
-
-
-                    <!-- CLEAR -->
-
-                    <a
-                        href="{% url 'report_tickets' %}"
-                        class="btn-clear"
-                    >
-                        Clear
-                    </a>
+<button
+type="submit"
+class="btn btn-primary"
+>
+Filter
+</button>
 
 
-                    <a href="{% url 'export_tickets_pdf' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}&status={{ request.GET.status|urlencode }}" class="btn btn-danger">Export PDF</a>
+<!-- CLEAR -->
 
-                    <a href="{% url 'export_tickets_excel' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}&status={{ request.GET.status|urlencode }}" class="btn btn-success">Export Excel</a>
+<a
+href="{% url 'report_tickets' %}"
+class="btn-clear">
+Clear
+</a>
 
-                </div>
+
+<a href="{% url 'export_tickets_pdf' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}&status={{ request.GET.status|urlencode }}" class="btn btn-danger">Export PDF</a>
+
+<a href="{% url 'export_tickets_excel' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}&status={{ request.GET.status|urlencode }}" class="btn btn-success">Export Excel</a>
+
+</div>
 
 
-            </form>
+</form>
 
-        </div>
+</div>
         <!-- =================================================
              END FILTER CARD
         ================================================== -->
@@ -656,7 +655,7 @@
                         <tr>
 
                             <td
-                                colspan="5"
+                                colspan="6"
                                 class="empty-table"
                             >
 
