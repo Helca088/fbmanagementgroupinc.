@@ -207,46 +207,17 @@
 
                 <!-- ACTIONS -->
 
+                                <!-- ACTIONS -->
+
                 <div class="filter-actions">
 
-                    <!-- FILTER -->
+                    <button type="submit" class="btn btn-primary">Filter</button>
 
-                    <button
-                        type="submit"
-                        class="btn btn-primary"
-                    >
-                        Filter
-                    </button>
+                    <a href="{% url 'reports' %}" class="btn-clear">Clear</a>
 
+                    <a href="{% url 'export_reports_pdf' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}&status={{ request.GET.status|urlencode }}" class="btn btn-danger">Export PDF</a>
 
-                    <!-- CLEAR -->
-
-                    
-                        href="{% url 'reports' %}"
-                        class="btn-clear"
-                    >
-                        Clear
-                    </a>
-
-
-                    <!-- EXPORT PDF -->
-
-                    
-                        href="{% url 'export_reports_pdf' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}&status={{ request.GET.status|urlencode }}"
-                        class="btn btn-danger"
-                    >
-                        Export PDF
-                    </a>
-
-
-                    <!-- EXPORT EXCEL -->
-
-                    
-                        href="{% url 'export_reports_excel' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}&status={{ request.GET.status|urlencode }}"
-                        class="btn btn-success"
-                    >
-                        Export Excel
-                    </a>
+                    <a href="{% url 'export_reports_excel' %}?start={{ request.GET.start|urlencode }}&end={{ request.GET.end|urlencode }}&department={{ request.GET.department|urlencode }}&outlet={{ request.GET.outlet|urlencode }}&status={{ request.GET.status|urlencode }}" class="btn btn-success">Export Excel</a>
 
                 </div>
 
